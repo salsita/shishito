@@ -3,7 +3,7 @@
 """
 @author: Vojtech Burian
 """
-from library.common import gid, config_loader
+from library.lib_test_config import gid, config_loader
 from selenium.common.exceptions import NoSuchElementException, \
     ElementNotVisibleException, TimeoutException
 import time

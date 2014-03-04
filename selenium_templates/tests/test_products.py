@@ -5,12 +5,12 @@
 """
 from unittestzero import Assert
 import os
-from library.common import start_browser
+from library.lib_test_config import start_browser
 from pages.sample_page import Products
 # from library.ripple import switch_from_ripple_app, switch_to_ripple_app
 
 
-class SampleTest():
+class TestSample():
     """  Product page sample test """
 
     def setup_class(self):
@@ -20,7 +20,6 @@ class SampleTest():
     def teardown_class(self):
         """ executes after test class finishes """
         print('Test finished')
-        start_browser()
 
     def setup_method(self, method):
         """ executes before test function starts """

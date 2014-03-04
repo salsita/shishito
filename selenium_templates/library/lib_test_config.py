@@ -7,6 +7,7 @@
 import ConfigParser
 from selenium import webdriver
 import os
+import pytest
 
 
 def config_loader():
@@ -57,16 +58,13 @@ def gid(searched_id, config_vars):
 
 def get_capabilities(testname, testcase):
     """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
-    config = ConfigParser.ConfigParser()
-    config.read(os.path.dirname(os.path.abspath(__file__)) + '/../temp_combo')
-    section = 'BROWSERSTACK'
-    desired_cap = {'os': config.get(section, 'os'),
-                   'os_version': config.get(section, 'os_version'),
-                   'browser': config.get(section, 'browser'),
-                   'browser_version': config.get(section, 'browser_version'),
-                   'resolution': config.get(section, 'resolution'),
+    desired_cap = {'os': pytest.config.getoption('xos'),
+                   'os_version': pytest.config.getoption('xosversion'),
+                   'browser': pytest.config.getoption('xbrowser'),
+                   'browser_version': pytest.config.getoption('xbrowserversion'),
+                   'resolution': pytest.config.getoption('xresolution'),
                    'project': gid('project_name', config_loader()),
-                   'build': config.get(section, 'build_name'),
+                   'build': pytest.config.getoption('xbuildname'),
                    'name': testname + ': ' + testcase.split(':')[1]}
     return desired_cap
 
@@ -77,15 +75,18 @@ def start_browser(self, testname, testcase, url=gid('base_url', config_loader())
     """ Browser startup function.
      Initialize session over Browserstack or local browser. """
     if browser.lower() == "browserstack":
+        bs_username = gid('bs_username', config_loader())
+        bs_password = gid('bs_password', config_loader())
+        command_executor='http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
         self.driver = webdriver.Remote(
-            command_executor=gid('command_executor', config_loader()),
+            command_executor=command_executor,
             desired_capabilities=get_capabilities(testname, testcase))
     elif browser == "Firefox":
         self.driver = webdriver.Firefox()
     elif browser == "Chrome":
         self.driver = webdriver.Chrome()
     elif browser == "IE":
-        self.driver = webdriver.Ie
+        self.driver = webdriver.Ie()
     elif browser == "PhantomJS":
         self.driver = webdriver.PhantomJS()
     elif browser == "Opera":
@@ -98,13 +99,3 @@ def start_browser(self, testname, testcase, url=gid('base_url', config_loader())
     self.driver.get(url)
     self.driver.implicitly_wait(10)
     return self.driver
-
-
-def log_in(email_field, email, password_field, password, submit_button):
-    """ basic login function """
-    email_field.clear()
-    password_field.clear()
-
-    email_field.send_keys(email)
-    password_field.send_keys(password)
-    submit_button.click()

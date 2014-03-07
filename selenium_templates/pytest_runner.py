@@ -28,23 +28,23 @@ class PyTestRunner():
 
         self.bs_config = ConfigParser.RawConfigParser()
         self.bs_config.read(bs_config_file)
-        self.current_date = now.strftime("%Y-%m-%d")
-        self.current_time = now.strftime("%H-%M-%S")
+        self.timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
+        self.result_folder = os.path.dirname(os.path.abspath(__file__)) + '/' \
+                             + gid('result_folder', config_loader()) + '/' + self.timestamp
         self.build_name = self.get_build_name()
 
     def run_tests(self):
         """ Runs tests locally or using Browserstack. """
         driver_name = gid('driver', config_loader())
-        result_folder = os.path.dirname(os.path.abspath(__file__)) + '/' + gid('result_folder', config_loader())
-        if not (os.path.exists(result_folder)):
-            os.makedirs(result_folder)
+        if not (os.path.exists(self.result_folder)):
+            os.makedirs(self.result_folder)
         if driver_name.lower() == 'browserstack':
             for config_section in self.bs_config.sections():
                 print('Running combination: ' + config_section)
                 self.trigger_pytest(config_section)
             self.correct_browserstack_results(gid('bs_username', config_loader()),
                                               gid('bs_password', config_loader()),
-                                              self.build_name, result_folder + '/' + config_section)
+                                              self.build_name, self.result_folder + '/' + config_section)
         else:
             config_section = driver_name
             self.trigger_pytest(config_section)
@@ -55,20 +55,26 @@ class PyTestRunner():
         driver_name = gid('driver', config_loader())
         if driver_name.lower() == 'browserstack':
             config = self.bs_config
-            pytest.main([current_path + '/tests', '-n', gid('parallel_tests', config_loader()),
-                         '--junitxml=' + current_path + '/' + gid('result_folder',
-                                                                  config_loader()) + '/' + config_section,
+            test_result_prefix = '[' + config.get(config_section, 'browser') \
+                                 + ', ' + config.get(config_section, 'browser_version') \
+                                 + ', ' + config.get(config_section, 'os') \
+                                 + ', ' + config.get(config_section, 'os_version') \
+                                 + ', ' + config.get(config_section, 'resolution') + ']'
+
+            pytest.main([current_path + '/tests',
+                         '-n', gid('parallel_tests', config_loader()),
+                         '--junit-prefix=' + test_result_prefix,
+                         '--junitxml=' + self.result_folder + '/' + config_section,
                          '--xbrowser=' + config.get(config_section, 'browser'),
                          '--xbrowserversion=' + config.get(config_section, 'browser_version'),
                          '--xos=' + config.get(config_section, 'os'),
                          '--xosversion=' + config.get(config_section, 'os_version'),
                          '--xresolution=' + config.get(config_section, 'resolution'),
                          '--xbuildname=' + self.build_name])
-            self.process_xunit_results(config_section)
         else:
-            pytest.main([current_path + '/tests', '-n', gid('parallel_tests', config_loader()),
-                         '--junitxml=' + current_path + '/' + gid('result_folder',
-                                                                  config_loader()) + '/' + config_section])
+            pytest.main([current_path + '/tests',
+                         '-n', gid('parallel_tests', config_loader()),
+                         '--junitxml=' + self.result_folder + '/' + config_section])
 
     def get_build_name(self):
         """ Retrieves the build name from script argument and also appends timestamp. """
@@ -80,28 +86,10 @@ class PyTestRunner():
                     build_name = arg
         except:
             print('Build name argument passed to script by Continuous Integration Job was incomplete or incorrect!'
-                  '\nSetting default name: ' + self.current_date + '_' + self.current_time)
+                  '\nSetting default name: ' + self.timestamp)
 
-        build_name = build_name + ' (' + self.current_date + '_' + self.current_time + ')'
+        build_name = build_name + ' (' + self.timestamp + ')'
         return build_name
-
-    def process_xunit_results(self, config_section):
-        """ Appends information about Browser and OS to xunit test result file,
-         so it's not merged with other files, using different configuration, in Jenkins test report """
-        config = self.bs_config
-        text_to_append = '[' + config.get(config_section, 'browser') + ' ' \
-                         + config.get(config_section, 'browser_version') + ', ' \
-                         + config.get(config_section, 'os') + ' ' + config.get(config_section, 'os_version') \
-                         + ', ' + config.get(config_section, 'resolution') + '] '
-        result_file = os.path.dirname(os.path.abspath(__file__)) \
-                      + '/' + gid('result_folder', config_loader()) + '/' + config_section
-        f = open(result_file)
-        text = f.read()
-        f.close()
-        text = text.replace('<testcase classname="', '<testcase classname="' + text_to_append)
-        f = open(result_file, 'w')
-        f.write(text)
-        f.close()
 
     def correct_browserstack_results(self, username, password, session_name, result_file):
         """ Searches for failed tests in PyTest xUnit report XML file

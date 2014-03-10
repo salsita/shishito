@@ -18,8 +18,8 @@ class Page(object):
         self.profile_name = gid('profile_name', config_loader())
         self._admin_username = gid('user_name', config_loader())
         self._admin_password = gid('password', config_loader())
-        self._default_implicit_wait = gid('default_implicit_wait', config_loader())
-        self._timeout = gid('timeout', config_loader())
+        self._default_implicit_wait = int(gid('default_implicit_wait', config_loader()))
+        self._timeout = int(gid('timeout', config_loader()))
         self.driver = driver
         
     @property    
@@ -42,7 +42,7 @@ class Page(object):
             # set the implicit wait back
             self.driver.implicitly_wait(self._default_implicit_wait)
 
-    def is_element_visible(self, locator):
+    def is_element_visible(self, *locator):
         """
         True if the element at the specified locator is visible in the browser.
         Note: It uses an implicit wait if element is not immediately found.
@@ -52,7 +52,7 @@ class Page(object):
         except (NoSuchElementException, ElementNotVisibleException):
             return False
 
-    def is_element_not_visible(self, locator):
+    def is_element_not_visible(self, *locator):
         """
         True if the element at the specified locator is not visible.
         Note: It returns true immediately if the element is not found.
@@ -66,7 +66,7 @@ class Page(object):
             # set the implicit wait back
             self.driver.implicitly_wait(self._default_implicit_wait)
 
-    def wait_for_element_present(self, locator):
+    def wait_for_element_present(self, *locator):
         """ Wait for the element at the specified locator 
         to be present in the DOM. """
         count = 0
@@ -76,7 +76,7 @@ class Page(object):
             if count == self._timeout:
                 raise Exception(*locator + ' has not loaded')
 
-    def wait_for_element_visible(self, locator):
+    def wait_for_element_visible(self, *locator):
         """
         Wait for the element at the specified locator to be visible.
         """
@@ -87,7 +87,7 @@ class Page(object):
             if count == self._timeout:
                 raise Exception(*locator + " is not visible")
 
-    def wait_for_element_not_present(self, locator):
+    def wait_for_element_not_present(self, *locator):
         """ Wait for the element at the specified locator
          not to be present in the DOM. """
         self.driver.implicitly_wait(0)
@@ -112,7 +112,7 @@ class Page(object):
         """Return a list of elements at the specified locator."""
         return self.driver.find_elements(*locator)
     
-    def find_elements_with_text(self, text, locator):
+    def find_elements_with_text(self, text, *locator):
         elements = self.driver.find_elements(*locator)
         selected = []
         for item in elements:
@@ -123,17 +123,17 @@ class Page(object):
         else:
             return selected
 
-    def link_destination(self, locator):
+    def link_destination(self, *locator):
         """Return the href attribute of the element at the specified locator."""
         link = self.find_element(*locator)
         return link.get_attribute('href')
 
-    def image_source(self, locator):
+    def image_source(self, *locator):
         """Return the src attribute of the element at the specified locator."""
         link = self.find_element(*locator)
         return link.get_attribute('src')
 
-    def wait_for_text_to_match(self, locator, text, max_count=20, delay=0.25):
+    def wait_for_text_to_match(self, text, max_count=20, delay=0.25, *locator):
         """ waiting for element text to match specified text, until certain deadline """
         element = self.find_element(*locator)
         counter = 0

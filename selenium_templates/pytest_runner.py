@@ -7,6 +7,7 @@
 import pytest
 import os
 import ConfigParser
+from library.browserstack_api import BrowserStackAPI
 from library.lib_test_config import gid
 import sys
 import getopt
@@ -29,7 +30,7 @@ class PyTestRunner():
         self.bs_config_file = self.dir_path + '/config/browserstack.properties'
         self.bs_config_file_smoke = self.dir_path + '/config/browserstack_smoke.properties'
         if not (os.path.exists(self.bs_config_file)) or not (os.path.exists(self.bs_config_file_smoke)):
-            print('Both browserstack properties files not found! Session terminated.')
+            print('One of browserstack properties files not found! Session terminated.')
             sys.exit()
         self.bs_config = ConfigParser.RawConfigParser()
 
@@ -43,29 +44,30 @@ class PyTestRunner():
 
     def run_tests(self):
         """ Runs tests locally or using Browserstack. """
-        self.get_runner_args()
-        if os.path.exists(self.dir_path + '/results'):
-            shutil.rmtree(self.dir_path + '/results')
-        os.makedirs(self.result_folder)
-        if self.driver_name.lower() == 'browserstack':
-            if self.env_type == 'vcs':
-                if self.test_type == 'smoke':
-                    self.bs_config.read(self.bs_config_file_smoke)
-                else:
-                    self.bs_config.read(self.bs_config_file)
-                for config_section in self.bs_config.sections():
-                    print('Running combination: ' + config_section)
-                    self.trigger_pytest(config_section)
-            elif self.env_type == 'os_vars':
-                config_list = json.loads(str(os.environ['BROWSERSTACK']))
-                for config_section in config_list['test_suite']:
-                    print('Running combination: ' + str(config_section))
-                    self.trigger_pytest(config_section)
-        else:
-            config_section = self.driver_name
-            print('Running for browser: ' + config_section)
-            self.trigger_pytest(config_section)
-        self.archive_results()
+        if self.wait_for_free_sessions():
+            self.get_runner_args()
+            if os.path.exists(self.dir_path + '/results'):
+                shutil.rmtree(self.dir_path + '/results')
+            os.makedirs(self.result_folder)
+            if self.driver_name.lower() == 'browserstack':
+                if self.env_type == 'vcs':
+                    if self.test_type == 'smoke':
+                        self.bs_config.read(self.bs_config_file_smoke)
+                    else:
+                        self.bs_config.read(self.bs_config_file)
+                    for config_section in self.bs_config.sections():
+                        print('Running combination: ' + config_section)
+                        self.trigger_pytest(config_section)
+                elif self.env_type == 'os_vars':
+                    config_list = json.loads(str(os.environ['BROWSERSTACK']))
+                    for config_section in config_list['test_suite']:
+                        print('Running combination: ' + str(config_section))
+                        self.trigger_pytest(config_section)
+            else:
+                config_section = self.driver_name
+                print('Running for browser: ' + config_section)
+                self.trigger_pytest(config_section)
+            self.archive_results()
 
     def trigger_pytest(self, config_section):
         """ trigger PyTest runner """
@@ -111,8 +113,25 @@ class PyTestRunner():
 
         pytest.main(pytest_arguments)
 
+    def wait_for_free_sessions(self):
+        counter = 0
+        api = BrowserStackAPI()
+        session_available = True
+        auth = (gid('bs_username'), gid('bs_password'))
+        session = api.get_session_running(auth)
+        while session == 1:
+            print('No BrowserStack session available. Waiting for 2 minutes...')
+            if counter >= 30:
+                print('No BrowserStack session not got available after 1 hour. No test will be executed.')
+                session_available = False
+                break
+            session = api.get_session_running(auth)
+            counter += 1
+            time.sleep(120)
+        return session_available
+
     def get_runner_args(self):
-        """ Retrieves the build name from script argument and also appends timestamp. """
+        """ Retrieves the command line arguments passed to runner """
         env_type = None
         test_type = None
         try:

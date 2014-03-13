@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 @author: Vojtech Burian
-@summary: Common function library
+@summary: Common configuration functions supporting test execution.
+ Various startup and termination procedures, helper functions etc.
+ Not to be used for directly testing the system under test (must not contain Asserts etc.)
 """
 import ConfigParser
 from selenium import webdriver
@@ -14,7 +16,7 @@ import time
 
 
 def config_loader():
-    """ loads variables from .properties configuration files """
+    """ Loads variables from .properties configuration files """
     dir_path = os.path.dirname(os.path.abspath(__file__))
     config = ConfigParser.ConfigParser()
 
@@ -59,7 +61,7 @@ def gid(searched_id):
 
 def get_capabilities():
     """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
-    testname = os.path.basename(inspect.getsourcefile(sys._getframe(2)))[:-3]
+    test_name = os.path.basename(inspect.getsourcefile(sys._getframe(2)))[:-3]
     desired_cap = {'os': pytest.config.getoption('xos'),
                    'os_version': pytest.config.getoption('xosversion'),
                    'browser': pytest.config.getoption('xbrowser'),
@@ -67,7 +69,7 @@ def get_capabilities():
                    'resolution': pytest.config.getoption('xresolution'),
                    'project': gid('project_name'),
                    'build': pytest.config.getoption('xbuildname'),
-                   'name': testname + time.strftime('_%Y-%m-%d')}
+                   'name': test_name + time.strftime('_%Y-%m-%d')}
     return desired_cap
 
 
@@ -101,3 +103,10 @@ def start_browser(self, url=gid('base_url'),
     self.driver.get(url)
     self.driver.implicitly_wait(int(gid('default_implicit_wait')))
     return self.driver
+
+
+def stop_browser(self, delete_cookies=True):
+    """ Browser termination function """
+    if delete_cookies:
+        self.driver.delete_all_cookies()
+    self.driver.quit()

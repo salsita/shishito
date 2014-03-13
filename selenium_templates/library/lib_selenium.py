@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 @author: Vojtech Burian
-@summary: Common function library
+@summary: Common selenium webdriver related functions.
+ Helper functions that abstract often basic webdriver operations into more usable functional blocks.
 """
 
 from selenium.common.exceptions import NoSuchElementException, \
@@ -99,7 +100,7 @@ def wait_for_element_present(self, *locator):
         time.sleep(1)
         count += 1
         if count == _timeout:
-            raise Exception(*locator + ' has not loaded')
+            raise Exception(str(*locator) + ' has not loaded')
 
 
 def wait_for_element_visible(self, *locator):
@@ -111,7 +112,7 @@ def wait_for_element_visible(self, *locator):
         time.sleep(1)
         count += 1
         if count == _timeout:
-            raise Exception(*locator + " is not visible")
+            raise Exception(str(*locator) + " is not visible")
 
 
 def wait_for_element_not_present(self, *locator):

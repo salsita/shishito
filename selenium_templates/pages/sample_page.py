@@ -15,7 +15,7 @@ class Products(Page):
         self.driver = driver
 
         # page elements locators
-        self._product_section = (By.CLASS_NAME, 'product-section')
+        self._product_section_locator = (By.CLASS_NAME, 'product-section')
         self._product_name_locator = (By.ID, 'some-element')
 
     @property
@@ -24,11 +24,15 @@ class Products(Page):
 
     @property
     def products(self):
-        return self.driver.find_elements(*self._product_section)
+        """ Return list of product objects """
+        products = []
+        for product in self.driver.find_elements(*self._product_section_locator):
+            products.append(self.ProductSection(product, self.driver))
+        return products
 
     def get_product_by_name(self, name):
-        """ Returns Element object with name that matches supplied parameter value """
-        products = self.driver.find_elements(*self._product_section)
+        """ Returns product with name that matches supplied parameter value """
+        products = self.driver.find_elements(*self._product_section_locator)
         return_value = None
         for item in products:
             web_element = item.find_element(*self._product_name_locator)
@@ -48,8 +52,8 @@ class Products(Page):
 
         @property
         def product_description(self):
-            return self.driver.find_element(*self._product_description_locator)
+            return self._root_element.find_element(*self._product_description_locator)
 
         @property
         def product_color(self):
-            return self.driver.find_element(*self._product_color_locator)
+            return self._root_element.find_element(*self._product_color_locator)

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 @author: Vojtech Burian
-@summary: BrowserStack test runner
+@summary: Selenium Webdriver Python test runner
 """
 import pytest
 import os
@@ -17,7 +17,10 @@ import shutil
 
 
 class PyTestRunner():
-    """ Selenium PyTest runner """
+    """ Selenium Webdriver Python test runner.
+    - runs python selenium tests on customizable configurations, locally or on BrowserStack using PyTest
+    - checks for available BrowserStack sessions and wait if necessary
+    - archive the test results in .zip file """
 
     def __init__(self):
         # set support variables
@@ -38,19 +41,20 @@ class PyTestRunner():
         self.env_type = self.get_runner_args()[0]
         self.test_type = self.get_runner_args()[1]
         if self.env_type is None:
-            self.env_type = 'vcs'
+            self.env_type = 'versioned'
         if self.test_type is None:
             self.test_type = 'all'
 
     def run_tests(self):
-        """ Runs tests locally or using Browserstack. """
+        """ Triggers PyTest runner locally or on BrowserStack.
+        It runs PyTest for each BS combination, taken from either versioned .properties file or environment variable """
         if self.wait_for_free_sessions():
             self.get_runner_args()
             if os.path.exists(self.dir_path + '/results'):
                 shutil.rmtree(self.dir_path + '/results')
             os.makedirs(self.result_folder)
             if self.driver_name.lower() == 'browserstack':
-                if self.env_type == 'vcs':
+                if self.env_type == 'versioned':
                     if self.test_type == 'smoke':
                         self.bs_config.read(self.bs_config_file_smoke)
                     else:
@@ -58,7 +62,7 @@ class PyTestRunner():
                     for config_section in self.bs_config.sections():
                         print('Running combination: ' + config_section)
                         self.trigger_pytest(config_section)
-                elif self.env_type == 'os_vars':
+                elif self.env_type == 'direct':
                     config_list = json.loads(str(os.environ['BROWSERSTACK']))
                     for config_section in config_list['test_suite']:
                         print('Running combination: ' + str(config_section))
@@ -70,12 +74,12 @@ class PyTestRunner():
             self.archive_results()
 
     def trigger_pytest(self, config_section):
-        """ trigger PyTest runner """
+        """ Runs PyTest runner on specific configuration """
         pytest_arguments = [self.dir_path + '/tests', '-n', gid('parallel_tests')]
         if self.test_type == 'smoke':
             pytest_arguments.extend(['-m', self.test_type])
         if self.driver_name.lower() == 'browserstack':
-            if self.env_type == 'os_vars':
+            if self.env_type == 'direct':
                 browser = config_section['browser']
                 browser_version = config_section['browser_version']
                 os_type = config_section['os']
@@ -114,6 +118,7 @@ class PyTestRunner():
         pytest.main(pytest_arguments)
 
     def wait_for_free_sessions(self):
+        """ Waits for BrowserStack session to be available """
         counter = 0
         api = BrowserStackAPI()
         session_available = True
@@ -131,7 +136,7 @@ class PyTestRunner():
         return session_available
 
     def get_runner_args(self):
-        """ Retrieves the command line arguments passed to runner """
+        """ Retrieves the command line arguments passed to the script """
         env_type = None
         test_type = None
         try:

@@ -1,8 +1,7 @@
-'''
-Created on Mar 4, 2014
-
+"""
 @author: Irina
-'''
+@summary: Functions that operate over BrowserStack API
+"""
 import json
 import requests
 

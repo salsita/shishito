@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 @author: Vojtech Burian
-@summary: Common library for executing Ripple Emulator UI actions
+@summary: Common library for functions executing actions over Ripple Emulator UI (Mobile OS web emulator)
 """
 import time
 from selenium.webdriver.common.by import By

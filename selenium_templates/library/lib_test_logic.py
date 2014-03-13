@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 @author: Vojtech Burian
-@summary: Common function library
+@summary: Common functions to be used directly within tests.
+ Written for the purpose of directly testing the system under test (may contain Asserts etc.)
 """
 
 

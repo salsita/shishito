@@ -13,7 +13,9 @@ import sys
 import inspect
 import pytest
 import time
+from library.browserstack_api import BrowserStackAPI
 
+bs_api = BrowserStackAPI()
 
 def config_loader():
     """ Loads variables from .properties configuration files """
@@ -81,10 +83,16 @@ def start_browser(self, url=gid('base_url'),
     if browser.lower() == "browserstack":
         bs_username = gid('bs_username')
         bs_password = gid('bs_password')
+        capabilities = get_capabilities()
         command_executor = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
         self.driver = webdriver.Remote(
             command_executor=command_executor,
-            desired_capabilities=get_capabilities())
+            desired_capabilities=capabilities)
+
+        auth = (gid('bs_username'), gid('bs_password'))
+        session = bs_api.get_session(auth, capabilities['name'], 'running')
+        self.session_link = self.api.get_session_link(session)
+        self.session_id = self.api.get_session_hashed_id(session)
     elif browser == "Firefox":
         self.driver = webdriver.Firefox()
     elif browser == "Chrome":
@@ -110,3 +118,7 @@ def stop_browser(self, delete_cookies=True):
     if delete_cookies:
         self.driver.delete_all_cookies()
     self.driver.quit()
+    # auth = (gid('bs_username'), gid('bs_password'))
+    # if sys.exc_info() is not None:
+    #     print("\n Some tests failed!!!\n")
+    #     bs_api.change_status(auth, self.session_id)

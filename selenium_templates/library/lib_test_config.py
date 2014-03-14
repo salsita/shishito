@@ -70,7 +70,7 @@ def get_capabilities():
                    'browser_version': pytest.config.getoption('xbrowserversion'),
                    'resolution': pytest.config.getoption('xresolution'),
                    'project': gid('project_name'),
-                   'build': pytest.config.getoption('xbuildname'),
+                   'build': gid('build_name'),
                    'name': test_name + time.strftime('_%Y-%m-%d')}
     return desired_cap
 
@@ -89,10 +89,10 @@ def start_browser(self, url=gid('base_url'),
             command_executor=command_executor,
             desired_capabilities=capabilities)
 
-        auth = (gid('bs_username'), gid('bs_password'))
-        session = bs_api.get_session(auth, capabilities['name'], 'running')
-        self.session_link = self.api.get_session_link(session)
-        self.session_id = self.api.get_session_hashed_id(session)
+        # auth = (gid('bs_username'), gid('bs_password'))
+        # session = bs_api.get_session(auth, capabilities['build'], 'running')
+        # self.session_link = self.api.get_session_link(session)
+        # self.session_id = self.api.get_session_hashed_id(session)
     elif browser == "Firefox":
         self.driver = webdriver.Firefox()
     elif browser == "Chrome":

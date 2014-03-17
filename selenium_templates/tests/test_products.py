@@ -4,8 +4,7 @@
 @author: Author
 """
 from unittestzero import Assert
-from library.lib_selenium import go_to_page, get_base_url
-from library.lib_test_config import start_browser, stop_browser
+from library.lib_test_config import start_browser, stop_browser, start_test
 from pages.sample_page import Products
 import pytest
 
@@ -25,7 +24,7 @@ class TestSample():
 
     def setup_method(self, method):
         """ executes before test function starts """
-        go_to_page(self, get_base_url())
+        start_test(self)
 
     def teardown_method(self, method):
         """ executes after test function finishes """

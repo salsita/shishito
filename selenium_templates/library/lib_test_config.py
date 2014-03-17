@@ -122,3 +122,8 @@ def stop_browser(self, delete_cookies=True):
     # if sys.exc_info() is not None:
     #     print("\n Some tests failed!!!\n")
     #     bs_api.change_status(auth, self.session_id)
+
+def start_test(self):
+    self.driver.get(gid('base_url'))
+    self.driver.implicitly_wait(gid('default_implicit_wait'))
+    time.sleep(5)

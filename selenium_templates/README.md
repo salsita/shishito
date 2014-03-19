@@ -45,10 +45,11 @@ Common template for all automated testing projects written with Selenium Webdriv
 
 ### Required Python Modules
 
-* selenium
-* pytest 
-* pytest-xdist
-* UnittestZero
+* selenium (python selenium webdriver module)
+* pytest (test runner)
+* pytest-xdist (supports parallel test execution)
+* pytest-instafail (shows test failures instantly - not at the end of the session)
+* UnittestZero (provides better assertions than PyTest)
 
 ###Command line options
 

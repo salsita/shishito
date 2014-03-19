@@ -110,7 +110,8 @@ class PyTestRunner():
                 '--xbrowserversion=' + browser_version,
                 '--xos=' + os_type,
                 '--xosversion=' + os_version,
-                '--xresolution=' + resolution])
+                '--xresolution=' + resolution,
+                '--instafail'])
         else:
             pytest_arguments.append('--junitxml=' + self.result_folder + '/' + self.driver_name)
 

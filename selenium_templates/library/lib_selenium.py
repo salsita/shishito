@@ -50,6 +50,18 @@ def click_and_wait(self, element, locator=None):
         WebDriverWait(element, 10).until(EC.presence_of_element_located(*locator))
 
 
+def check_images_are_loaded(self):
+    """ checks all images on the pages and verifies if they are properly loaded """
+    images_not_loaded = []
+    for image in self.driver.find_elements_by_tag_name('img'):
+        script = 'return arguments[0].complete && typeof arguments[0].naturalWidth' \
+                 ' != "undefined" && arguments[0].naturalWidth > 0'
+        image_loaded = bool(self.driver.execute_script(script, image))
+        if not image_loaded:
+            images_not_loaded.append(image.get_attribute('src'))
+    return images_not_loaded
+
+
 def is_element_present(self, *locator):
     """
     True if the element at the specified locator is present in the DOM.

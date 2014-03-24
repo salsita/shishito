@@ -15,6 +15,8 @@ import json
 import shutil
 import argparse
 
+bs_api = BrowserStackAPI()
+
 
 class PyTestRunner():
     """ Selenium Webdriver Python test runner.
@@ -44,11 +46,10 @@ class PyTestRunner():
     def run_tests(self):
         """ Triggers PyTest runner locally or on BrowserStack.
         It runs PyTest for each BS combination, taken from either versioned .properties file or environment variable """
-        if os.path.exists(self.dir_path + '/results'):
-            shutil.rmtree(self.dir_path + '/results')
-        os.makedirs(self.result_folder)
         if self.driver_name.lower() == 'browserstack':
-            if self.wait_for_free_sessions():
+            if bs_api.wait_for_free_sessions((gid('bs_username'), gid('bs_password')),
+                                             gid('session_waiting_time'), gid('session_waiting_delay')):
+                self.cleanup_results()
                 if self.env_type == 'versioned':
                     if self.test_type == 'smoke':
                         self.bs_config.read(self.bs_config_file_smoke)
@@ -63,6 +64,7 @@ class PyTestRunner():
                         print('Running combination: ' + str(config_section))
                         self.trigger_pytest(config_section)
         else:
+            self.cleanup_results()
             config_section = self.driver_name
             print('Running for browser: ' + config_section)
             self.trigger_pytest(config_section)
@@ -112,26 +114,6 @@ class PyTestRunner():
 
         pytest.main(pytest_arguments)
 
-    def wait_for_free_sessions(self):
-        """ Waits for BrowserStack session to be available """
-        wait_total = int(gid('session_waiting_time'))
-        wait_delay = int(gid('session_waiting_delay'))
-        wait_steps = wait_total / wait_delay
-        counter = 0
-        api = BrowserStackAPI()
-        session_available = True
-        auth = (gid('bs_username'), gid('bs_password'))
-        session = api.get_session_running(auth)
-        while session == 1:
-            print('No BrowserStack session available. Waiting for ' + str(wait_delay) + ' minutes...')
-            if counter >= wait_steps:
-                sys.exit('No BrowserStack session not got available'
-                         ' after ' + str(wait_total) + ' minutes. No test will be executed.')
-            session = api.get_session_running(auth)
-            counter += 1
-            time.sleep(wait_delay * 60)
-        return session_available
-
     def get_runner_args(self):
         """ Retrieves the command line arguments passed to the script """
         parser = argparse.ArgumentParser(description='Selenium Python test runner execution arguments.')
@@ -145,6 +127,12 @@ class PyTestRunner():
                             default='all')
         args = parser.parse_args()
         return [args.env, args.tests]
+
+    def cleanup_results(self):
+        """ Cleans up test result folder """
+        if os.path.exists(self.dir_path + '/results'):
+            shutil.rmtree(self.dir_path + '/results')
+        os.makedirs(self.result_folder)
 
     def archive_results(self):
         """ Archives test results in zip package """

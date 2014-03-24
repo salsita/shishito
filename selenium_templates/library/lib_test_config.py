@@ -81,9 +81,9 @@ def start_browser(self, url=gid('base_url'),
     """ Browser startup function.
      Initialize session over Browserstack or local browser. """
     if browser.lower() == "browserstack":
-        wait_till_session_finishes()
         bs_username = gid('bs_username')
         bs_password = gid('bs_password')
+        bs_api.wait_for_free_sessions((bs_username, bs_password), 2, 1)
         capabilities = get_capabilities()
         command_executor = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
         self.driver = webdriver.Remote(
@@ -122,25 +122,3 @@ def start_test(self):
     self.driver.get(gid('base_url'))
     self.driver.implicitly_wait(gid('default_implicit_wait'))
     time.sleep(5)
-
-
-def wait_till_session_finishes():
-        """ Waits for BrowserStack session to finish.
-         Prevents PyTest to go ahead while BS session hangs (and does not terminate).
-         Will wait up to BS built-in timeout 150 + 10 seconds (after that BS session should be killed by BS) """
-        bs_timeout = 160
-        wait_step = 5
-        counter = 0
-        api = BrowserStackAPI()
-        session_available = True
-        auth = (gid('bs_username'), gid('bs_password'))
-        session = api.get_session_running(auth)
-        while session == 1:
-            if counter >= int(bs_timeout / wait_step):
-                print('No BrowserStack session got available after 150 seconds!')
-                session_available = False
-                break
-            session = api.get_session_running(auth)
-            counter += 1
-            time.sleep(wait_step)
-        return session_available

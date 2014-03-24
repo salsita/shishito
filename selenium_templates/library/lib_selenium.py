@@ -154,10 +154,7 @@ def find_elements(self, locator):
 def find_elements_with_text(self, text, *locator):
     """ Find elements that have specified text """
     elements = self.driver.find_elements(*locator)
-    selected = []
-    for item in elements:
-        if item.text == text:
-            selected.append(item)
+    selected = [item for item in elements if item.text == text]
     if len(selected) == 1:
         return selected[0]
     else:

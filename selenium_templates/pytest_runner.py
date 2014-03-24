@@ -10,10 +10,10 @@ import ConfigParser
 from library.browserstack_api import BrowserStackAPI
 from library.lib_test_config import gid
 import sys
-import getopt
 import time
 import json
 import shutil
+import argparse
 
 
 class PyTestRunner():
@@ -33,27 +33,22 @@ class PyTestRunner():
         self.bs_config_file = self.dir_path + '/config/browserstack.properties'
         self.bs_config_file_smoke = self.dir_path + '/config/browserstack_smoke.properties'
         if not (os.path.exists(self.bs_config_file)) or not (os.path.exists(self.bs_config_file_smoke)):
-            print('One of browserstack properties files not found! Session terminated.')
-            sys.exit()
+            sys.exit('One of browserstack properties files not found! Session terminated.')
         self.bs_config = ConfigParser.RawConfigParser()
 
         # load cmd arguments and set default values if not specified
-        self.env_type = self.get_runner_args()[0]
-        self.test_type = self.get_runner_args()[1]
-        if self.env_type is None:
-            self.env_type = 'versioned'
-        if self.test_type is None:
-            self.test_type = 'all'
+        cmd_args = self.get_runner_args()
+        self.env_type = cmd_args[0]
+        self.test_type = cmd_args[1]
 
     def run_tests(self):
         """ Triggers PyTest runner locally or on BrowserStack.
         It runs PyTest for each BS combination, taken from either versioned .properties file or environment variable """
-        if self.wait_for_free_sessions():
-            self.get_runner_args()
-            if os.path.exists(self.dir_path + '/results'):
-                shutil.rmtree(self.dir_path + '/results')
-            os.makedirs(self.result_folder)
-            if self.driver_name.lower() == 'browserstack':
+        if os.path.exists(self.dir_path + '/results'):
+            shutil.rmtree(self.dir_path + '/results')
+        os.makedirs(self.result_folder)
+        if self.driver_name.lower() == 'browserstack':
+            if self.wait_for_free_sessions():
                 if self.env_type == 'versioned':
                     if self.test_type == 'smoke':
                         self.bs_config.read(self.bs_config_file_smoke)
@@ -67,11 +62,11 @@ class PyTestRunner():
                     for config_section in config_list['test_suite']:
                         print('Running combination: ' + str(config_section))
                         self.trigger_pytest(config_section)
-            else:
-                config_section = self.driver_name
-                print('Running for browser: ' + config_section)
-                self.trigger_pytest(config_section)
-            self.archive_results()
+        else:
+            config_section = self.driver_name
+            print('Running for browser: ' + config_section)
+            self.trigger_pytest(config_section)
+        self.archive_results()
 
     def trigger_pytest(self, config_section):
         """ Runs PyTest runner on specific configuration """
@@ -119,37 +114,37 @@ class PyTestRunner():
 
     def wait_for_free_sessions(self):
         """ Waits for BrowserStack session to be available """
+        wait_total = int(gid('session_waiting_time'))
+        wait_delay = int(gid('session_waiting_delay'))
+        wait_steps = wait_total / wait_delay
         counter = 0
         api = BrowserStackAPI()
         session_available = True
         auth = (gid('bs_username'), gid('bs_password'))
         session = api.get_session_running(auth)
         while session == 1:
-            print('No BrowserStack session available. Waiting for 2 minutes...')
-            if counter >= 30:
-                print('No BrowserStack session not got available after 1 hour. No test will be executed.')
-                session_available = False
-                break
+            print('No BrowserStack session available. Waiting for ' + str(wait_delay) + ' minutes...')
+            if counter >= wait_steps:
+                sys.exit('No BrowserStack session not got available'
+                         ' after ' + str(wait_total) + ' minutes. No test will be executed.')
             session = api.get_session_running(auth)
             counter += 1
-            time.sleep(120)
+            time.sleep(wait_delay * 60)
         return session_available
 
     def get_runner_args(self):
         """ Retrieves the command line arguments passed to the script """
-        env_type = None
-        test_type = None
-        try:
-            options, args = getopt.getopt(sys.argv[1:], 'hg:d', ['env=', 'tests='])
-            for opt, arg in options:
-                if opt == '--env':
-                    env_type = arg
-                if opt == '--tests':
-                    test_type = arg
-        except:
-            print('Arguments passed to script were incomplete or incorrect!')
-            sys.exit()
-        return [env_type, test_type]
+        parser = argparse.ArgumentParser(description='Selenium Python test runner execution arguments.')
+        parser.add_argument('--env',
+                            help='BrowserStack environments; '
+                                 'options: "direct" - passed as OS environment variable '
+                                 '(JSON format), "versioned" (default) - loaded from *.properties configuration files',
+                            default='versioned')
+        parser.add_argument('--tests',
+                            help='Tests to run; options: "smoke", "all" (default)',
+                            default='all')
+        args = parser.parse_args()
+        return [args.env, args.tests]
 
     def archive_results(self):
         """ Archives test results in zip package """

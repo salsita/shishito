@@ -72,7 +72,10 @@ class PyTestRunner():
 
     def trigger_pytest(self, config_section):
         """ Runs PyTest runner on specific configuration """
-        pytest_arguments = [self.dir_path + '/tests', '-n', gid('parallel_tests')]
+        pytest_arguments = [self.dir_path + '/tests']
+        parallel_tests = int(gid('parallel_tests'))
+        if parallel_tests > 1:
+            pytest_arguments.extend(['-n', str(parallel_tests)])
         if self.test_type == 'smoke':
             pytest_arguments.extend(['-m', self.test_type])
         if self.driver_name.lower() == 'browserstack':

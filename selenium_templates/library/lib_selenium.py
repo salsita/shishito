@@ -108,7 +108,7 @@ def wait_for_element_present(self, *locator):
     """ Wait for the element at the specified locator
     to be present in the DOM. """
     count = 0
-    while not self.is_element_present(*locator):
+    while not is_element_present(self, *locator):
         time.sleep(1)
         count += 1
         if count == _timeout:
@@ -120,7 +120,7 @@ def wait_for_element_visible(self, *locator):
     Wait for the element at the specified locator to be visible.
     """
     count = 0
-    while not self.is_element_visible(*locator):
+    while not is_element_visible(self, *locator):
         time.sleep(1)
         count += 1
         if count == _timeout:
@@ -163,19 +163,19 @@ def find_elements_with_text(self, text, *locator):
 
 def link_destination(self, *locator):
     """ Return the href attribute of the element at the specified locator."""
-    link = self.find_element(*locator)
+    link = self.driver.find_element(*locator)
     return link.get_attribute('href')
 
 
 def image_source(self, *locator):
     """ Return the src attribute of the element at the specified locator."""
-    link = self.find_element(*locator)
+    link = self.driver.find_element(*locator)
     return link.get_attribute('src')
 
 
 def wait_for_text_to_match(self, text, max_count=20, delay=0.25, *locator):
     """ Waits for element text to match specified text, until certain deadline """
-    element = self.find_element(*locator)
+    element = self.driver.find_element(*locator)
     counter = 0
     while element.text != text:
         if counter < max_count:

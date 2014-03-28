@@ -85,7 +85,8 @@ class PyTestRunner():
                 os_type = config_section['os']
                 os_version = config_section['os_version']
                 resolution = config_section['resolution']
-                junitxml_path = self.result_folder + '/' + browser + browser_version + os_type + os_version + resolution
+                junitxml_path = self.result_folder + '/' + browser + browser_version\
+                                + os_type + os_version + resolution + '.xml'
 
             else:
                 if self.test_type == 'smoke':
@@ -98,7 +99,7 @@ class PyTestRunner():
                 os_type = self.bs_config.get(config_section, 'os')
                 os_version = self.bs_config.get(config_section, 'os_version')
                 resolution = self.bs_config.get(config_section, 'resolution')
-                junitxml_path = self.result_folder + '/' + config_section
+                junitxml_path = self.result_folder + '/' + config_section + '.xml'
 
             test_result_prefix = '[' + browser + ', ' + browser_version + ', ' + os_type \
                                  + ', ' + os_version + ', ' + resolution + ']'

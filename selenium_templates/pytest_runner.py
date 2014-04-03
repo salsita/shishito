@@ -57,18 +57,19 @@ class PyTestRunner():
                         self.bs_config.read(self.bs_config_file)
                     for config_section in self.bs_config.sections():
                         print('Running combination: ' + config_section)
-                        self.trigger_pytest(config_section)
+                        status=self.trigger_pytest(config_section)
                 elif self.env_type == 'direct':
                     config_list = json.loads(str(os.environ['BROWSERSTACK']))
                     for config_section in config_list['test_suite']:
                         print('Running combination: ' + str(config_section))
-                        self.trigger_pytest(config_section)
+                        status=self.trigger_pytest(config_section)
         else:
             self.cleanup_results()
             config_section = self.driver_name
             print('Running for browser: ' + config_section)
-            self.trigger_pytest(config_section)
+            status=self.trigger_pytest(config_section)
         self.archive_results()
+        return status
 
     def trigger_pytest(self, config_section):
         """ Runs PyTest runner on specific configuration """
@@ -121,7 +122,8 @@ class PyTestRunner():
             pytest_arguments.append('--junitxml=' + self.result_folder + '/' + self.driver_name + '.xml')
             pytest_arguments.append('--html=' + self.result_folder + '/' + self.driver_name + '.html')
 
-        pytest.main(pytest_arguments)
+        status=pytest.main(pytest_arguments)
+        return status
 
     def get_runner_args(self):
         """ Retrieves the command line arguments passed to the script """
@@ -149,3 +151,9 @@ class PyTestRunner():
         if not (os.path.exists(archive_folder)):
             os.makedirs(archive_folder)
         shutil.make_archive(archive_folder + '/' + self.timestamp, "zip", self.dir_path + '/results')
+
+
+
+test_runner = PyTestRunner()
+status=test_runner.run_tests()
+sys.exit(status)

@@ -61,8 +61,12 @@ def gid(searched_id):
     return value_to_return
 
 
-def get_capabilities():
+def get_capabilities(build_name=None):
     """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
+    if build_name is not None:
+         build_name= build_name
+    else:
+         build_name= gid('build_name')
     test_name = os.path.basename(inspect.getsourcefile(sys._getframe(2)))[:-3]
     desired_cap = {'os': pytest.config.getoption('xos'),
                    'os_version': pytest.config.getoption('xosversion'),
@@ -70,25 +74,30 @@ def get_capabilities():
                    'browser_version': pytest.config.getoption('xbrowserversion'),
                    'resolution': pytest.config.getoption('xresolution'),
                    'project': gid('project_name'),
-                   'build': gid('build_name'),
+                   'build': build_name,
                    'name': test_name + time.strftime('_%Y-%m-%d')}
     return desired_cap
 
 
-def start_browser(self, url=gid('base_url'),
+def start_browser(self, build_name=None, url=gid('base_url'),
                   browser=gid('driver'), width=gid('window_width'),
                   height=gid('window_height')):
     """ Browser startup function.
      Initialize session over Browserstack or local browser. """
+    self.session_link=None
     if browser.lower() == "browserstack":
         bs_username = gid('bs_username')
         bs_password = gid('bs_password')
         bs_api.wait_for_free_sessions((bs_username, bs_password), 2, 1)
-        capabilities = get_capabilities()
+        capabilities = get_capabilities(build_name)
         command_executor = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
         self.driver = webdriver.Remote(
             command_executor=command_executor,
             desired_capabilities=capabilities)
+        auth=(bs_username,bs_password)
+        session=bs_api.get_session(auth, capabilities['build'], 'running')
+        self.session_link=bs_api.get_session_link(session)
+        self.session_id=bs_api.get_session_hashed_id(session)
 
     elif browser == "Firefox":
         self.driver = webdriver.Firefox()
@@ -119,6 +128,8 @@ def stop_browser(self, delete_cookies=True):
 
 def start_test(self, reload=None):
     """ Executed before every test-case (test function) """
+    if self.session_link is not None:
+        print ("Link to Browserstack report: %s "% self.session_link)
     if reload is not None:
         self.driver.get(gid('base_url'))
         self.driver.implicitly_wait(gid('default_implicit_wait'))

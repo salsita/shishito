@@ -103,7 +103,7 @@ class PyTestRunner():
                 os_version = self.bs_config.get(config_section, 'os_version')
                 resolution = self.bs_config.get(config_section, 'resolution')
                 junitxml_path = self.result_folder + '/' + config_section + '.xml'
-
+                html_path = self.result_folder + '/' + config_section + '.html'
             test_result_prefix = '[' + browser + ', ' + browser_version + ', ' + os_type \
                                  + ', ' + os_version + ', ' + resolution + ']'
 

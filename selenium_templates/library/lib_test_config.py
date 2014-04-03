@@ -117,8 +117,9 @@ def stop_browser(self, delete_cookies=True):
     self.driver.quit()
 
 
-def start_test(self):
+def start_test(self, reload=None):
     """ Executed before every test-case (test function) """
-    self.driver.get(gid('base_url'))
-    self.driver.implicitly_wait(gid('default_implicit_wait'))
-    time.sleep(5)
+    if reload is not None:
+        self.driver.get(gid('base_url'))
+        self.driver.implicitly_wait(gid('default_implicit_wait'))
+        time.sleep(5)

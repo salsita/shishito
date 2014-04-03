@@ -5,6 +5,7 @@
 @summary: Fixtures for handling custom BrowserStack parameters
 """
 import pytest
+from library.junithtml import LogHTML
 
 
 def pytest_addoption(parser):
@@ -20,6 +21,31 @@ def pytest_addoption(parser):
                      help="Screen resolution: 1024x768, 1280x960, 1280x1024, 1600x1200, 1920x1080")
     parser.addoption("--xbuildname", action="store", default="Unnamed",
                      help="Test build name")
+    group = parser.getgroup("terminal reporting")
+    group.addoption('--html', '--junit-html', action="store",
+           dest="htmlpath", metavar="path", default=None,
+           help="create html style report file at given path.")
+    group.addoption('--htmlprefix', '--html-prefix', action="store",
+           dest="prefix", metavar="str", default=None,
+           help="prepend prefix to classnames in html output")
+
+
+
+def pytest_configure(config):
+    htmlpath = config.option.htmlpath
+    #print(htmlpath)
+    prefix = config.option.prefix
+    #print(prefix)
+    # prevent opening xmllog on slave nodes (xdist)
+    if htmlpath and not hasattr(config, 'slaveinput'):
+        config._html = LogHTML(htmlpath, prefix)
+        config.pluginmanager.register(config._html)
+
+def pytest_unconfigure(config):
+    html = getattr(config, '_html', None)
+    if html:
+        del config._html
+        config.pluginmanager.unregister(html)
 
 
 @pytest.fixture(scope='class')

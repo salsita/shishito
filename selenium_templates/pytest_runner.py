@@ -87,6 +87,8 @@ class PyTestRunner():
                 resolution = config_section['resolution']
                 junitxml_path = self.result_folder + '/' + browser + browser_version\
                                 + os_type + os_version + resolution + '.xml'
+                html_path =  self.result_folder + '/' + browser + browser_version\
+                                + os_type + os_version + resolution + '.html'
 
             else:
                 if self.test_type == 'smoke':
@@ -107,6 +109,8 @@ class PyTestRunner():
             pytest_arguments.extend([
                 '--junitxml=' + junitxml_path,
                 '--junit-prefix=' + test_result_prefix,
+                '--html=' + html_path,
+                '--html-prefix=' + test_result_prefix,
                 '--xbrowser=' + browser,
                 '--xbrowserversion=' + browser_version,
                 '--xos=' + os_type,
@@ -115,6 +119,7 @@ class PyTestRunner():
                 '--instafail'])
         else:
             pytest_arguments.append('--junitxml=' + self.result_folder + '/' + self.driver_name + '.xml')
+            pytest_arguments.append('--html=' + self.result_folder + '/' + self.driver_name + '.html')
 
         pytest.main(pytest_arguments)
 
@@ -144,7 +149,3 @@ class PyTestRunner():
         if not (os.path.exists(archive_folder)):
             os.makedirs(archive_folder)
         shutil.make_archive(archive_folder + '/' + self.timestamp, "zip", self.dir_path + '/results')
-
-
-test_runner = PyTestRunner()
-test_runner.run_tests()

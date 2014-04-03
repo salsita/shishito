@@ -114,7 +114,7 @@ class PyTestRunner():
                 '--xresolution=' + resolution,
                 '--instafail'])
         else:
-            pytest_arguments.append('--junitxml=' + self.result_folder + '/' + self.driver_name)
+            pytest_arguments.append('--junitxml=' + self.result_folder + '/' + self.driver_name + '.xml')
 
         pytest.main(pytest_arguments)
 

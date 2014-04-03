@@ -25,6 +25,19 @@ table {
  * SUMMARY INFORMATION
  ******************************/
 
+#summary-wrapper {
+    position:fixed;
+    background-color: white;
+    padding: 5px;
+    border-color: rgb(200,200,200);
+    border-style:solid;
+    border-width:3px;
+}
+
+#summary-space {
+    height:100px;
+}
+
 #configuration td {
 	padding: 5px;
 	border: 1px solid #E6E6E6;
@@ -32,6 +45,10 @@ table {
 
 #configuration tr:nth-child(odd) {
 	background-color: #f6f6f6;
+}
+.clickable {
+    cursor:pointer;
+    text-decoration:underline;
 }
 
 /******************************
@@ -45,6 +62,9 @@ span.skipped, span.xfailed, .skipped .col-result, .xfailed .col-result {
 }
 span.error, span.failed, span.xpassed, .failed .col-result, .xpassed .col-result  {
 	color: red;
+}
+.failed.results-table-row {
+    cursor: pointer;
 }
 
 

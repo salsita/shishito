@@ -122,19 +122,23 @@ class LogHTML(object):
                 #html.table(
                     ##[html.tr(html.td(k), html.td(v)) for k, v in sorted(configuration.items()) if v],
                     #id='configuration'),
-                html.h2('Summary'),
-                html.p(
-                    '%i tests ran in %i seconds.' % (numtests, suite_time_delta),
+                html.div([html.p(
+                    html.span('%i tests' % numtests, class_='all clickable'),
+                    ' ran in %i seconds.' % suite_time_delta,
+                    # '%i tests ran in %i seconds.' % (numtests, suite_time_delta),
                     html.br(),
-                    html.span('%i passed' % self.passed, class_='passed'), ', ',
-                    html.span('%i skipped' % self.skipped, class_='skipped'), ', ',
-                    html.span('%i failed' % self.failed, class_='failed'), ', ',
-                    html.span('%i errors' % self.errors, class_='error'), '.',
+                    html.span('%i passed' % self.passed, class_='passed clickable'), ', ',
+                    html.span('%i skipped' % self.skipped, class_='skipped clickable'), ', ',
+                    html.span('%i failed' % self.failed, class_='failed clickable'), ', ',
+                    html.span('%i errors' % self.errors, class_='error clickable'), '.',
                     html.br(),),
+                    html.span('Hide all errors', class_='clickable hide_all_errors'), ', ',
+                    html.span('Show all errors', class_='clickable show_all_errors'),
                     #commented on future usage
                     #html.span('%i expected failures' % self.xfailed, class_='skipped'), ', ',
                     #html.span('%i unexpected passes' % self.xpassed, class_='failed'), '.'),
-                html.h2('Results'),
+                    ], id='summary-wrapper'),
+                html.div(id='summary-space'),
                 html.table([
                     html.thead(html.tr([
                         html.th('Result', class_='sortable', col='result'),

@@ -4,7 +4,50 @@ $(document).ready(function() {
 
 	split_debug_onto_two_rows();
 
+	$('.show_error').hide();
+
 	$('.sortable').click(toggle_sort_states);
+    $('.failed.results-table-row').click(function() {
+        $(this).next('tr.debug').toggle('fast');
+        $(this).children('.col-result').children('.hide_error').toggle();
+        $(this).children('.col-result').children('.show_error').toggle();
+    });
+    $('.show_all_errors').click(function() {
+        $('tr.debug').show();
+        $('.hide_error').show();
+        $('.show_error').hide();
+    });
+    $('.hide_all_errors').click(function() {
+        $('tr.debug').hide();
+        $('.hide_error').hide();
+        $('.show_error').show();
+    });
+    $('.passed.clickable').click(function() {
+        $('.passed.results-table-row').show();
+        $('.failed.results-table-row').hide();
+        hide_all_errors();
+        $('.all.clickable').css("font-weight","normal");
+        $('.failed.clickable').css("font-weight","normal");
+        $('.passed.clickable').css("font-weight","Bold");
+    });
+
+    $('.failed.clickable').click(function() {
+        $('.passed.results-table-row').hide();
+        $('.failed.results-table-row').show();
+        show_all_errors();
+        $('.all.clickable').css("font-weight","normal");
+        $('.failed.clickable').css("font-weight","Bold");
+        $('.passed.clickable').css("font-weight","normal");
+    });
+
+    $('.all.clickable').click(function() {
+        $('.passed.results-table-row').show();
+        $('.failed.results-table-row').show();
+        show_all_errors();
+        $('.all.clickable').css("font-weight","Bold");
+        $('.failed.clickable').css("font-weight","normal");
+        $('.passed.clickable').css("font-weight","normal");
+    });
 
 	$('.sortable').click(function() {
 		var columnName = $(this).attr('col');
@@ -16,6 +59,37 @@ $(document).ready(function() {
 	});
 
 });
+
+function show_all_errors() {
+    $('tr.debug').show();
+    $('.hide_error').show();
+    $('.show_error').hide();
+}
+function hide_all_errors() {
+    $('tr.debug').hide();
+    $('.hide_error').hide();
+    $('.show_error').show();
+}
+
+function show_tests(type) {
+    switch(type) {
+        case "passed":
+            $('.passed.results-table-row').show();
+            $('.failed.results-table-row').hide();
+            hide_all_errors();
+            break;
+        case "failed":
+            $('.passed.results-table-row').hide();
+            $('.failed.results-table-row').show();
+            show_all_errors();
+            break;
+        case "all":
+            $('.passed.results-table-row').show();
+            $('.failed.results-table-row').show();
+            show_all_errors();
+            break;
+    }
+}
 
 function sort_rows_alpha(clicked, sortclass) {
 	one_row_for_data();

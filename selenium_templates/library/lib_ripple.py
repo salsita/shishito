@@ -16,6 +16,10 @@ left_arrow_locator = (By.CSS_SELECTOR, '#ui > section.left-panel-collapse.ui-sta
                                        'ui-corner-all.ui-state-hover > span')
 right_arrow_locator = (By.CSS_SELECTOR, '#ui > section.right-panel-collapse.ui-state-default.'
                                         'ui-corner-all.ui-state-hover > span')
+gps_header_locator = (By.CSS_SELECTOR, '#gps-container > section.h2.info-header > section.collapse-handle')
+gps_container_locator = (By.CSS_SELECTOR, '#gps-container > section.info.ui-widget-content.ui-corner-all')
+geo_latitude_locator = (By.ID, 'geo-latitude')
+geo_longitude_locator = (By.ID, 'geo-longitude')
 
 # Ripple UI functions
 
@@ -64,3 +68,21 @@ def switch_to_ripple_app(self):
 def switch_from_ripple_app(self):
     """ switches into the default Ripple Emulator UI DOM (so selenium can target Ripple control elements) """
     self.driver.switch_to_default_content()
+
+
+def set_geo_location(self, lat, long):
+    """ sets location to given coordinates """
+    switch_from_ripple_app(self)
+    expand_right_section(self, True)
+    if not self.driver.find_element(*gps_container_locator).is_displayed():
+        self.driver.find_element(*gps_header_locator).click()
+        time.sleep(1)
+    latitude = self.driver.find_element(*geo_latitude_locator)
+    longitude = self.driver.find_element(*geo_longitude_locator)
+    latitude.clear()
+    longitude.clear()
+    latitude.send_keys(str(lat))
+    longitude.send_keys(str(long))
+    expand_right_section(self, False)
+    self.driver.refresh()
+    switch_to_ripple_app(self)

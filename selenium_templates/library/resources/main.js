@@ -4,7 +4,7 @@ $(document).ready(function() {
 
 	split_debug_onto_two_rows();
 
-	$('.show_error').hide();
+	hide_all_errors();
 
 	$('.sortable').click(toggle_sort_states);
     $('.failed.results-table-row').click(function() {
@@ -13,14 +13,12 @@ $(document).ready(function() {
         $(this).children('.col-result').children('.show_error').toggle();
     });
     $('.show_all_errors').click(function() {
-        $('tr.debug').show();
-        $('.hide_error').show();
-        $('.show_error').hide();
+        var error = $('.failed.results-table-row').next('tr.debug');
+        error.show();
+        error.children('.debug').show();
     });
     $('.hide_all_errors').click(function() {
         $('tr.debug').hide();
-        $('.hide_error').hide();
-        $('.show_error').show();
     });
     $('.passed.clickable').click(function() {
         $('.passed.results-table-row').show();
@@ -34,7 +32,6 @@ $(document).ready(function() {
     $('.failed.clickable').click(function() {
         $('.passed.results-table-row').hide();
         $('.failed.results-table-row').show();
-        show_all_errors();
         $('.all.clickable').css("font-weight","normal");
         $('.failed.clickable').css("font-weight","Bold");
         $('.passed.clickable').css("font-weight","normal");
@@ -43,7 +40,6 @@ $(document).ready(function() {
     $('.all.clickable').click(function() {
         $('.passed.results-table-row').show();
         $('.failed.results-table-row').show();
-        show_all_errors();
         $('.all.clickable').css("font-weight","Bold");
         $('.failed.clickable').css("font-weight","normal");
         $('.passed.clickable').css("font-weight","normal");
@@ -61,14 +57,12 @@ $(document).ready(function() {
 });
 
 function show_all_errors() {
-    $('tr.debug').show();
-    $('.hide_error').show();
-    $('.show_error').hide();
+    var error = $('.failed.results-table-row').next('tr.debug');
+    error.show();
+    error.children('.debug').show();
 }
 function hide_all_errors() {
     $('tr.debug').hide();
-    $('.hide_error').hide();
-    $('.show_error').show();
 }
 
 function show_tests(type) {
@@ -113,6 +107,7 @@ function sort_rows_alpha(clicked, sortclass) {
 	});
 	$('#results-table-body').append(therows);
 	split_debug_onto_two_rows();
+	hide_all_errors();
 }
 
 function sort_rows_num(clicked, sortclass) {
@@ -129,6 +124,7 @@ function sort_rows_num(clicked, sortclass) {
 	});
 	$('#results-table-body').append(therows);
 	split_debug_onto_two_rows();
+	hide_all_errors();
 }
 
 function reset_sort_headers() {
@@ -136,6 +132,7 @@ function reset_sort_headers() {
 	$('.sortable').prepend('<div class="sort-icon">vvv</div>');
 	$('.sortable').removeClass('asc desc inactive active');
 	$('.sortable').addClass('asc inactive');
+	hide_all_errors();
 }
 
 function toggle_sort_states() {

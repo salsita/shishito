@@ -7,42 +7,49 @@ $(document).ready(function() {
 	hide_all_errors();
 
 	$('.sortable').click(toggle_sort_states);
-    $('.failed.results-table-row').click(function() {
+    $('.failed.results-table-row, .error.results-table-row').click(function() {
         $(this).next('tr.debug').toggle('fast');
         $(this).children('.col-result').children('.hide_error').toggle();
         $(this).children('.col-result').children('.show_error').toggle();
     });
     $('.show_all_errors').click(function() {
-        var error = $('.failed.results-table-row').next('tr.debug');
-        error.show();
-        error.children('.debug').show();
+        var failed = $('.failed.results-table-row, .error.results-table-row').next('tr.debug');
+        failed.show();
+        failed.children('.debug').show();
     });
     $('.hide_all_errors').click(function() {
         $('tr.debug').hide();
     });
     $('.passed.clickable').click(function() {
         $('.passed.results-table-row').show();
-        $('.failed.results-table-row').hide();
+        $('.failed.results-table-row, .error.results-table-row, .skipped.results-table-row').hide();
         hide_all_errors();
-        $('.all.clickable').css("font-weight","normal");
-        $('.failed.clickable').css("font-weight","normal");
         $('.passed.clickable').css("font-weight","Bold");
+        $('.all.clickable, .error.clickable, .failed.clickable, .skipped.clickable').css("font-weight","normal");
     });
-
+    $('.skipped.clickable').click(function() {
+        $('.skipped.results-table-row').show();
+        $('.failed.results-table-row, .error.results-table-row, .passed.results-table-row').hide();
+        hide_all_errors();
+        $('.skipped.clickable').css("font-weight","Bold");
+        $('.all.clickable, .error.clickable, .failed.clickable, .passed.clickable').css("font-weight","normal");
+    });
     $('.failed.clickable').click(function() {
-        $('.passed.results-table-row').hide();
+        $('.passed.results-table-row, .error.results-table-row, .skipped.results-table-row').hide();
         $('.failed.results-table-row').show();
-        $('.all.clickable').css("font-weight","normal");
         $('.failed.clickable').css("font-weight","Bold");
-        $('.passed.clickable').css("font-weight","normal");
+        $('.all.clickable, .passed.clickable, .error.clickable, .skipped.clickable').css("font-weight","normal");
     });
-
+    $('.error.clickable').click(function() {
+        $('.error.results-table-row').show();
+        $('.passed.results-table-row, .failed.results-table-row, .skipped.results-table-row').hide();
+        $('.error.clickable').css("font-weight","Bold");
+        $('.all.clickable, .passed.clickable, .failed.clickable, .skipped.clickable').css("font-weight","normal");
+    });
     $('.all.clickable').click(function() {
-        $('.passed.results-table-row').show();
-        $('.failed.results-table-row').show();
+        $('.passed.results-table-row, .failed.results-table-row, .error.results-table-row, .skipped.results-table-row').show();
         $('.all.clickable').css("font-weight","Bold");
-        $('.failed.clickable').css("font-weight","normal");
-        $('.passed.clickable').css("font-weight","normal");
+        $('.passed.clickable, .error.clickable, .failed.clickable, .skipped.clickable').css("font-weight","normal");
     });
 
 	$('.sortable').click(function() {
@@ -57,32 +64,12 @@ $(document).ready(function() {
 });
 
 function show_all_errors() {
-    var error = $('.failed.results-table-row').next('tr.debug');
+    var error = $('.error.results-table-row, .failed.results-table-row').next('tr.debug');
     error.show();
     error.children('.debug').show();
 }
 function hide_all_errors() {
     $('tr.debug').hide();
-}
-
-function show_tests(type) {
-    switch(type) {
-        case "passed":
-            $('.passed.results-table-row').show();
-            $('.failed.results-table-row').hide();
-            hide_all_errors();
-            break;
-        case "failed":
-            $('.passed.results-table-row').hide();
-            $('.failed.results-table-row').show();
-            show_all_errors();
-            break;
-        case "all":
-            $('.passed.results-table-row').show();
-            $('.failed.results-table-row').show();
-            show_all_errors();
-            break;
-    }
 }
 
 function sort_rows_alpha(clicked, sortclass) {

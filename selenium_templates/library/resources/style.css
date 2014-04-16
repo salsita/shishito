@@ -60,7 +60,7 @@ span.passed, .passed .col-result {
 span.skipped, span.xfailed, .skipped .col-result, .xfailed .col-result {
 	color: orange;
 }
-span.error, span.failed, span.xpassed, .failed .col-result, .xpassed .col-result  {
+span.error, span.failed, span.xpassed, .failed .col-result, .error .col-result, .xpassed .col-result  {
 	color: red;
 }
 .failed.results-table-row {
@@ -69,6 +69,13 @@ span.error, span.failed, span.xpassed, .failed .col-result, .xpassed .col-result
 }
 .failed.results-table-row:hover {
     background-color: rgb(250,180,180);
+}
+.error.results-table-row {
+    cursor: pointer;
+    background-color: rgb(250,200,200);
+}
+.error.results-table-row:hover {
+    background-color: rgb(250,150,150);
 }
 
 

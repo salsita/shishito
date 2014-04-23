@@ -14,10 +14,19 @@ from unittestzero import Assert
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from library.lib_test_config import gid
+import os
+
 
 _base_url = gid('base_url')
 _default_implicit_wait = int(gid('default_implicit_wait'))
 _timeout = int(gid('timeout'))
+
+
+def save_screenshot(self, name):
+    screenshot_folder = os.path.dirname(os.path.abspath(__file__)) + '/../screenshots'
+    if not os.path.exists(screenshot_folder):
+        os.makedirs(screenshot_folder)
+    self.driver.save_screenshot(screenshot_folder + '/' + name + '.png')
 
 
 def get_base_url():
@@ -47,7 +56,7 @@ def click_and_wait(self, element, locator=None):
     if locator is None:
         self.driver.implicitly_wait(10)
     else:
-        WebDriverWait(element, 10).until(EC.presence_of_element_located(*locator))
+        wait_for_element_ready(self, locator)
 
 
 def check_images_are_loaded(self):
@@ -127,6 +136,18 @@ def wait_for_element_visible(self, *locator):
             raise Exception(str(*locator) + " is not visible")
 
 
+def wait_for_element_not_visible(self, *locator):
+    """
+    Wait for the element at the specified locator not to be visible anymore.
+    """
+    count = 0
+    while is_element_visible(self, *locator):
+        time.sleep(1)
+        count += 1
+        if count == _timeout:
+            raise Exception(str(*locator) + " is still visible")
+
+
 def wait_for_element_not_present(self, *locator):
     """ Wait for the element at the specified locator
      not to be present in the DOM. """
@@ -185,3 +206,11 @@ def wait_for_text_to_match(self, text, max_count=20, delay=0.25, *locator):
             Assert.fail('"' + text + '" text did not match "' + element.text
                         + '" after ' + str(counter * delay) + ' seconds')
             break
+
+
+def wait_for_element_ready(self, locator):
+    """ Waits until certain element is present and clickable """
+    WebDriverWait(self.driver, _timeout).until(EC.presence_of_element_located(locator),
+                                               'Element specified by ' + str(locator) + ' was not present!')
+    WebDriverWait(self.driver, _timeout).until(EC.element_to_be_clickable(locator),
+                                               'Element specified by ' + str(locator) + ' did not become clickable!')

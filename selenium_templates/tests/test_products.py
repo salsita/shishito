@@ -4,6 +4,7 @@
 @author: Author
 """
 from unittestzero import Assert
+from library.lib_selenium import save_screenshot
 from library.lib_test_config import start_browser, stop_browser, start_test
 from pages.sample_page import Products
 import pytest
@@ -28,6 +29,7 @@ class TestSample():
 
     def teardown_method(self, method):
         """ executes after test function finishes """
+        save_screenshot(self, method.__name__)
 
     ### Tests ###
 

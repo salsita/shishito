@@ -13,16 +13,20 @@ import datetime
 import cgi
 import shutil
 
+
 def mangle_testnames(names):
     names = [x.replace(".py", "") for x in names if x != '()']
     names[0] = names[0].replace("/", '.')
     #print("names %s" %names)
     return names
 
+
 class LogHTML(object):
     def __init__(self, logfile, prefix):
         logfile = os.path.expanduser(os.path.expandvars(logfile))
         self.logfile = os.path.normpath(os.path.abspath(logfile))
+        self.screenshot_path = os.path.dirname(self.logfile) + '/screenshots'
+        self.used_screens = []
         self.prefix = prefix
         self.tests = []
         self.passed = self.skipped = 0
@@ -47,13 +51,26 @@ class LogHTML(object):
 
     def _write_captured_output(self, report):
         sec = dict(report.sections)
-        output=""
+        output = ""
         for name in ('out', 'err'):
             content = sec.get("Captured std%s" % name)
             if content:
-                output=output+content
+                output = output + content
         return output
 
+    def append_screenshot(self, name, log):
+        if not os.path.exists(self.screenshot_path):
+            os.makedirs(self.screenshot_path)
+        source = os.path.dirname(os.path.abspath(__file__)) + '/../screenshots/' + name + '.png'
+        destination = self.screenshot_path + '/' + name + '.png'
+        self.used_screens.append(source)
+        log.append(html.img(src=destination))
+
+    def process_screenshot_files(self):
+        for screen in self.used_screens:
+            if os.path.exists(screen):
+                shutil.copy(screen, self.screenshot_path)
+        shutil.rmtree(os.path.dirname(os.path.abspath(__file__)) + '/../screenshots/')
 
     def append_pass(self, report):
         self.passed += 1
@@ -117,108 +134,51 @@ class LogHTML(object):
                 html.p('Report generated on %s at %s ' % (
                     generated.strftime('%d-%b-%Y'),
                     generated.strftime('%H:%M:%S'),
-                    )),
-                #html.h2('Configuration'),
-                #html.table(
-                    ##[html.tr(html.td(k), html.td(v)) for k, v in sorted(configuration.items()) if v],
-                    #id='configuration'),
+                )),
                 html.div([html.p(
                     html.span('%i tests' % numtests, class_='all clickable'),
                     ' ran in %i seconds.' % suite_time_delta,
-                    # '%i tests ran in %i seconds.' % (numtests, suite_time_delta),
                     html.br(),
                     html.span('%i passed' % self.passed, class_='passed clickable'), ', ',
                     html.span('%i skipped' % self.skipped, class_='skipped clickable'), ', ',
                     html.span('%i failed' % self.failed, class_='failed clickable'), ', ',
                     html.span('%i errors' % self.errors, class_='error clickable'), '.',
-                    html.br(),),
-                    html.span('Hide all errors', class_='clickable hide_all_errors'), ', ',
-                    html.span('Show all errors', class_='clickable show_all_errors'),
-                    #commented on future usage
-                    #html.span('%i expected failures' % self.xfailed, class_='skipped'), ', ',
-                    #html.span('%i unexpected passes' % self.xpassed, class_='failed'), '.'),
-                    ], id='summary-wrapper'),
+                    html.br(), ),
+                          html.span('Hide all errors', class_='clickable hide_all_errors'), ', ',
+                          html.span('Show all errors', class_='clickable show_all_errors'),
+                         ], id='summary-wrapper'),
                 html.div(id='summary-space'),
                 html.table([
-                    html.thead(html.tr([
-                        html.th('Result', class_='sortable', col='result'),
-                        html.th('Class', class_='sortable', col='class'),
-                        html.th('Name', class_='sortable', col='name'),
-                        html.th('Duration', class_='sortable numeric', col='duration'),
-                        #html.th('Output')]), id='results-table-head'),
-                        html.th('Links to BrowserStack')]), id='results-table-head'),
-                    html.tbody(*self.test_logs, id='results-table-body')], id='results-table')))
-        logfile.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">' + doc.unicode(indent=2))
+                               html.thead(html.tr([
+                                   html.th('Result', class_='sortable', col='result'),
+                                   html.th('Class', class_='sortable', col='class'),
+                                   html.th('Name', class_='sortable', col='name'),
+                                   html.th('Duration', class_='sortable numeric', col='duration'),
+                                   #html.th('Output')]), id='results-table-head'),
+                                   html.th('Links to BrowserStack')]), id='results-table-head'),
+                               html.tbody(*self.test_logs, id='results-table-body')], id='results-table')))
+        logfile.write(
+            '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">' + doc.unicode(
+                indent=2))
         logfile.close()
+        self.process_screenshot_files()
 
     def _appendrow(self, result, report):
-        names=mangle_testnames(report.nodeid.split("::"))
-        testclass=(names[:-1])
+        names = mangle_testnames(report.nodeid.split("::"))
+        testclass = (names[:-1])
         if self.prefix:
             testclass.insert(0, self.prefix)
-        testclass=".".join(testclass)
-        testmethod=names[-1]
+        testclass = ".".join(testclass)
+        testmethod = names[-1]
         time = getattr(report, 'duration', 0.0)
-        '''
-        links = {}
-
-        if hasattr(report, 'debug') and any(report.debug.values()):
-            (relative_path, full_path) = self._debug_paths(testclass, testmethod)
-
-            if report.debug['screenshots']:
-                filename = 'screenshot.png'
-                f = open(os.path.join(full_path, filename), 'wb')
-                f.write(base64.decodestring(report.debug['screenshots'][-1]))
-                links.update({'Screenshot': os.path.join(relative_path, filename)})
-
-            if report.debug['html']:
-                filename = 'html.txt'
-                f = open(os.path.join(full_path, filename), 'wb')
-                f.write(report.debug['html'][-1])
-                links.update({'HTML': os.path.join(relative_path, filename)})
-
-            # Log may contain passwords, etc so we only capture it for tests marked as public
-            if report.debug['logs'] and 'public' in report.keywords:
-                filename = 'log.txt'
-                f = open(os.path.join(full_path, filename), 'wb')
-                f.write(report.debug['logs'][-1])
-                links.update({'Log': os.path.join(relative_path, filename)})
-
-            if report.debug['network_traffic']:
-                filename = 'networktraffic.json'
-                f = open(os.path.join(full_path, filename), 'wb')
-                f.write(report.debug['network_traffic'][-1])
-                links.update({'Network Traffic': os.path.join(relative_path, filename)})
-
-            if report.debug['urls']:
-                links.update({'Failing URL': report.debug['urls'][-1]})
-
-        self.sauce_labs_job = None
-        if self.config.option.sauce_labs_credentials_file and getattr(report, 'session_id', None):
-            self.sauce_labs_job = sauce_labs.Job(report.session_id)
-            links['Sauce Labs Job'] = self.sauce_labs_job.url
-
-        links_html = []
-        for name, path in links.iteritems():
-            links_html.append(html.a(name, href=path, target='_blank'))
-            links_html.append(' ')'''
 
         additional_html = []
 
         if not 'Passed' in result:
-            '''
-            if self.sauce_labs_job:
-                additional_html.append(self.sauce_labs_job.video_html)
-
-            if 'Screenshot' in links:
-                additional_html.append(
-                    html.div(
-                        html.a(html.img(src=links['Screenshot']),
-                               href=links['Screenshot']),
-                        class_='screenshot'))'''
             if report.longrepr:
                 log = html.div(class_='log')
                 for line in str(report.longrepr).splitlines():
+                    line = line.decode('utf8')
                     separator = line.startswith('_ ' * 10)
                     if separator:
                         log.append(line[:80])
@@ -230,19 +190,23 @@ class LogHTML(object):
                         else:
                             log.append(raw(cgi.escape(line)))
                     log.append(html.br())
+                if not os.path.exists(self.screenshot_path):
+                    os.makedirs(self.screenshot_path)
+                self.append_screenshot(testmethod, log)
                 additional_html.append(log)
-        output=self._write_captured_output(report)
-        info=output.split(" ")
+        output = self._write_captured_output(report)
+        info = output.split(" ")
         links_html = []
         for i in range(0, len(info)):
-            if("http" in info[i] and "browserstack.com" in info[i]):
+            if ("http" in info[i] and "browserstack.com" in info[i]):
                 links_html.append(html.a("link", href=info[i], target='_blank'))
                 links_html.append(' ')
 
         self.test_logs.append(html.tr([
-            html.td(result, class_='col-result'),
-            html.td(testclass, class_='col-class'),
-            html.td(testmethod, class_='col-name'),
-            html.td(round(time), class_='col-duration'),
-            html.td(links_html, class_='col-links'),
-            html.td(additional_html, class_='debug')], class_=result.lower() + ' results-table-row'))
+                                          html.td(result, class_='col-result'),
+                                          html.td(testclass, class_='col-class'),
+                                          html.td(testmethod, class_='col-name'),
+                                          html.td(round(time), class_='col-duration'),
+                                          html.td(links_html, class_='col-links'),
+                                          html.td(additional_html, class_='debug')],
+                                      class_=result.lower() + ' results-table-row'))

@@ -64,7 +64,7 @@ class LogHTML(object):
         source = os.path.dirname(os.path.abspath(__file__)) + '/../screenshots/' + name + '.png'
         destination = self.screenshot_path + '/' + name + '.png'
         self.used_screens.append(source)
-        log.append(html.img(src=destination))
+        log.append(html.img(src='screenshots/' + name + '.png'))
 
     def process_screenshot_files(self):
         for screen in self.used_screens:

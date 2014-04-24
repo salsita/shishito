@@ -25,7 +25,7 @@ class LogHTML(object):
     def __init__(self, logfile, prefix):
         logfile = os.path.expanduser(os.path.expandvars(logfile))
         self.logfile = os.path.normpath(os.path.abspath(logfile))
-        self.screenshot_path = os.path.dirname(self.logfile) + '/screenshots'
+        self.screenshot_path = os.path.join(os.path.dirname(self.logfile), 'screenshots')
         self.used_screens = []
         self.prefix = prefix
         self.tests = []
@@ -61,8 +61,8 @@ class LogHTML(object):
     def append_screenshot(self, name, log):
         if not os.path.exists(self.screenshot_path):
             os.makedirs(self.screenshot_path)
-        source = os.path.dirname(os.path.abspath(__file__)) + '/../screenshots/' + name + '.png'
-        destination = self.screenshot_path + '/' + name + '.png'
+        source = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'screenshots', name + '.png')
+        destination = os.path.join(self.screenshot_path, name + '.png')
         self.used_screens.append(source)
         log.append(html.img(src='screenshots/' + name + '.png'))
 
@@ -70,7 +70,9 @@ class LogHTML(object):
         for screen in self.used_screens:
             if os.path.exists(screen):
                 shutil.copy(screen, self.screenshot_path)
-        shutil.rmtree(os.path.dirname(os.path.abspath(__file__)) + '/../screenshots/')
+        screenshot_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'screenshots')
+        if os.path.exists(screenshot_folder):
+            shutil.rmtree(screenshot_folder)
 
     def append_pass(self, report):
         self.passed += 1

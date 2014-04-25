@@ -4,12 +4,12 @@
 @author: Author
 """
 from unittestzero import Assert
-from library.lib_selenium import save_screenshot
-from library.lib_test_config import start_browser, stop_browser, start_test
+from library.lib_test_config import start_browser, stop_browser, start_test, stop_test
 from pages.sample_page import Products
 import pytest
 
 
+@pytest.mark.usefixtures("test_status")
 class TestSample():
     """  Product page sample test """
 
@@ -27,14 +27,18 @@ class TestSample():
         """ executes before test function starts """
         start_test(self)
 
-    def teardown_method(self, method):
+    def teardown_method(self, stuff):
         """ executes after test function finishes """
-        save_screenshot(self, method.__name__)
+        stop_test(self)
 
     ### Tests ###
+    @pytest.mark.parametrize('param', ['@#$%hello', 2, 3])
+    def test_page_title(self, param):
+        Assert.equal(self.driver.title, 'Some expected title' + str(param))
 
-    def test_page_title(self):
-        Assert.equal(self.driver.title, 'Some expected title')
+    @pytest.mark.parametrize('param', ['@#$%hello', 2, 3])
+    def test_not_failing(self, param):
+        Assert.not_equal(self.driver.title, 'Some expected title' + str(param))
 
     @pytest.mark.smoke
     def test_only_when_smoke(self):

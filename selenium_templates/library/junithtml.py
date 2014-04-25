@@ -12,6 +12,7 @@ import time
 import datetime
 import cgi
 import shutil
+import re
 
 
 def mangle_testnames(names):
@@ -59,10 +60,10 @@ class LogHTML(object):
         return output
 
     def append_screenshot(self, name, log):
+        name = re.sub('[^A-Za-z0-9_. ]+', '', name)
         if not os.path.exists(self.screenshot_path):
             os.makedirs(self.screenshot_path)
         source = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'screenshots', name + '.png')
-        destination = os.path.join(self.screenshot_path, name + '.png')
         self.used_screens.append(source)
         log.append(html.img(src='screenshots/' + name + '.png'))
 

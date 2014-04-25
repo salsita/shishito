@@ -7,15 +7,18 @@
  Not to be used for directly testing the system under test (must not contain Asserts etc.)
 """
 import ConfigParser
-from selenium import webdriver
 import os
 import sys
 import inspect
-import pytest
 import time
+import re
+from selenium import webdriver
+import pytest
 from library.browserstack_api import BrowserStackAPI
+from tests.conftest import get_test_info
 
 bs_api = BrowserStackAPI()
+
 
 def config_loader():
     """ Loads variables from .properties configuration files """
@@ -134,3 +137,14 @@ def start_test(self, reload=None):
         self.driver.get(gid('base_url'))
         self.driver.implicitly_wait(gid('default_implicit_wait'))
         time.sleep(5)
+
+
+def stop_test(self):
+    test_info = get_test_info()
+    if test_info.test_status not in ('passed', None):
+        # save screenshot in case test fails
+        screenshot_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'screenshots')
+        if not os.path.exists(screenshot_folder):
+            os.makedirs(screenshot_folder)
+        file_name = re.sub('[^A-Za-z0-9_. ]+', '', test_info.test_name)
+        self.driver.save_screenshot(os.path.join(screenshot_folder, file_name + '.png'))

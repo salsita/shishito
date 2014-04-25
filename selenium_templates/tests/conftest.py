@@ -7,6 +7,26 @@
 import pytest
 from library.junithtml import LogHTML
 
+# CURRENT TEST INFO OBJECT #
+
+class TestInfo():
+    """ Gathers test execution information about currently running test """
+    def __init__(self):
+        self.test_status = None
+        self.test_name = None
+
+    def set_test_info(self, new_status=None, new_name=None):
+        self.test_status = new_status
+        self.test_name = new_name
+
+test_info = TestInfo()
+
+
+def get_test_info():
+    return test_info
+
+
+# FIXTURES #
 
 def pytest_addoption(parser):
     parser.addoption("--xbrowser", action="store", default="Chrome",
@@ -46,6 +66,32 @@ def pytest_unconfigure(config):
     if html:
         del config._html
         config.pluginmanager.unregister(html)
+
+
+@pytest.mark.tryfirst
+def pytest_runtest_makereport(item, call, __multicall__):
+    # execute all other hooks to obtain the report object
+    rep = __multicall__.execute()
+    # set an report attribute for each phase of a call, which can
+    # be "setup", "call", "teardown"
+    setattr(item, "rep_" + rep.when, rep)
+    return rep
+
+@pytest.fixture()
+def test_status(request):
+    test_name = request.node.nodeid.split('::')[-1]
+    def fin():
+        # request.node is an "item" because we use the default
+        # "function" scope
+        if request.node.rep_setup.failed:
+            print "setting up a test failed!", request.node.nodeid
+            test_info.set_test_info('failed_setup', test_name)
+        elif request.node.rep_setup.passed:
+            if request.node.rep_call.failed:
+                test_info.set_test_info('failed_execution', test_name)
+                print "executing test failed", request.node.nodeid
+    request.addfinalizer(fin)
+    test_info.set_test_info('passed', test_name)
 
 
 @pytest.fixture(scope='class')

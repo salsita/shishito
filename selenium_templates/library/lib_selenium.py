@@ -23,10 +23,10 @@ _timeout = int(gid('timeout'))
 
 
 def save_screenshot(self, name):
-    screenshot_folder = os.path.dirname(os.path.abspath(__file__)) + '/../screenshots'
+    screenshot_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'screenshots')
     if not os.path.exists(screenshot_folder):
         os.makedirs(screenshot_folder)
-    self.driver.save_screenshot(screenshot_folder + '/' + name + '.png')
+    self.driver.save_screenshot(os.path.join(screenshot_folder, name + '.png'))
 
 
 def get_base_url():

@@ -31,13 +31,13 @@ def get_test_info():
 def pytest_addoption(parser):
     parser.addoption("--xbrowser", action="store", default="Chrome",
                      help="BrowserStack browser: Chrome, Firefox, IE, PhantomJS, Opera, Safari")
-    parser.addoption("--xbrowserversion", action="store", default="32.0",
+    parser.addoption("--xbrowserversion", action="store", default="34.0",
                      help="BrowserStack browser version. Value depends on selected browser.")
     parser.addoption("--xos", action="store", default="Windows",
                      help="BrowserStack operating system: Windows, OS X")
     parser.addoption("--xosversion", action="store", default="7",
                      help="BrowserStack operating system version. Depends on selected OS.")
-    parser.addoption("--xresolution", action="store", default="1024x768",
+    parser.addoption("--xresolution", action="store", default="1280x1024",
                      help="Screen resolution: 1024x768, 1280x960, 1280x1024, 1600x1200, 1920x1080")
     parser.addoption("--xbuildname", action="store", default="Unnamed",
                      help="Test build name")

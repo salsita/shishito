@@ -115,9 +115,11 @@ def start_browser(self, build_name=None, url=gid('base_url'),
     elif browser == "Safari":
         self.driver = webdriver.SafariDriver()
 
+    self.driver.get(url)
     if browser.lower() != "browserstack":
         self.driver.set_window_size(width, height)
-    self.driver.get(url)
+    else:
+        self.driver.maximize_window()
     self.driver.implicitly_wait(int(gid('default_implicit_wait')))
     return self.driver
 

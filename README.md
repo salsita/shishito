@@ -29,14 +29,14 @@ Webdriver drivers need to be setup (ChromeDriver, InternetExplorerDriver etc.)
 ## Quick Start
 
 1. clone Salsa WebQA repository.
-```git clone [salsa webqa project repo]```
+```git clone git@github.com:salsita/salsa-webqa.git```
 1. add *salsa_webqa* directory into PYTHONPATH environment variable
-1. clone sample test project repository
-```git clone [sample project repo]```
+1. clone sample test project repository https://github.com/salsita/salsa-webqa-sample-project
+```git clone git@github.com:salsita/salsa-webqa-sample-project.git```
 1. if you want to use BrowserStack for running your tests, replace "bs_username", "bs_password" values with your credentials in
-```[sample project repo]/config/server_config.properties```
+```salsa-webqa-sample-project/config/server_config.properties```
 1. install Firefox or change "driver" value to some other installed driver in
-```[sample project repo]/config/local_config.properties```
+```salsa-webqa-sample-project/config/local_config.properties```
 Available values  "BrowserStack", "Firefox", "Chrome", "IE", "PhantomJS", "Opera"
 1. run *google_test_runner.py* in sample project folder!
 
@@ -44,8 +44,8 @@ If you use local driver, you should now observe browser being started and tests 
 There are information about progress shown in console output.
 Once testing is finished, HTML report can be found in:
 ```
-[sample project folder]/results folder # HTML report
-[sample project folder]/results_archive folder # zipped HTML report
+salsa-webqa-sample-project/results folder # HTML report
+salsa-webqa-sample-project/results_archive folder # zipped HTML report
 ```
 
 ## Continuous Integration
@@ -53,29 +53,27 @@ Once testing is finished, HTML report can be found in:
 Using Salsa WebQA with Continuous Integration solution, such as Jenkins, is easy!
 All you need to do is clone Salsa WebQA repo and add it into the PYTHONPATH.
 
-Example script below:
+Example script below (Jenkins "execute shell" build step):
 ```bash
 #!/bin/bash
-######################
-# SCRIPT VARIABLES   #
-######################
-
-export PYTHONPATH=${PYTHONPATH}:/$WORKSPACE/integration-support/salsaweb_qa
-root_folder=$WORKSPACE/src/integration_tests
-
 ######################
 # clone Salsa WebQA  #
 ######################
 
-git clone git@github.com:salsita/integration-support.git $WORKSPACE
-cd $WORKSPACE/integration-support
-git checkout library_conversion
+cd $WORKSPACE
+git clone git@github.com:salsita/salsa-webqa.git
+
+######################
+# VARIABLES          #
+######################
+
+export PYTHONPATH=${PYTHONPATH}:/$WORKSPACE/salsa-webqa
 
 ######################
 # SCRIPT             #
 ######################
 
-python ${root_folder}/pytest_runner.py
+python google_test_runner.py
 ```
 
 ## Command line options

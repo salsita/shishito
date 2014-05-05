@@ -3,9 +3,6 @@ author: Irina Gvozdeva
 Based on initial code from Ross Lawley and mozilla selenium report generating.
 """
 
-import py
-from py.xml import html
-from py.xml import raw
 import pkg_resources
 import os
 import time
@@ -13,6 +10,11 @@ import datetime
 import cgi
 import shutil
 import re
+
+import py
+
+from py.xml import html
+from py.xml import raw
 
 
 def mangle_testnames(names):
@@ -26,6 +28,7 @@ class LogHTML(object):
     def __init__(self, logfile, prefix):
         logfile = os.path.expanduser(os.path.expandvars(logfile))
         self.logfile = os.path.normpath(os.path.abspath(logfile))
+        self.project_root = os.environ['SALSA_WEBQA_PROJECT']
         self.screenshot_path = os.path.join(os.path.dirname(self.logfile), 'screenshots')
         self.used_screens = []
         self.prefix = prefix
@@ -63,7 +66,7 @@ class LogHTML(object):
         name = re.sub('[^A-Za-z0-9_. ]+', '', name)
         if not os.path.exists(self.screenshot_path):
             os.makedirs(self.screenshot_path)
-        source = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'screenshots', name + '.png')
+        source = os.path.join(self.project_root, 'screenshots', name + '.png')
         self.used_screens.append(source)
         log.append(html.img(src='screenshots/' + name + '.png'))
 
@@ -71,7 +74,7 @@ class LogHTML(object):
         for screen in self.used_screens:
             if os.path.exists(screen):
                 shutil.copy(screen, self.screenshot_path)
-        screenshot_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'screenshots')
+        screenshot_folder = os.path.join(self.project_root, 'screenshots')
         if os.path.exists(screenshot_folder):
             shutil.rmtree(screenshot_folder)
 

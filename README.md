@@ -33,8 +33,7 @@ Webdriver drivers need to be setup (ChromeDriver, InternetExplorerDriver etc.)
 1. add *salsa_webqa* directory into PYTHONPATH environment variable
 1. clone sample test project repository https://github.com/salsita/salsa-webqa-sample-project
 ```git clone git@github.com:salsita/salsa-webqa-sample-project.git```
-1. if you want to use BrowserStack for running your tests, replace "bs_username", "bs_password" values with your credentials in
-```salsa-webqa-sample-project/config/server_config.properties```
+1. if you want to use BrowserStack for running your tests, replace "bs_username", "bs_password" values with your credentials in ```salsa-webqa-sample-project/config/server_config.properties```
 1. install Firefox or change "driver" value to some other installed driver in
 ```salsa-webqa-sample-project/config/local_config.properties```
 Available values  "BrowserStack", "Firefox", "Chrome", "IE", "PhantomJS", "Opera"

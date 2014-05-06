@@ -159,7 +159,7 @@ class TestControl():
             self.call_local_browser(browser)
             self.driver.set_window_size(width, height)
 
-        self.test_init(url)
+        self.test_init(url, browser)
         return self.driver
 
     def stop_browser(self, delete_cookies=True):
@@ -168,10 +168,12 @@ class TestControl():
             self.driver.delete_all_cookies()
         self.driver.quit()
 
-    def test_init(self, url):
+    def test_init(self, url, browser):
         """ Executed only once after browser starts.
          Suitable for general pre-test logic that do not need to run before every individual test-case. """
         self.driver.get(url)
+        if browser.lower() == "browserstack":
+            self.driver.maximize_window()
         self.driver.implicitly_wait(int(self.gid('default_implicit_wait')))
 
     def start_test(self, reload=None):

@@ -68,7 +68,8 @@ class TestSelenium():
                      ' != "undefined" && arguments[0].naturalWidth > 0'
             image_loaded = bool(self.driver.execute_script(script, image))
             if not image_loaded:
-                images_not_loaded.append(image.get_attribute('src'))
+                if image.get_attribute('src') is not None:
+                    images_not_loaded.append(self.driver.title + ': ' + str(image.get_attribute('src')))
         return images_not_loaded
 
     def is_element_present(self, locator):

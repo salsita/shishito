@@ -118,7 +118,7 @@ class TestSelenium():
             time.sleep(1)
             count += 1
             if count == self.timeout:
-                raise Exception(str(*locator) + ' has not loaded')
+                raise Exception(str(locator) + ' has not loaded')
 
     def wait_for_element_visible(self, locator):
         """
@@ -129,7 +129,7 @@ class TestSelenium():
             time.sleep(1)
             count += 1
             if count == self.timeout:
-                raise Exception(str(*locator) + " is not visible")
+                raise Exception(str(locator) + " is not visible")
 
     def wait_for_element_not_visible(self, locator):
         """
@@ -140,7 +140,7 @@ class TestSelenium():
             time.sleep(1)
             count += 1
             if count == self.timeout:
-                raise Exception(str(*locator) + " is still visible")
+                raise Exception(str(locator) + " is still visible")
 
     def wait_for_element_not_present(self, locator):
         """ Wait for the element at the specified locator

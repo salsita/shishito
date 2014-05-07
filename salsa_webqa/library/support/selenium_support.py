@@ -9,6 +9,7 @@
 import time
 import os
 
+from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import NoSuchElementException, \
     ElementNotVisibleException, TimeoutException
 from selenium.webdriver.support.wait import WebDriverWait
@@ -20,7 +21,6 @@ from salsa_webqa.library.test_control import TestControl
 
 
 class TestSelenium():
-
     def __init__(self, driver):
         self.driver = driver
         self.tc = TestControl()
@@ -199,6 +199,13 @@ class TestSelenium():
     def wait_for_element_ready(self, locator):
         """ Waits until certain element is present and clickable """
         WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located(locator),
-                                                   'Element specified by ' + str(locator) + ' was not present!')
+                                                       'Element specified by ' + str(locator) + ' was not present!')
         WebDriverWait(self.driver, self.timeout).until(EC.element_to_be_clickable(locator),
-                                                   'Element specified by ' + str(locator) + ' did not become clickable!')
+                                                       'Element specified by ' + str(
+                                                           locator) + ' did not become clickable!')
+
+    def select_dropdown_value(self, select, value):
+        """ Set 'select' dropdown value """
+        select = Select(select)
+        option = [option for option in select.options if option.text == value][0]
+        option.click()

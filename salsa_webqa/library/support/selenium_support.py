@@ -209,3 +209,13 @@ class TestSelenium():
         select = Select(select)
         option = [option for option in select.options if option.text == value][0]
         option.click()
+
+    def upload_file(self, file_path, input_field_locator, delay=5):
+        """ uploads file through the file input field
+            @file_path: path to file (including the file name) relative to test project root
+            @input_field_locator: locator of input element with type="file"
+            @delay: seconds to wait for file to upload
+        """
+        file_path = os.path.join(self.tc.project_root, file_path)
+        self.driver.find_element(*input_field_locator).send_keys(file_path)
+        time.sleep(delay)

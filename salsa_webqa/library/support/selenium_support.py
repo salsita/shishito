@@ -17,13 +17,13 @@ from unittestzero import Assert
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 
-from salsa_webqa.library.test_control import TestControl
+from salsa_webqa.library.control_test import ControlTest
 
 
-class TestSelenium():
+class SeleniumTest():
     def __init__(self, driver):
         self.driver = driver
-        self.tc = TestControl()
+        self.tc = ControlTest()
         self.base_url = self.tc.gid('base_url')
         self.default_implicit_wait = int(self.tc.gid('default_implicit_wait'))
         self.timeout = int(self.tc.gid('timeout'))

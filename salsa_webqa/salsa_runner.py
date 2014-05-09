@@ -15,7 +15,7 @@ import argparse
 import pytest
 
 from salsa_webqa.library.support.browserstack import BrowserStackAPI
-from salsa_webqa.library.test_control import TestControl
+from salsa_webqa.library.control_test import ControlTest
 
 
 bs_api = BrowserStackAPI()
@@ -33,7 +33,7 @@ class SalsaRunner():
         self.set_project_root()
 
         # set support variables
-        self.tc = TestControl()
+        self.tc = ControlTest()
         self.driver_name = self.tc.gid('driver')
         self.timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
         self.result_folder = os.path.join(self.project_root, 'results', self.timestamp)

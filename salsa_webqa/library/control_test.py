@@ -22,7 +22,7 @@ from salsa_webqa.library.support.browserstack import BrowserStackAPI
 bs_api = BrowserStackAPI()
 
 
-class TestControl():
+class ControlTest():
     def __init__(self):
         self.bs_api = BrowserStackAPI()
         self.project_root = self.get_project_root()

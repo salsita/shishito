@@ -12,6 +12,7 @@ import sys
 import inspect
 import time
 import re
+import ntpath
 
 from selenium import webdriver
 import pytest
@@ -90,10 +91,6 @@ class ControlTest():
             build_name = build_name
         else:
             build_name = self.gid('build_name')
-        # TODO need to change the way how to set test name
-        # this is no longer reliable now that user can override any kind of method in his/her custom library
-        # because of this there the call stack can have various depth
-        test_name = os.path.basename(inspect.getsourcefile(sys._getframe(2)))[:-3]
         desired_cap = {'os': pytest.config.getoption('xos'),
                        'os_version': pytest.config.getoption('xosversion'),
                        'browser': pytest.config.getoption('xbrowser'),
@@ -101,8 +98,22 @@ class ControlTest():
                        'resolution': pytest.config.getoption('xresolution'),
                        'project': self.gid('project_name'),
                        'build': build_name,
-                       'name': test_name + time.strftime('_%Y-%m-%d')}
+                       'name': self.get_test_name() + time.strftime('_%Y-%m-%d')}
         return desired_cap
+
+    def get_test_name(self):
+        """ Returns test name from the call stack, assuming there can be only
+         one 'test_' file in the stack. If there are more it means two PyTest
+        tests ran when calling get_test_name, which is invalid use case. """
+        test_name = None
+        frames = inspect.getouterframes(inspect.currentframe())
+        for frame in frames:
+            if re.match('test_.*', ntpath.basename(frame[1])):
+                test_name = ntpath.basename(frame[1])[:-3]
+                break
+        if test_name is None:
+            test_name = self.gid('project_name')
+        return test_name
 
     def get_default_browser_attributes(self, browser, height, url, width):
         """ Returns default browser values if not initially set """
@@ -143,9 +154,9 @@ class ControlTest():
             self.driver = webdriver.PhantomJS()
         elif browser == "Opera":
             self.driver = webdriver.Opera()
-        # SafariDriver bindings for Python not yet implemented
-        # elif browser == "Safari":
-        #     self.driver = webdriver.SafariDriver()
+            # SafariDriver bindings for Python not yet implemented
+            # elif browser == "Safari":
+            #     self.driver = webdriver.SafariDriver()
 
     def start_browser(self, build_name=None, url=None, browser=None, width=None, height=None):
         """ Browser startup function.

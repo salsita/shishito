@@ -96,6 +96,7 @@ class ControlTest():
                        'browser': pytest.config.getoption('xbrowser'),
                        'browser_version': pytest.config.getoption('xbrowserversion'),
                        'resolution': pytest.config.getoption('xresolution'),
+                       'browserstack.debug': self.gid('browserstack_debug'),
                        'project': self.gid('project_name'),
                        'build': build_name,
                        'name': self.get_test_name() + time.strftime('_%Y-%m-%d')}

@@ -157,7 +157,7 @@ class ControlTest():
 
             if browser == "Firefox":
                 ffprofile = webdriver.FirefoxProfile()
-                all_extensions = self.get_extension_file_name('xpi')
+                all_extensions = self.get_extension_file_names('xpi')
 
                 for browser_extension in all_extensions:
                     extension = os.path.join(self.project_root, 'extension',
@@ -169,7 +169,7 @@ class ControlTest():
                 self.driver = webdriver.Firefox(ffprofile)
             elif browser == "Chrome":
                 options = webdriver.ChromeOptions()
-                tall_extensions = self.get_extension_file_name('crx')
+                tall_extensions = self.get_extension_file_names('crx')
                 for chr_extension in tall_extensions:
                     print (chr_extension)
                     print os.path.join(self.project_root, 'extension', chr_extension + '.crx')
@@ -239,7 +239,7 @@ class ControlTest():
             file_name = re.sub('[^A-Za-z0-9_. ]+', '', test_info.test_name)
             self.driver.save_screenshot(os.path.join(screenshot_folder, file_name + '.png'))
 
-    def get_extension_file_name(self, extension_type):
+    def get_extension_file_names(self, extension_type):
         """ Method reads extension folder and gets extension file name based on provided extension type"""
         extension_location = os.path.join(self.project_root, 'extension')
         # extension_files = glob.glob(extension_location + '/*.' + extension_type)

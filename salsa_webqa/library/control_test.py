@@ -282,15 +282,12 @@ class ControlTest():
     def build_extension(self):
         """ Method build Chrome extension from code provided in path in local config file."""
         # build Chrome extension
+        extension_path = os.path.abspath(os.path.join(self.project_root, self.gid('path_to_extension_code')))
+        shell_path = os.path.abspath(os.path.join(extension_path, os.pardir))
+        extension_name = self.path_leaf(extension_path)
+        os.chdir(shell_path)
+        shell_command = 'crxmake ' + extension_name
         try:
-            extension_path = os.path.abspath(os.path.join(self.project_root, self.gid('path_to_extension_code')))
-            shell_path = os.path.abspath(os.path.join(extension_path, os.pardir))
-            extension_name = self.path_leaf(extension_path)
-            os.chdir(shell_path)
-            shell_command = 'crxmake ' + extension_name
-            try:
-                cmd_shell = subprocess.check_call(shell_command, shell=True)
-            except subprocess.CalledProcessError:
-                print('There was an issue with building extension!')
-        except:
-            sys.exit('Building Chrome extension failed from some reason, please check!')
+            cmd_shell = subprocess.check_call(shell_command, shell=True)
+        except subprocess.CalledProcessError:
+            print('There was an issue with building extension!')

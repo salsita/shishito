@@ -132,19 +132,42 @@ class ControlTest():
         """ Starts browser on BrowserStack """
         bs_username = self.gid('bs_username')
         bs_password = self.gid('bs_password')
-        self.bs_api.wait_for_free_sessions((bs_username, bs_password), 2, 1)
+        self.bs_api.wait_for_free_sessions((bs_username, bs_password),
+                                           int(self.gid('session_waiting_time')),
+                                           int(self.gid('session_waiting_delay')))
         capabilities = self.get_capabilities(build_name)
+
+        # add extensions to remote driver
+        browser_profile = None
+        if bool(self.gid('with_extension')):
+            browser_type = capabilities['browser']
+            if browser_type.lower() == 'chrome':
+                options = webdriver.ChromeOptions()
+                all_extensions = self.get_extension_file_names('crx')
+                for chr_extension in all_extensions:
+                    options.add_extension(os.path.join(self.project_root, 'extension', chr_extension + '.crx'))
+                chrome_capabilities = options.to_capabilities()
+                capabilities.update(chrome_capabilities)
+            elif browser_type.lower() == 'firefox':
+                browser_profile = webdriver.FirefoxProfile()
+                all_extensions = self.get_extension_file_names('xpi')
+                for ff_extension in all_extensions:
+                    browser_profile.add_extension(os.path.join(self.project_root, 'extension', ff_extension + '.xpi'))
+
+        # start remote driver
         command_executor = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
         self.driver = webdriver.Remote(
             command_executor=command_executor,
-            desired_capabilities=capabilities)
+            desired_capabilities=capabilities,
+            browser_profile=browser_profile)
         auth = (bs_username, bs_password)
         session = self.bs_api.get_session(auth, capabilities['build'], 'running')
         self.session_link = self.bs_api.get_session_link(session)
         self.session_id = self.bs_api.get_session_hashed_id(session)
 
     def call_local_browser(self, browser):
-        """ Starts local browser with extension """
+        """ Starts local browser """
+        # start local browser with extension
         if bool(self.gid('with_extension')):
             if browser == "Firefox":
                 ffprofile = webdriver.FirefoxProfile()
@@ -166,6 +189,8 @@ class ControlTest():
                     options.add_extension(
                         os.path.join(self.project_root, 'extension', chr_extension + '.crx'))
                 self.driver = webdriver.Chrome(chrome_options=options)
+
+        # starts local browser without extensions
         else:
             if browser == "Firefox":
                 self.driver = webdriver.Firefox()

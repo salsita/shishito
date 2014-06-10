@@ -1,0 +1,8 @@
+/.idea/scopes
+
+/.idea
+/graphics
+**/integration_tests/results
+**/integration_tests/results_archive
+**/integration_tests/extension
+*.pyc

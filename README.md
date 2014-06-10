@@ -131,7 +131,7 @@ If no arguments are specified, Salsa WebQA, by default, searches for BROWSERSTAC
 Browser Extensions can be automatically installed before testing using Chrome or Firefox.
 This works on BrowserStack cloud as well.
 
-In order to automatically install browser extensions into browsers, "with_extension" property needs to be set to *true*.
+In order to automatically install browser extensions into browsers, "with_extension" property (from *local_config.properties* and/or *server_config.properties*) needs to be set to *true*.
 When folder 'extension' is available in project root, Salsa WebQA will then install any extension in this folder before testing (for appropriate browser).
 
 "path_to_extension_code" is optional, but once it is filled with path to extension source code folder (relative to test project root folder), Salsa WebQA will automatically build .crx file from source code, using crxmake https://github.com/bellbind/crxmake-python, and install this extension. Building extension from source option is available only for Chrome browser now.

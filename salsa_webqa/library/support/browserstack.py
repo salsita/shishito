@@ -9,7 +9,6 @@ import time
 
 
 class BrowserStackAPI():
-
     def __init__(self):
         pass
 
@@ -68,7 +67,7 @@ class BrowserStackAPI():
         return session
 
     def get_session_link(self, session):
-        if session != 0:
+        if session is not None:
             link = session['logs']
             link = link[:-4]
         else:
@@ -76,7 +75,7 @@ class BrowserStackAPI():
         return link
 
     def get_session_hashed_id(self, session):
-        if session != 0:
+        if session is not None:
             hashed_id = session['hashed_id']
         else:
             hashed_id = None

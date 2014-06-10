@@ -16,16 +16,11 @@ import ntpath
 import glob
 import shutil
 import subprocess
-import logging
 
 from selenium import webdriver
 import pytest
-from selenium.webdriver.support.expected_conditions import element_selection_state_to_be
 
 from salsa_webqa.library.support.browserstack import BrowserStackAPI
-
-
-bs_api = BrowserStackAPI()
 
 
 class ControlTest():
@@ -149,12 +144,8 @@ class ControlTest():
         self.session_id = self.bs_api.get_session_hashed_id(session)
 
     def call_local_browser(self, browser):
-        """ Starts local browser with extension
-        :param extension_version:
-        :param extension_file:
-        """
+        """ Starts local browser with extension """
         if bool(self.gid('with_extension')):
-
             if browser == "Firefox":
                 ffprofile = webdriver.FirefoxProfile()
                 all_extensions = self.get_extension_file_names('xpi')
@@ -163,16 +154,15 @@ class ControlTest():
                     extension = os.path.join(self.project_root, 'extension',
                                              browser_extension + ".xpi")
                     ffprofile.add_extension(extension)
+                    # TODO set extension version for Firefox
                     # ffprofile.set_preference("extensions." + self.gid('extension_name') + ".currentVersion",
-                    #                          self.gid('extension_version'))
+                    # self.gid('extension_version'))
 
                 self.driver = webdriver.Firefox(ffprofile)
             elif browser == "Chrome":
                 options = webdriver.ChromeOptions()
-                tall_extensions = self.get_extension_file_names('crx')
-                for chr_extension in tall_extensions:
-                    print (chr_extension)
-                    print os.path.join(self.project_root, 'extension', chr_extension + '.crx')
+                all_extensions = self.get_extension_file_names('crx')
+                for chr_extension in all_extensions:
                     options.add_extension(
                         os.path.join(self.project_root, 'extension', chr_extension + '.crx'))
                 self.driver = webdriver.Chrome(chrome_options=options)
@@ -189,7 +179,7 @@ class ControlTest():
                 self.driver = webdriver.Opera()
                 # SafariDriver bindings for Python not yet implemented
                 # elif browser == "Safari":
-                #     self.driver = webdriver.SafariDriver()
+                # self.driver = webdriver.SafariDriver()
 
     def start_browser(self, build_name=None, url=None, browser=None, width=None, height=None):
         """ Browser startup function.
@@ -242,18 +232,20 @@ class ControlTest():
     def get_extension_file_names(self, extension_type):
         """ Method reads extension folder and gets extension file name based on provided extension type"""
         extension_location = os.path.join(self.project_root, 'extension')
-        # extension_files = glob.glob(extension_location + '/*.' + extension_type)
         extension_file_names = []
         extension_path = self.gid('path_to_extension_code')
-        if extension_type == 'crx':
-            if extension_path:
-                self.build_extension()
-                shutil.copy(extension_path + self.gid('extension_name') + '.crx', extension_location)
-
-        extension_files = glob.glob(os.path.join(extension_location, '*.' + extension_type))
-        for extension in extension_files:
-            extension_file_name = self.path_leaf(extension).replace('.' + extension_type, '', 1)
-            extension_file_names.append(extension_file_name)
+        # build Chrome extension from sources if required
+        if extension_type == 'crx' and extension_path:
+            if not os.path.exists(extension_location):
+                os.makedirs(extension_location)
+            self.build_extension()
+            shutil.copy(extension_path + '.' + extension_type, extension_location)
+        # find all extensions in folder (build from sources in previous step + already existing)
+        if os.path.exists(extension_location):
+            extension_files = glob.glob(os.path.join(extension_location, '*.' + extension_type))
+            for extension in extension_files:
+                extension_file_name = self.path_leaf(extension).replace('.' + extension_type, '', 1)
+                extension_file_names.append(extension_file_name)
         return extension_file_names
 
     def path_leaf(self, path):
@@ -267,8 +259,10 @@ class ControlTest():
         # build Chrome extension
         try:
             extension_path = self.gid('path_to_extension_code')
-            os.chdir(extension_path)
-            shell_command = 'crxmake ' + self.gid('extension_name')
+            shell_path = os.path.abspath(os.path.join(extension_path, os.pardir))
+            extension_name = self.path_leaf(extension_path)
+            os.chdir(shell_path)
+            shell_command = 'crxmake ' + extension_name
             try:
                 cmd_shell = subprocess.check_call(shell_command, shell=True)
             except subprocess.CalledProcessError:

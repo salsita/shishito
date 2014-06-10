@@ -1,12 +1,13 @@
 # Salsa WebQA
 
-Salsa WebQA is test module for integration testing with Selenium Webdriver & Python.
+Salsa WebQA is module for web application and browser extension integration testing with Selenium Webdriver & Python.
 It runs tests using included libraries and generates nice test results output.
 
 ## Features
 
 * runs python Selenium Webdriver tests via PyTest
 * easy configuration for local and remote (BrowserStack) test execution
+* support browser extensions testing through Selenium
 * contains useful test libraries
 * generates HTML test results report (with screenshots for failed tests)
 * designed to be used as a module (by multiple projects if needed)
@@ -23,6 +24,15 @@ Following python modules needs to be installed
 
 ```pip install selenium pytest pytest-xdist pytest-instafail UnittestZero```
 *(On linux run as root with 'sudo')*
+
+To build Chrome extension from sources automatically
+
+* crxmake
+
+```
+sudo apt-get install swig
+sudo pip install crxmake
+```
 
 Webdriver drivers need to be setup (ChromeDriver, InternetExplorerDriver etc.)
 
@@ -115,3 +125,18 @@ If no arguments are specified, Salsa WebQA, by default, searches for BROWSERSTAC
 * contains BrowserStack combinations tests should run on
 * only used if *driver=BrowserStack* in *local_config.properties* or *server_config.properties*
 * default file is *browserstack.properties*; *browserstack_smoke.properties* is used when argument *--tests smoke* is passed to salsa_webqa runner
+
+## Browser Extensions
+
+Browser Extensions can be automatically installed before testing using Chrome or Firefox.
+This works on BrowserStack cloud as well.
+
+In order to automatically install browser extensions into browsers, "with_extension" property needs to be set to *true*.
+When folder 'extension' is available in project root, Salsa WebQA will then install any extension in this folder before testing (for appropriate browser).
+
+"path_to_extension_code" is optional, but once it is filled with path to extension source code folder (relative to test project root folder), Salsa WebQA will automatically build .crx file from source code, using crxmake https://github.com/bellbind/crxmake-python, and install this extension. Building extension from source option is available only for Chrome browser now.
+```
+# Extension settings
+with_extension=true
+path_to_extension_code=../test-extension/source/main
+```

@@ -51,6 +51,7 @@ class SeleniumTest():
     def go_to_page(self, url):
         """ Opens url in currently active window """
         self.driver.get(url)
+        self.driver.implicitly_wait(self.default_implicit_wait)
 
     def click_and_wait(self, element, locator=None):
         """ clicks on a element and then waits for specific element to be present or simply waits implicitly """

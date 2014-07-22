@@ -85,7 +85,7 @@ class ControlTest():
 
         return value_to_return
 
-    def get_capabilities(self, build_name=None):
+    def get_browserstack_capabilities(self, build_name=None):
         """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
         if build_name is not None:
             build_name = build_name
@@ -100,6 +100,17 @@ class ControlTest():
                        'project': self.gid('project_name'),
                        'build': build_name,
                        'name': self.get_test_name() + time.strftime('_%Y-%m-%d')}
+        return desired_cap
+
+    def get_capabilities(self, build_name=None, browserstack=False):
+        """ Returns dictionary of browser capabilities """
+        desired_cap = {}
+        if bool(self.gid('accept_ssl_cert').lower() == 'false'):
+            desired_cap['acceptSslCerts'] = False
+        else:
+            desired_cap['acceptSslCerts'] = True
+        if browserstack:
+            desired_cap.update(self.get_browserstack_capabilities(build_name))
         return desired_cap
 
     def get_test_name(self):
@@ -135,7 +146,7 @@ class ControlTest():
         self.bs_api.wait_for_free_sessions((bs_username, bs_password),
                                            int(self.gid('session_waiting_time')),
                                            int(self.gid('session_waiting_delay')))
-        capabilities = self.get_capabilities(build_name)
+        capabilities = self.get_capabilities(build_name, browserstack=True)
 
         # add extensions to remote driver
         browser_profile = None
@@ -167,6 +178,9 @@ class ControlTest():
 
     def call_local_browser(self, browser):
         """ Starts local browser """
+        # get browser capabilities
+        capabilities = self.get_capabilities()
+
         # start local browser with extension
         if bool(self.gid('with_extension')):
             if browser == "Firefox":
@@ -181,27 +195,27 @@ class ControlTest():
                     # ffprofile.set_preference("extensions." + self.gid('extension_name') + ".currentVersion",
                     # self.gid('extension_version'))
 
-                self.driver = webdriver.Firefox(ffprofile)
+                self.driver = webdriver.Firefox(ffprofile, capabilities=capabilities)
             elif browser == "Chrome":
                 options = webdriver.ChromeOptions()
                 all_extensions = self.get_extension_file_names('crx')
                 for chr_extension in all_extensions:
                     options.add_extension(
                         os.path.join(self.project_root, 'extension', chr_extension + '.crx'))
-                self.driver = webdriver.Chrome(chrome_options=options)
+                self.driver = webdriver.Chrome(desired_capabilities=capabilities, chrome_options=options)
 
         # starts local browser without extensions
         else:
             if browser == "Firefox":
-                self.driver = webdriver.Firefox()
+                self.driver = webdriver.Firefox(capabilities=capabilities)
             elif browser == "Chrome":
-                self.driver = webdriver.Chrome()
+                self.driver = webdriver.Chrome(desired_capabilities=capabilities)
             elif browser == "IE":
-                self.driver = webdriver.Ie()
+                self.driver = webdriver.Ie(capabilities=capabilities)
             elif browser == "PhantomJS":
-                self.driver = webdriver.PhantomJS()
+                self.driver = webdriver.PhantomJS(desired_capabilities=capabilities)
             elif browser == "Opera":
-                self.driver = webdriver.Opera()
+                self.driver = webdriver.Opera(desired_capabilities=capabilities)
                 # SafariDriver bindings for Python not yet implemented
                 # elif browser == "Safari":
                 # self.driver = webdriver.SafariDriver()

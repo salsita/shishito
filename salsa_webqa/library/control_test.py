@@ -272,9 +272,10 @@ class ControlTest():
         """ Method reads extension folder and gets extension file name based on provided extension type"""
         extension_location = os.path.join(self.project_root, 'extension')
         extension_file_names = []
-        extension_path = os.path.abspath(os.path.join(self.project_root, self.gid('path_to_extension_code')))
+        extension_code = self.gid('path_to_extension_code')
         # build Chrome extension from sources if required
-        if extension_type == 'crx' and extension_path:
+        if extension_type == 'crx' and extension_code:
+            extension_path = os.path.abspath(os.path.join(self.project_root, self.gid('path_to_extension_code')))
             if not os.path.exists(extension_location):
                 os.makedirs(extension_location)
             self.build_extension()

@@ -27,6 +27,7 @@ class ControlTest():
     def __init__(self):
         self.bs_api = BrowserStackAPI()
         self.project_root = self.get_project_root()
+        self.configs = self.load_configs()
         self.session_link = None
         self.session_id = None
         self.driver = None
@@ -64,9 +65,8 @@ class ControlTest():
          If local execution parameter is "True", function will try to search for parameter in local configuration file.
          If such parameter is not found or there is an error while reading the file, server (default) configuration
          file will be used instead. """
-        config_vars = self.load_configs()
-        server_config = config_vars[0]
-        local_config = config_vars[1]
+        server_config = self.configs[0]
+        local_config = self.configs[1]
         local_execution = local_config.get('local_execution')
         use_server = True
 

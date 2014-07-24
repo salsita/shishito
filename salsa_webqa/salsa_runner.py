@@ -13,6 +13,7 @@ import shutil
 import argparse
 
 import pytest
+from jinja2 import Environment, FileSystemLoader
 
 from salsa_webqa.library.support.browserstack import BrowserStackAPI
 from salsa_webqa.library.control_test import ControlTest
@@ -28,7 +29,9 @@ class SalsaRunner():
     - archive the test results in .zip file """
 
     def __init__(self, project_root):
-        # set project root folder
+
+        # set project root folder and current folder
+        self.current_folder = os.path.dirname(os.path.abspath(__file__))
         self.project_root = project_root
         self.set_project_root()
 
@@ -70,13 +73,14 @@ class SalsaRunner():
             else:
                 test_status = self.run_locally()
             self.archive_results()
+            self.generate_combined_report()
             return test_status
 
     def run_on_browserstack(self):
         """ Runs tests on BrowserStack """
         test_status = 0
         if bs_api.wait_for_free_sessions((self.tc.gid('bs_username'), self.tc.gid('bs_password')),
-                                             self.tc.gid('session_waiting_time'), self.tc.gid('session_waiting_delay')):
+                                         self.tc.gid('session_waiting_time'), self.tc.gid('session_waiting_delay')):
             self.cleanup_results()
 
             # load browserstack variables from configuration files
@@ -194,4 +198,21 @@ class SalsaRunner():
         archive_folder = os.path.join(self.project_root, 'results_archive')
         if not (os.path.exists(archive_folder)):
             os.makedirs(archive_folder)
-        shutil.make_archive(os.path.join(archive_folder, self.timestamp), "zip", os.path.join(self.project_root, 'results'))
+        shutil.make_archive(os.path.join(archive_folder, self.timestamp), "zip",
+                            os.path.join(self.project_root, 'results'))
+
+    def generate_combined_report(self):
+        data = os.listdir(os.path.join(self.project_root, 'results', self.timestamp))
+        result_reports = [item[:-5] for item in data if item.endswith('.html')]
+        if len(result_reports) > 0:
+            env = Environment(
+                loader=FileSystemLoader(os.path.join(self.current_folder, 'library', 'report', 'resources')))
+            template = env.get_template('CombinedReportTemplate.html')
+            template_vars = {'data': result_reports}
+            output = template.render(template_vars)
+            formatted_output = output.encode('utf8').strip()
+            final_report = open(os.path.join(self.project_root, 'results', self.timestamp, 'CombinedReport.html'), 'w')
+            final_report.write(formatted_output)
+            final_report.close()
+            shutil.copy(os.path.join(self.current_folder, 'library', 'report', 'resources', 'combined_report.js'),
+                        os.path.join(self.project_root, 'results', self.timestamp))

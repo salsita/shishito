@@ -21,8 +21,9 @@ Following python modules needs to be installed
 * pytest-xdist
 * pytest-instafail
 * UnittestZero
+* Jinja2
 
-```pip install selenium pytest pytest-xdist pytest-instafail UnittestZero```
+```pip install selenium pytest pytest-xdist pytest-instafail UnittestZero jinja2```
 *(On linux run as root with 'sudo')*
 
 To build Chrome extension from sources automatically

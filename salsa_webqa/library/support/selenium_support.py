@@ -13,6 +13,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import NoSuchElementException, \
     ElementNotVisibleException, TimeoutException
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.keys import Keys
 from unittestzero import Assert
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
@@ -233,3 +234,26 @@ class SeleniumTest():
         file_path = os.path.join(self.tc.project_root, file_path)
         self.driver.find_element(*input_field_locator).send_keys(file_path)
         time.sleep(delay)
+
+    def execute_js_script(self, script, arguments=None):
+        """execute any js command with arguments or without it"""
+        script_value =self.driver.execute_script(script, arguments)
+        return script_value
+
+    def open_new_tab(self, url):
+        """Open new tab using keyboard, for now work only in Firefox and IE, in Chrome use js script to open tab """
+        ActionChains(self.driver).send_keys(Keys.CONTROL, "t").perform()
+        windows=self.driver.window_handles
+        self.driver.switch_to_window(windows[-1])
+        self.driver.get(url)
+
+    def switch_new_tab(self):
+        """switch to new tab/window"""
+        windows=self.driver.window_handles
+        self.driver.switch_to_window(windows[-1])
+
+    def switch_first_tab(self):
+        """Close current tab, switch to first tab/window"""
+        windows=self.driver.window_handles
+        self.driver.close()
+        self.driver.switch_to_window(windows[0])

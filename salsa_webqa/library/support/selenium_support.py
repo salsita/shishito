@@ -197,6 +197,19 @@ class SeleniumTest():
                             + '" after ' + str(counter * delay) + ' seconds')
                 break
 
+    def wait_for_attribute_value(self, attribute, attribute_text, locator, max_count=20, delay=0.25):
+        """ Waits for element attribute value to match specified text, until certain deadline """
+        element = self.driver.find_element(*locator)
+        counter = 0
+        while element.get_attribute(attribute) != attribute_text:
+            if counter < max_count:
+                time.sleep(delay)
+                counter += 1
+            else:
+                Assert.fail('"' + attribute_text + '" text did not match "' + element.get_attribute(attribute)
+                            + '" after ' + str(counter * delay) + ' seconds')
+                break
+
     def wait_for_element_ready(self, locator):
         """ Waits until certain element is present and clickable """
         WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located(locator),

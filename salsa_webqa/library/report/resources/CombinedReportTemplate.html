@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Combined Test Results Report</title>
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="combined_report.js"></script>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+{% for session in data %}
+<button onclick="show_frame('{{ session }}')">{{ session }}</button>
+{% endfor %}
+<br>
+
+{% for session in data %}
+<div id="{{ session }}" class="result_div">
+    <div class="result_frame_title">{{ session }}</div>
+    <iframe class="result_frame" frameborder="0" src="{{ session }}.html"></iframe>
+</div>
+{% endfor %}

@@ -1,12 +1,13 @@
 body {
-	font-family: Helvetica, Arial, sans-serif;
-	font-size: 12px;
-	min-width: 1200px;
-	color: #000000;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    min-width: 1200px;
+    color: #000000;
 }
+
 h2 {
-	font-size: 16px;
-	color: black;
+    font-size: 16px;
+    color: black;
 }
 
 p {
@@ -14,11 +15,25 @@ p {
 }
 
 a {
-	color: #FF0000;
+    color: #FF0000;
 }
 
 table {
-	border-collapse: collapse;
+    border-collapse: collapse;
+}
+
+/******************************
+ * FINAL(COMBINED) REPORT
+ ******************************/
+
+.result_frame_title {
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px;
+}
+
+.result_frame {
+    border: none;
 }
 
 /******************************
@@ -26,58 +41,64 @@ table {
  ******************************/
 
 #summary-wrapper {
-    position:fixed;
+    position: fixed;
     background-color: white;
     padding: 5px;
-    border-color: rgb(200,200,200);
-    border-style:solid;
-    border-width:3px;
+    border-color: rgb(200, 200, 200);
+    border-style: solid;
+    border-width: 3px;
 }
 
 #summary-space {
-    height:100px;
+    height: 100px;
 }
 
 #configuration td {
-	padding: 5px;
-	border: 1px solid #E6E6E6;
+    padding: 5px;
+    border: 1px solid #E6E6E6;
 }
 
 #configuration tr:nth-child(odd) {
-	background-color: #f6f6f6;
+    background-color: #f6f6f6;
 }
+
 .clickable {
-    cursor:pointer;
-    text-decoration:underline;
+    cursor: pointer;
+    text-decoration: underline;
 }
 
 /******************************
  * TEST RESULT COLORS
  ******************************/
 span.passed, .passed .col-result {
-	color: green;
-}
-span.skipped, span.xfailed, .skipped .col-result, .xfailed .col-result {
-	color: orange;
-}
-span.error, span.failed, span.xpassed, .failed .col-result, .error .col-result, .xpassed .col-result  {
-	color: red;
-}
-.failed.results-table-row {
-    cursor: pointer;
-    background-color: rgb(250,230,230);
-}
-.failed.results-table-row:hover {
-    background-color: rgb(250,180,180);
-}
-.error.results-table-row {
-    cursor: pointer;
-    background-color: rgb(250,200,200);
-}
-.error.results-table-row:hover {
-    background-color: rgb(250,150,150);
+    color: green;
 }
 
+span.skipped, span.xfailed, .skipped .col-result, .xfailed .col-result {
+    color: orange;
+}
+
+span.error, span.failed, span.xpassed, .failed .col-result, .error .col-result, .xpassed .col-result {
+    color: red;
+}
+
+.failed.results-table-row {
+    cursor: pointer;
+    background-color: rgb(250, 230, 230);
+}
+
+.failed.results-table-row:hover {
+    background-color: rgb(250, 180, 180);
+}
+
+.error.results-table-row {
+    cursor: pointer;
+    background-color: rgb(250, 200, 200);
+}
+
+.error.results-table-row:hover {
+    background-color: rgb(250, 150, 150);
+}
 
 /******************************
  * RESULTS TABLE
@@ -93,19 +114,20 @@ span.error, span.failed, span.xpassed, .failed .col-result, .error .col-result, 
  *------------------*/
 
 #results-table {
-	border: 1px solid #e6e6e6;
-	color: #000000;
-	font-size: 12px;
-	width: 100%
+    border: 1px solid #e6e6e6;
+    color: #000000;
+    font-size: 12px;
+    width: 100%
 }
 
 #results-table th, #results-table td {
-	padding: 5px;
-	border: 1px solid #E6E6E6;
-	text-align: left
+    padding: 5px;
+    border: 1px solid #E6E6E6;
+    text-align: left
 }
+
 #results-table th {
-	font-weight: bold
+    font-weight: bold
 }
 
 /*------------------
@@ -113,66 +135,69 @@ span.error, span.failed, span.xpassed, .failed .col-result, .error .col-result, 
  *------------------*/
 
 .log:only-child {
-	height: inherit
+    height: inherit
 }
+
 .log {
-	background-color: #e6e6e6;
-	border: 1px solid #e6e6e6;
-	color: black;
-	display: block;
-	font-family: "Courier New", Courier, monospace;
-	height: 230px;
-	overflow-y: scroll;
-	padding: 5px;
-	white-space: pre-wrap
+    background-color: #e6e6e6;
+    border: 1px solid #e6e6e6;
+    color: black;
+    display: block;
+    font-family: "Courier New", Courier, monospace;
+    height: 230px;
+    overflow-y: scroll;
+    padding: 5px;
+    white-space: pre-wrap
 }
+
 .screenshot, .video {
-	border: 1px solid #e6e6e6;
-	float: right;
-	height: 240px;
-	margin-left: 5px;
-	overflow: hidden;
-	width: 320px
+    border: 1px solid #e6e6e6;
+    float: right;
+    height: 240px;
+    margin-left: 5px;
+    overflow: hidden;
+    width: 320px
 }
+
 .screenshot img {
-	width: 320px
+    width: 320px
 }
 
 /*if the result is passed or xpassed don't show debug row*/
 .passed + .debug, .xpassed + .debug {
-	display: none;
+    display: none;
 }
 
 /*------------------
  * 3. Sorting items
  *------------------*/
 .sortable {
-	cursor: pointer;
+    cursor: pointer;
 }
 
 .sort-icon {
-	font-size: 0px;
-	float: left;
-	margin-right: 5px;
-	margin-top: 5px;
-	/*triangle*/
-	width: 0;
-	height: 0;
-	border-left: 8px solid transparent;
-	border-right: 8px solid transparent;
+    font-size: 0px;
+    float: left;
+    margin-right: 5px;
+    margin-top: 5px;
+    /*triangle*/
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
 }
 
 .inactive .sort-icon {
-	/*finish triangle*/
-	border-top: 8px solid #E6E6E6;
+    /*finish triangle*/
+    border-top: 8px solid #E6E6E6;
 }
 
 .asc.active .sort-icon {
-	/*finish triangle*/
-	border-bottom: 8px solid #999;
+    /*finish triangle*/
+    border-bottom: 8px solid #999;
 }
 
 .desc.active .sort-icon {
-	/*finish triangle*/
-	border-top: 8px solid #999;
+    /*finish triangle*/
+    border-top: 8px solid #999;
 }

@@ -139,31 +139,53 @@ class ControlTest():
             height = self.gid('window_height')
         return browser, height, url, width
 
+    def get_browser_profile(self, browser_type):
+        """ returns ChromeOptions or FirefoxProfile with default settings, based on browser """
+        profile = None
+        if browser_type.lower() == 'chrome':
+            profile = webdriver.ChromeOptions()
+            profile.add_experimental_option("excludeSwitches", ["ignore-certificate-errors"])
+        elif browser_type.lower() == 'firefox':
+            profile = webdriver.FirefoxProfile()
+        return profile
+
+    def add_extension_to_browser(self, browser_type, browser_profile):
+        """ returns browser profile updated with one or more extensions """
+        if browser_type == 'chrome':
+            all_extensions = self.get_extension_file_names('crx')
+            for chr_extension in all_extensions:
+                browser_profile.add_extension(os.path.join(self.project_root, 'extension', chr_extension + '.crx'))
+        elif browser_type == 'firefox':
+            all_extensions = self.get_extension_file_names('xpi')
+            for ff_extension in all_extensions:
+                browser_profile.add_extension(os.path.join(self.project_root, 'extension', ff_extension + '.xpi'))
+                # TODO set extension version for Firefox
+                # browser_profile.set_preference("extensions." + self.gid('extension_name') + ".currentVersion",
+                # self.gid('extension_version'))
+        return browser_profile
+
     def call_browserstack_browser(self, build_name):
         """ Starts browser on BrowserStack """
         bs_username = self.gid('bs_username')
         bs_password = self.gid('bs_password')
+
+        # wait until free browserstack session is available
         self.bs_api.wait_for_free_sessions((bs_username, bs_password),
                                            int(self.gid('session_waiting_time')),
                                            int(self.gid('session_waiting_delay')))
+
+        # get browser capabilities and profile
         capabilities = self.get_capabilities(build_name, browserstack=True)
+        browser_type = capabilities['browser'].lower()
+        browser_profile = self.get_browser_profile(browser_type)
 
         # add extensions to remote driver
-        browser_profile = None
         if bool(self.gid('with_extension')):
-            browser_type = capabilities['browser']
-            if browser_type.lower() == 'chrome':
-                options = webdriver.ChromeOptions()
-                all_extensions = self.get_extension_file_names('crx')
-                for chr_extension in all_extensions:
-                    options.add_extension(os.path.join(self.project_root, 'extension', chr_extension + '.crx'))
-                chrome_capabilities = options.to_capabilities()
+            self.add_extension_to_browser(browser_type, browser_profile)
+            if browser_type == 'chrome':
+                chrome_capabilities = browser_profile.to_capabilities()
                 capabilities.update(chrome_capabilities)
-            elif browser_type.lower() == 'firefox':
-                browser_profile = webdriver.FirefoxProfile()
-                all_extensions = self.get_extension_file_names('xpi')
-                for ff_extension in all_extensions:
-                    browser_profile.add_extension(os.path.join(self.project_root, 'extension', ff_extension + '.xpi'))
+                browser_profile = None
 
         # start remote driver
         command_executor = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
@@ -176,49 +198,30 @@ class ControlTest():
         self.session_link = self.bs_api.get_session_link(session)
         self.session_id = self.bs_api.get_session_hashed_id(session)
 
-    def call_local_browser(self, browser):
+    def call_local_browser(self, browser_type):
         """ Starts local browser """
-        # get browser capabilities
+        # get browser capabilities and profile
         capabilities = self.get_capabilities()
+        browser_profile = self.get_browser_profile(browser_type)
 
-        # start local browser with extension
+        # add extensions to browser
         if bool(self.gid('with_extension')):
-            if browser == "Firefox":
-                ffprofile = webdriver.FirefoxProfile()
-                all_extensions = self.get_extension_file_names('xpi')
+            browser_profile = self.add_extension_to_browser(browser_type, browser_profile)
 
-                for browser_extension in all_extensions:
-                    extension = os.path.join(self.project_root, 'extension',
-                                             browser_extension + ".xpi")
-                    ffprofile.add_extension(extension)
-                    # TODO set extension version for Firefox
-                    # ffprofile.set_preference("extensions." + self.gid('extension_name') + ".currentVersion",
-                    # self.gid('extension_version'))
-
-                self.driver = webdriver.Firefox(ffprofile, capabilities=capabilities)
-            elif browser == "Chrome":
-                options = webdriver.ChromeOptions()
-                all_extensions = self.get_extension_file_names('crx')
-                for chr_extension in all_extensions:
-                    options.add_extension(
-                        os.path.join(self.project_root, 'extension', chr_extension + '.crx'))
-                self.driver = webdriver.Chrome(desired_capabilities=capabilities, chrome_options=options)
-
-        # starts local browser without extensions
-        else:
-            if browser == "Firefox":
-                self.driver = webdriver.Firefox(capabilities=capabilities)
-            elif browser == "Chrome":
-                self.driver = webdriver.Chrome(desired_capabilities=capabilities)
-            elif browser == "IE":
-                self.driver = webdriver.Ie(capabilities=capabilities)
-            elif browser == "PhantomJS":
-                self.driver = webdriver.PhantomJS(desired_capabilities=capabilities)
-            elif browser == "Opera":
-                self.driver = webdriver.Opera(desired_capabilities=capabilities)
-                # SafariDriver bindings for Python not yet implemented
-                # elif browser == "Safari":
-                # self.driver = webdriver.SafariDriver()
+        # starts local browser
+        if browser_type == "firefox":
+            self.driver = webdriver.Firefox(browser_profile, capabilities=capabilities)
+        elif browser_type == "chrome":
+            self.driver = webdriver.Chrome(desired_capabilities=capabilities, chrome_options=browser_profile)
+        elif browser_type == "ie":
+            self.driver = webdriver.Ie(capabilities=capabilities)
+        elif browser_type == "phantomjs":
+            self.driver = webdriver.PhantomJS(desired_capabilities=capabilities)
+        elif browser_type == "opera":
+            self.driver = webdriver.Opera(desired_capabilities=capabilities)
+            # SafariDriver bindings for Python not yet implemented
+            # elif browser == "Safari":
+            # self.driver = webdriver.SafariDriver()
 
     def start_browser(self, build_name=None, url=None, browser=None, width=None, height=None):
         """ Browser startup function.
@@ -229,7 +232,7 @@ class ControlTest():
         if browser.lower() == "browserstack":
             self.call_browserstack_browser(build_name)
         else:
-            self.call_local_browser(browser)
+            self.call_local_browser(browser.lower())
             self.driver.set_window_size(width, height)
 
         self.test_init(url, browser)
@@ -273,6 +276,7 @@ class ControlTest():
         extension_location = os.path.join(self.project_root, 'extension')
         extension_file_names = []
         extension_code = self.gid('path_to_extension_code')
+
         # build Chrome extension from sources if required
         if extension_type == 'crx' and extension_code:
             extension_path = os.path.abspath(os.path.join(self.project_root, self.gid('path_to_extension_code')))
@@ -280,6 +284,7 @@ class ControlTest():
                 os.makedirs(extension_location)
             self.build_extension()
             shutil.copy(extension_path + '.' + extension_type, extension_location)
+
         # find all extensions in folder (build from sources in previous step + already existing)
         if os.path.exists(extension_location):
             extension_files = glob.glob(os.path.join(extension_location, '*.' + extension_type))

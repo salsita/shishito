@@ -21,15 +21,15 @@ class CircleAPI():
 
     def collect_artifacts(self, destination_folder):
         """ downloads build artifacts from CircleCI for latest build from specific branch """
-        return_value = True
         if not os.path.exists(destination_folder):
             os.makedirs(destination_folder)
         artifact_data = self.get_artifact_data()
         for artifact in artifact_data:
             self.save_artifact(artifact, destination_folder)
         if len([name for name in os.listdir(destination_folder)]) == 0:
-            return_value = False
-        return return_value
+            return False
+        else:
+            return True
 
     def save_artifact(self, artifact, destination_folder):
         """ saves artifact into specified folder """

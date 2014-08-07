@@ -26,6 +26,10 @@ class CircleAPI():
         artifact_data = self.get_artifact_data()
         for artifact in artifact_data:
             self.save_artifact(artifact, destination_folder)
+        if len([name for name in os.listdir(destination_folder)]) == 0:
+            return False
+        else:
+            return True
 
     def save_artifact(self, artifact, destination_folder):
         """ saves artifact into specified folder """

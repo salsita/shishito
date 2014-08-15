@@ -113,50 +113,94 @@ class SeleniumTest():
             # set the implicit wait back
             self.driver.implicitly_wait(self.default_implicit_wait)
 
-    def wait_for_element_present(self, locator):
+    def wait_for_element_present(self, locator, timeout=None):
         """ Wait for the element at the specified locator
         to be present in the DOM. """
+        if timeout is None:
+            timeout = self.timeout
         count = 0
         while not self.is_element_present(locator):
             time.sleep(1)
             count += 1
-            if count == self.timeout:
+            if count == timeout:
                 raise Exception(str(locator) + ' has not loaded')
 
-    def wait_for_element_visible(self, locator):
+    def wait_for_element_visible(self, locator, timeout=None):
         """
         Wait for the element at the specified locator to be visible.
         """
+        if timeout is None:
+            timeout = self.timeout
         count = 0
         while not self.is_element_visible(locator):
             time.sleep(1)
             count += 1
-            if count == self.timeout:
+            if count == timeout:
                 raise Exception(str(locator) + " is not visible")
 
-    def wait_for_element_not_visible(self, locator):
+    def wait_for_element_not_visible(self, locator, timeout=None):
         """
         Wait for the element at the specified locator not to be visible anymore.
         """
+        if timeout is None:
+            timeout = self.timeout
         count = 0
         while self.is_element_visible(locator):
             time.sleep(1)
             count += 1
-            if count == self.timeout:
+            if count == timeout:
                 raise Exception(str(locator) + " is still visible")
 
-    def wait_for_element_not_present(self, locator):
+    def wait_for_element_not_present(self, locator, timeout=None):
         """ Wait for the element at the specified locator
          not to be present in the DOM. """
+        if timeout is None:
+            timeout = self.timeout
         self.driver.implicitly_wait(0)
         try:
-            WebDriverWait(self.driver, self.timeout).until(
+            WebDriverWait(self.driver, timeout).until(
                 lambda s: len(self.find_elements(*locator)) < 1)
             return True
         except TimeoutException:
             Assert.fail(TimeoutException)
         finally:
             self.driver.implicitly_wait(self.default_implicit_wait)
+
+    def wait_for_text_to_match(self, text, locator, max_count=20, delay=0.25):
+        """ Waits for element text to match specified text, until certain deadline """
+        element = self.driver.find_element(*locator)
+        counter = 0
+        while element.text != text:
+            if counter < max_count:
+                time.sleep(delay)
+                counter += 1
+            else:
+                Assert.fail('"' + text + '" text did not match "' + element.text
+                            + '" after ' + str(counter * delay) + ' seconds')
+                break
+
+    def wait_for_attribute_value(self, attribute, attribute_text, locator, max_count=20, delay=0.25):
+        """ Waits for element attribute value to match specified text, until certain deadline """
+        element = self.driver.find_element(*locator)
+        counter = 0
+        while element.get_attribute(attribute) != attribute_text:
+            if counter < max_count:
+                time.sleep(delay)
+                counter += 1
+            else:
+                Assert.fail('"' + attribute_text + '" text did not match "' + element.get_attribute(attribute)
+                            + '" after ' + str(counter * delay) + ' seconds')
+                break
+
+    def wait_for_element_ready(self, locator, timeout=None):
+        """ Waits until certain element is present and clickable """
+        if timeout is None:
+            timeout = self.timeout
+        WebDriverWait(self.driver, timeout).until(EC.presence_of_element_located(locator),
+                                                  'Element specified by ' + str(locator) + ' was not present!')
+        WebDriverWait(self.driver, timeout).until(EC.element_to_be_clickable(locator),
+                                                  'Element specified by ' + str(
+                                                      locator) + ' did not become clickable!')
 
     def find_element(self, locator):
         """ Return the element at the specified locator."""
@@ -185,40 +229,6 @@ class SeleniumTest():
         link = self.driver.find_element(*locator)
         return link.get_attribute('src')
 
-    def wait_for_text_to_match(self, text, locator, max_count=20, delay=0.25):
-        """ Waits for element text to match specified text, until certain deadline """
-        element = self.driver.find_element(*locator)
-        counter = 0
-        while element.text != text:
-            if counter < max_count:
-                time.sleep(delay)
-                counter += 1
-            else:
-                Assert.fail('"' + text + '" text did not match "' + element.text
-                            + '" after ' + str(counter * delay) + ' seconds')
-                break
-
-    def wait_for_attribute_value(self, attribute, attribute_text, locator, max_count=20, delay=0.25):
-        """ Waits for element attribute value to match specified text, until certain deadline """
-        element = self.driver.find_element(*locator)
-        counter = 0
-        while element.get_attribute(attribute) != attribute_text:
-            if counter < max_count:
-                time.sleep(delay)
-                counter += 1
-            else:
-                Assert.fail('"' + attribute_text + '" text did not match "' + element.get_attribute(attribute)
-                            + '" after ' + str(counter * delay) + ' seconds')
-                break
-
-    def wait_for_element_ready(self, locator):
-        """ Waits until certain element is present and clickable """
-        WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located(locator),
-                                                       'Element specified by ' + str(locator) + ' was not present!')
-        WebDriverWait(self.driver, self.timeout).until(EC.element_to_be_clickable(locator),
-                                                       'Element specified by ' + str(
-                                                           locator) + ' did not become clickable!')
-
     def select_dropdown_value(self, select, value):
         """ Set 'select' dropdown value """
         select = Select(select)
@@ -237,23 +247,23 @@ class SeleniumTest():
 
     def execute_js_script(self, script, arguments=None):
         """execute any js command with arguments or without it"""
-        script_value =self.driver.execute_script(script, arguments)
+        script_value = self.driver.execute_script(script, arguments)
         return script_value
 
     def open_new_tab(self, url):
         """Open new tab using keyboard, for now work only in Firefox and IE, in Chrome use js script to open tab """
         ActionChains(self.driver).send_keys(Keys.CONTROL, "t").perform()
-        windows=self.driver.window_handles
+        windows = self.driver.window_handles
         self.driver.switch_to_window(windows[-1])
         self.driver.get(url)
 
     def switch_new_tab(self):
         """switch to new tab/window"""
-        windows=self.driver.window_handles
+        windows = self.driver.window_handles
         self.driver.switch_to_window(windows[-1])
 
     def switch_first_tab(self):
         """Close current tab, switch to first tab/window"""
-        windows=self.driver.window_handles
+        windows = self.driver.window_handles
         self.driver.close()
         self.driver.switch_to_window(windows[0])

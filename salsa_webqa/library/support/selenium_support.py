@@ -9,6 +9,7 @@
 import time
 import os
 
+import requests
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import NoSuchElementException, \
     ElementNotVisibleException, TimeoutException
@@ -35,6 +36,24 @@ class SeleniumTest():
         if not os.path.exists(screenshot_folder):
             os.makedirs(screenshot_folder)
         self.driver.save_screenshot(os.path.join(screenshot_folder, name + '.png'))
+
+    def save_file_from_url(self, file_path, url):
+        """ Saves file from url """
+        if not os.path.isfile(file_path):
+            save_file = open(file_path, 'wb')
+            response = requests.get(url, stream=True)
+
+            if not response.ok:
+                print('Something went wrong when requesting file from url "' + str(url) + '".')
+
+            for block in response.iter_content(1024):
+                if not block:
+                    break
+
+                save_file.write(block)
+            save_file.close()
+        else:
+            print('File "' + str(file_path) + '" already exists.')
 
     def get_base_url(self):
         """ Return the url for the current page."""

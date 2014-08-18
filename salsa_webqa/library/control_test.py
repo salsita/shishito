@@ -182,10 +182,12 @@ class ControlTest():
         # add extensions to remote driver
         if bool(self.gid('with_extension')):
             self.add_extension_to_browser(browser_type, browser_profile)
-            if browser_type == 'chrome':
-                chrome_capabilities = browser_profile.to_capabilities()
-                capabilities.update(chrome_capabilities)
-                browser_profile = None
+
+        # add Chrome options to desired capabilities
+        if browser_type == 'chrome':
+            chrome_capabilities = browser_profile.to_capabilities()
+            capabilities.update(chrome_capabilities)
+            browser_profile = None
 
         # start remote driver
         command_executor = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'

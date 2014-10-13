@@ -68,21 +68,49 @@ class ControlTest():
         server_config = self.configs[0]
         local_config = self.configs[1]
         local_execution = local_config.get('local_execution')
-        use_server = True
+        use_server = False
+        use_environment_property = False
+        value_to_return = None
 
+        # try to retrieve value from local config
         if local_execution.lower() == 'true':
             try:
-                searched_value = local_config.get(searched_id)
-                if searched_value != '':
-                    use_server = False
+                string_returned = local_config.get(searched_id)
+                if string_returned == '':
+                    use_server = True
+                else:
+                    value_to_return = string_returned
             except:
                 print('There was an error while retrieving value "' + searched_id + '" from local config!.'
                       + '\nUsing server value instead.')
-        if use_server:
-            value_to_return = server_config.get(searched_id)
+                use_server = True
         else:
-            value_to_return = local_config.get(searched_id)
+            use_server = True
 
+        # try to retrieve value from server config
+        if use_server:
+            try:
+                string_returned = server_config.get(searched_id)
+                if string_returned == '':
+                    use_environment_property = True
+                else:
+                    value_to_return = string_returned
+            except:
+                print('There was an error while retrieving value "' + searched_id + '" from server config!.'
+                      + '\nLooking for environment property value instead.')
+                use_environment_property = True
+
+        # try to retrieve value from environment property
+        if use_environment_property:
+            env_property_value = os.environ.get(searched_id)
+            if env_property_value is not None:
+                value_to_return = env_property_value
+
+        # raise an exception in case value could not be retrieved by any means
+        if value_to_return is None:
+            print('Property "' + searched_id + '" has not been found within local, server configs, neither'
+                                               ' it was defined in environment property. Returning empty string')
+            return ''
         return value_to_return
 
     def get_browserstack_capabilities(self, build_name=None):

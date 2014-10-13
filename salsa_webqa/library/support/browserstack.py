@@ -13,7 +13,7 @@ class BrowserStackAPI():
         pass
 
     def get_projects(self, auth):
-        url = "https://browserstack.com/automate/projects.json"
+        url = "https://www.browserstack.com/automate/projects.json"
         r = requests.get(url, auth=auth)
         json_res = json.loads(r.text)
         return json_res
@@ -34,7 +34,7 @@ class BrowserStackAPI():
         return project
 
     def get_builds(self, auth):
-        url = "https://browserstack.com/automate/builds.json"
+        url = "https://www.browserstack.com/automate/builds.json"
         r = requests.get(url, auth=auth)
         json_res = json.loads(r.text)
         return json_res
@@ -51,7 +51,7 @@ class BrowserStackAPI():
 
     def get_sessions(self, auth, build_name):
         hashed_id = self.get_build_hash_id(auth, build_name)
-        url = "https://browserstack.com/automate/builds/%s/sessions.json" % hashed_id
+        url = "https://www.browserstack.com/automate/builds/%s/sessions.json" % hashed_id
         r = requests.get(url, auth=auth)
         sessions = json.loads(r.text)
         return sessions

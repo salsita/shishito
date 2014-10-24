@@ -53,6 +53,12 @@ class SalsaRunner():
         self.env_type = cmd_args[0]
         self.test_type = cmd_args[1]
 
+        # load browserstack credentials from cmd argument, if available
+        if cmd_args[2] != 'none':
+            browserstack_auth = cmd_args[2].split(':')
+            os.environ['bs_username'] = browserstack_auth[0]
+            os.environ['bs_password'] = browserstack_auth[1]
+
     def set_project_root(self):
         """ Sets tested project root folder into OS environment variable """
         if os.path.exists(self.project_root) and os.path.isdir(self.project_root):
@@ -184,8 +190,11 @@ class SalsaRunner():
         parser.add_argument('--tests',
                             help='Tests to run; options: "smoke", "all" (default)',
                             default='all')
+        parser.add_argument('--browserstack',
+                            help='BrowserStack credentials; format: "username:token"',
+                            default='none')
         args = parser.parse_args()
-        return [args.env, args.tests]
+        return [args.env, args.tests, args.browserstack]
 
     def cleanup_results(self):
         """ Cleans up test result folder """

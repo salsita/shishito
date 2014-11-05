@@ -45,6 +45,7 @@ Webdriver drivers need to be setup (ChromeDriver, InternetExplorerDriver etc.)
 1. clone sample test project repository https://github.com/salsita/salsa-webqa-sample-project
 ```git clone git@github.com:salsita/salsa-webqa-sample-project.git```
 1. if you want to use BrowserStack for running your tests, replace "bs_username", "bs_password" values with your credentials in ***salsa-webqa-sample-project/config/server_config.properties***
+ or pass it to runner python file as command line argument using flag --browserstack username:token
 1. install Firefox or change "driver" value to some other installed driver in ***salsa-webqa-sample-project/config/local_config.properties***
 Available values  "BrowserStack", "Firefox", "Chrome", "IE", "PhantomJS", "Opera".
 1. run *google_test_runner.py* in sample project folder!
@@ -88,7 +89,7 @@ python google_test_runner.py
 ## Command line options
 
 ```python
-python custom_runner.py --env [browserstack_environments] --tests [tests_to_run]
+python custom_runner.py --env [browserstack_environments] --tests [tests_to_run] --browserstack [username:token]
 
 --env direct # runs tests on browserstack combinations
              # passed to script through BROWSERSTACK environment variable (json)
@@ -102,6 +103,8 @@ os.environ['BROWSERSTACK'] = '{"test_suite": [{"browser": "Firefox", "browser_ve
                  # or "browserstack_smoke.properties" files
 
 --tests smoke # runs only tests with fixture "@pytest.mark.smoke"
+
+--browserstack testuser1:p84asd21d15asd454 # authenticate on BrowserStack using user "testuser1" and token "p84asd21d15asd454"
 ```
 
 If no arguments are specified, Salsa WebQA, by default, searches for BROWSERSTACK combinations in .properties files and runs all tests

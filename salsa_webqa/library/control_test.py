@@ -173,6 +173,10 @@ class ControlTest():
         if browser_type.lower() == 'chrome':
             profile = webdriver.ChromeOptions()
             profile.add_experimental_option("excludeSwitches", ["ignore-certificate-errors"])
+            # set mobile device emulation
+            mobile_browser_emulation = self.gid('mobile_browser_emulation')
+            if bool(mobile_browser_emulation):
+                profile.add_experimental_option("mobileEmulation", {"deviceName": mobile_browser_emulation})
         elif browser_type.lower() == 'firefox':
             profile = webdriver.FirefoxProfile()
         return profile

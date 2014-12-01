@@ -193,6 +193,7 @@ class SeleniumTest():
             if counter < max_count:
                 time.sleep(delay)
                 counter += 1
+                element = self.driver.find_element(*locator)
             else:
                 Assert.fail('"' + text + '" text did not match "' + element.text
                             + '" after ' + str(counter * delay) + ' seconds')

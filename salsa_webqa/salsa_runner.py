@@ -53,14 +53,14 @@ class SalsaRunner():
         cmd_args = self.get_runner_args()
         self.env_type = cmd_args[0]
         self.test_type = cmd_args[1]
-
+        self.test_mobile = cmd_args[2]
+        os.environ["test_mobile"] = self.test_mobile
         # load browserstack credentials from cmd argument, if available
-        if cmd_args[2] != 'none':
-            browserstack_auth = cmd_args[2].split(':')
+        if cmd_args[3] != 'none':
+            browserstack_auth = cmd_args[3].split(':')
             os.environ['bs_username'] = browserstack_auth[0]
             os.environ['bs_password'] = browserstack_auth[1]
-        self.test_mobile = cmd_args[3]
-        os.environ["test_mobile"] = self.test_mobile
+
 
     def set_project_root(self):
         """ Sets tested project root folder into OS environment variable """
@@ -215,15 +215,16 @@ class SalsaRunner():
         parser.add_argument('--tests',
                             help='Tests to run; options: "smoke", "all" (default)',
                             default='all')
-        parser.add_argument('--browserstack',
-                            help='BrowserStack credentials; format: "username:token"',
-                            default='none')
         parser.add_argument('--mobile',
                             help='Run tests on mobile/tablets, "default:none"'
                             'for running use "yes"',
                             default='none')
+        parser.add_argument('--browserstack',
+                            help='BrowserStack credentials; format: "username:token"',
+                            default='none')
+
         args = parser.parse_args()
-        return [args.env, args.tests, args.browserstack, args.mobile]
+        return [args.env, args.tests, args.mobile, args.browserstack]
 
     def cleanup_results(self):
         """ Cleans up test result folder """

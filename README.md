@@ -102,7 +102,8 @@ os.environ['BROWSERSTACK'] = '{"test_suite": [{"browser": "Firefox", "browser_ve
 --env versioned  # runs on browserstack combinations that are stored in "browserstack.properties"
                  # or "browserstack_smoke.properties" files
 
---tests smoke # runs only tests with fixture "@pytest.mark.smoke"
+--tests smoke # runs only tests with fixture "@pytest.mark.smoke", only for desctop
+--mobile yes # run tests on mobile browserstack combinations that are stored in "browserstack_mobile.properties" - can't be at the same time with smoke, default value is none
 
 --browserstack testuser1:p84asd21d15asd454 # authenticate on BrowserStack using user "testuser1" and token "p84asd21d15asd454"
 ```

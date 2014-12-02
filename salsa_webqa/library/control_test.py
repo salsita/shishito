@@ -20,6 +20,7 @@ import subprocess
 from selenium import webdriver
 import pytest
 
+
 from salsa_webqa.library.support.browserstack import BrowserStackAPI
 
 
@@ -119,7 +120,18 @@ class ControlTest():
             build_name = build_name
         else:
             build_name = self.gid('build_name')
-        desired_cap = {'os': pytest.config.getoption('xos'),
+        test_mobile=os.environ.get("test_mobile")
+        if test_mobile == "yes":
+            desired_cap = {'device': pytest.config.getoption('xdevice'),
+                       'platform': pytest.config.getoption('xplatform'),
+                       'deviceOrientation': pytest.config.getoption('xdeviceOrientation'),
+                       'browserName': pytest.config.getoption('xbrowserName'),
+                       'browserstack.debug': self.gid('browserstack_debug').lower(),
+                       'project': self.gid('project_name'),
+                       'build': build_name,
+                       'name': self.get_test_name() + time.strftime('_%Y-%m-%d')}
+        else:
+            desired_cap = {'os': pytest.config.getoption('xos'),
                        'os_version': pytest.config.getoption('xosversion'),
                        'browser': pytest.config.getoption('xbrowser'),
                        'browser_version': pytest.config.getoption('xbrowserversion'),
@@ -200,7 +212,7 @@ class ControlTest():
         """ Starts browser on BrowserStack """
         bs_username = self.gid('bs_username')
         bs_password = self.gid('bs_password')
-
+        test_mobile=os.environ.get("test_mobile")
         # wait until free browserstack session is available
         self.bs_api.wait_for_free_sessions((bs_username, bs_password),
                                            int(self.gid('session_waiting_time')),
@@ -208,25 +220,34 @@ class ControlTest():
 
         # get browser capabilities and profile
         capabilities = self.get_capabilities(build_name, browserstack=True)
-        browser_type = capabilities['browser'].lower()
-        browser_profile = self.get_browser_profile(browser_type)
+        if test_mobile == 'none':
+            browser_type = capabilities['browser'].lower()
+            browser_profile = self.get_browser_profile(browser_type)
 
-        # add extensions to remote driver
-        if bool(self.gid('with_extension')):
-            self.add_extension_to_browser(browser_type, browser_profile)
+            # add extensions to remote driver
+            if bool(self.gid('with_extension')):
+                self.add_extension_to_browser(browser_type, browser_profile)
 
-        # add Chrome options to desired capabilities
-        if browser_type == 'chrome':
-            chrome_capabilities = browser_profile.to_capabilities()
-            capabilities.update(chrome_capabilities)
-            browser_profile = None
+            # add Chrome options to desired capabilities
+            if browser_type == 'chrome':
+                chrome_capabilities = browser_profile.to_capabilities()
+                capabilities.update(chrome_capabilities)
+                browser_profile = None
 
-        # start remote driver
-        command_executor = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
-        self.driver = webdriver.Remote(
-            command_executor=command_executor,
-            desired_capabilities=capabilities,
-            browser_profile=browser_profile)
+            # start remote driver
+            command_executor = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
+            self.driver = webdriver.Remote(
+                command_executor=command_executor,
+                desired_capabilities=capabilities,
+                browser_profile=browser_profile)
+
+        else:
+            # start remote driver
+            command_executor = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
+            self.driver = webdriver.Remote(
+                command_executor=command_executor,
+                desired_capabilities=capabilities)
+
         auth = (bs_username, bs_password)
         session = self.bs_api.get_session(auth, capabilities['build'], 'running')
         self.session_link = self.bs_api.get_session_link(session)
@@ -282,8 +303,9 @@ class ControlTest():
         """ Executed only once after browser starts.
          Suitable for general pre-test logic that do not need to run before every individual test-case. """
         self.driver.get(url)
-        if browser.lower() == "browserstack":
-            self.driver.maximize_window()
+        #commented because mobiles haven't such func
+        #if browser.lower() == "browserstack":
+            #self.driver.maximize_window()
         self.driver.implicitly_wait(int(self.gid('default_implicit_wait')))
 
     def start_test(self, reload=None):

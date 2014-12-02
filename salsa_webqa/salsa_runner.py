@@ -45,8 +45,6 @@ class SalsaRunner():
         self.bs_config_file = os.path.join(self.project_root, 'config', 'browserstack.properties')
         self.bs_config_file_smoke = os.path.join(self.project_root, 'config', 'browserstack_smoke.properties')
         self.bs_config_file_mobile = os.path.join(self.project_root, 'config', 'browserstack_mobile.properties')
-        if not (os.path.exists(self.bs_config_file)) or not (os.path.exists(self.bs_config_file_smoke))  or not (os.path.exists(self.bs_config_file_mobile)):
-            sys.exit('One of browserstack properties files not found! Session terminated.')
         self.bs_config = ConfigParser.RawConfigParser()
 
         # load cmd arguments and set default values if not specified
@@ -61,6 +59,13 @@ class SalsaRunner():
             os.environ['bs_username'] = browserstack_auth[0]
             os.environ['bs_password'] = browserstack_auth[1]
 
+        # check if configuration files are present
+        if self.test_mobile == 'yes':
+            if not (os.path.exists(self.bs_config_file_mobile)):
+                sys.exit('Browserstack mobile properties file not found! Session terminated.')
+        else:
+            if not (os.path.exists(self.bs_config_file)) or not (os.path.exists(self.bs_config_file_smoke)):
+                sys.exit('One of browserstack properties files not found! Session terminated.')
 
     def set_project_root(self):
         """ Sets tested project root folder into OS environment variable """
@@ -160,14 +165,14 @@ class SalsaRunner():
                     test_result_prefix = '[' + device + ', ' + platform + ', ' + browserName + ']'
 
                     pytest_arguments.extend([
-                    '--junitxml=' + junitxml_path,
-                    '--junit-prefix=' + test_result_prefix,
-                    '--html=' + html_path,
-                    '--html-prefix=' + test_result_prefix,
-                    '--xbrowserName=' + browserName,
-                    '--xplatform=' + platform,
-                    '--xdevice=' + device,
-                    '--xdeviceOrientation=' + orientation])
+                        '--junitxml=' + junitxml_path,
+                        '--junit-prefix=' + test_result_prefix,
+                        '--html=' + html_path,
+                        '--html-prefix=' + test_result_prefix,
+                        '--xbrowserName=' + browserName,
+                        '--xplatform=' + platform,
+                        '--xdevice=' + device,
+                        '--xdeviceOrientation=' + orientation])
                 else:
                     if self.test_type == 'smoke':
                         self.bs_config.read(self.bs_config_file_smoke)
@@ -181,20 +186,20 @@ class SalsaRunner():
                     junitxml_path = os.path.join(self.result_folder, config_section + '.xml')
                     html_path = os.path.join(self.result_folder, config_section + '.html')
                     test_result_prefix = '[' + browser + ', ' + browser_version + ', ' + os_type \
-                                 + ', ' + os_version + ', ' + resolution + ']'
+                                         + ', ' + os_version + ', ' + resolution + ']'
 
-            # prepare pytest arguments into execution list
+                    # prepare pytest arguments into execution list
                     pytest_arguments.extend([
-                    '--junitxml=' + junitxml_path,
-                    '--junit-prefix=' + test_result_prefix,
-                    '--html=' + html_path,
-                    '--html-prefix=' + test_result_prefix,
-                    '--xbrowser=' + browser,
-                    '--xbrowserversion=' + browser_version,
-                    '--xos=' + os_type,
-                    '--xosversion=' + os_version,
-                    '--xresolution=' + resolution,
-                    '--instafail'])
+                        '--junitxml=' + junitxml_path,
+                        '--junit-prefix=' + test_result_prefix,
+                        '--html=' + html_path,
+                        '--html-prefix=' + test_result_prefix,
+                        '--xbrowser=' + browser,
+                        '--xbrowserversion=' + browser_version,
+                        '--xos=' + os_type,
+                        '--xosversion=' + os_version,
+                        '--xresolution=' + resolution,
+                        '--instafail'])
 
         # setup pytest arguments for local browser
         else:
@@ -217,7 +222,7 @@ class SalsaRunner():
                             default='all')
         parser.add_argument('--mobile',
                             help='Run tests on mobile/tablets, "default:none"'
-                            'for running use "yes"',
+                                 'for running use "yes"',
                             default='none')
         parser.add_argument('--browserstack',
                             help='BrowserStack credentials; format: "username:token"',

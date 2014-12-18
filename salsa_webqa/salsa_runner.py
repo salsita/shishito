@@ -52,10 +52,15 @@ class SalsaRunner():
         self.env_type = cmd_args[0]
         self.test_type = cmd_args[1]
         self.test_mobile = cmd_args[2]
+        self.jira_username = cmd_args[3]
+        self.jira_password = cmd_args[4]
+        os.environ['jira_username'] = self.jira_username
+        os.environ['jira_password'] = self.jira_password
+
         os.environ["test_mobile"] = self.test_mobile
         # load browserstack credentials from cmd argument, if available
-        if cmd_args[3] != 'none':
-            browserstack_auth = cmd_args[3].split(':')
+        if cmd_args[5] != 'none':
+            browserstack_auth = cmd_args[5].split(':')
             os.environ['bs_username'] = browserstack_auth[0]
             os.environ['bs_password'] = browserstack_auth[1]
 
@@ -146,7 +151,7 @@ class SalsaRunner():
                 os_type = config_section['os']
                 os_version = config_section['os_version']
                 resolution = config_section['resolution']
-                junitxml_path = os.path.join(self.result_folder, browser + browser_version
+                junitxml_path = os.path.join(self.self.tim, browser + browser_version
                                              + os_type + os_version + resolution + '.xml')
                 html_path = os.path.join(self.result_folder, browser + browser_version
                                          + os_type + os_version + resolution + '.html')
@@ -172,7 +177,9 @@ class SalsaRunner():
                         '--xbrowserName=' + browserName,
                         '--xplatform=' + platform,
                         '--xdevice=' + device,
-                        '--xdeviceOrientation=' + orientation])
+                        '--xdeviceOrientation=' + orientation,
+                        '--jira_username=' + self.jira_username,
+                        '--jira_password=' + self.jira_password])
                 else:
                     if self.test_type == 'smoke':
                         self.bs_config.read(self.bs_config_file_smoke)
@@ -199,12 +206,17 @@ class SalsaRunner():
                         '--xos=' + os_type,
                         '--xosversion=' + os_version,
                         '--xresolution=' + resolution,
-                        '--instafail'])
+                        '--instafail',
+                        '--jira_username=' + self.jira_username,
+                        '--jira_password=' + self.jira_password])
 
         # setup pytest arguments for local browser
         else:
+            #pytest_arguments.append('--jirapasswd=' + os.path.join(self.result_folder, self.driver_name + '.html'))
             pytest_arguments.append('--junitxml=' + os.path.join(self.result_folder, self.driver_name + '.xml'))
             pytest_arguments.append('--html=' + os.path.join(self.result_folder, self.driver_name + '.html'))
+            pytest_arguments.append('--jira_username=' + self.jira_username)
+            pytest_arguments.append('--jira_password=' + self.jira_password)
 
         # run pytest and return its exit code
         return pytest.main(pytest_arguments)
@@ -224,12 +236,18 @@ class SalsaRunner():
                             help='Run tests on mobile/tablets, "default:none"'
                                  'for running use "yes"',
                             default='none')
+        parser.add_argument('--jira_username',
+                            help='Jira username',
+                            default='none')
+        parser.add_argument('--jira_password',
+                            help='Jira password',
+                            default='none')
         parser.add_argument('--browserstack',
                             help='BrowserStack credentials; format: "username:token"',
                             default='none')
 
         args = parser.parse_args()
-        return [args.env, args.tests, args.mobile, args.browserstack]
+        return [args.env, args.tests, args.mobile, args.jira_username, args.jira_password, args.browserstack]
 
     def cleanup_results(self):
         """ Cleans up test result folder """

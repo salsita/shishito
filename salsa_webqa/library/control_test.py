@@ -367,3 +367,7 @@ class ControlTest():
             cmd_shell = subprocess.check_call(shell_command, shell=True)
         except subprocess.CalledProcessError:
             print('There was an issue with building extension!')
+
+    def get_jira_auth(self):
+        auth=(pytest.config.getoption('jira_username'), pytest.config.getoption('jira_password'))
+        return auth

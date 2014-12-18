@@ -65,7 +65,6 @@ class ZAPI():
             if i[0].isdigit():
                 test_cycle[i[0]] = list()
                 test_cycle[i[0]].append(i[1])
-                print(test_cycle)
         return json_res
 
     def get_cycle_execution_tests(self, cycle_id, auth):
@@ -78,8 +77,6 @@ class ZAPI():
             if i[0] == "executions":
                 executions_list = i[1]
                 break
-        for i in range(0, len(executions_list)):
-            print executions_list[i]
         return executions_list
 
     def get_issueid(self, cycle_id, jira_id, auth):
@@ -89,7 +86,6 @@ class ZAPI():
         for issue in issues:
             if issue["issueKey"] == jira_id:
                 issue_id = issue["issueId"]
-                print(issue_id)
                 break
         return issue_id
 
@@ -152,7 +148,6 @@ class ZAPI():
             url = "%s/rest/zapi/latest/cycle/%s" % (jira_server, cycle_id)
             r = requests.delete(url, auth=auth)
             json_res = json.loads(r.text)
-            print(json_res)
             return json_res
 
     #Execution API
@@ -170,7 +165,6 @@ class ZAPI():
         headers = {'content-type': 'application/json'}
         r = requests.post(url, auth=auth, data=json.dumps(data), headers=headers)
         json_res = json.loads(r.text)
-        print json_res
         return json_res.keys()[0]
 
     def add_tests_to_cycle(self, issue_keys, project_name, version_name, cycle_id, auth):
@@ -186,7 +180,6 @@ class ZAPI():
         }
         headers = {'content-type': 'application/json'}
         r = requests.post(url, auth=auth, data=json.dumps(data), headers=headers)
-        print(r.text)
         json_res = json.loads(r.text)
         return json_res
 

@@ -1,6 +1,6 @@
-# Salsa WebQA
+# Shishito
 
-Salsa WebQA is module for web application and browser extension integration testing with Selenium Webdriver & Python.
+Shishito is module for web application and browser extension integration testing with Selenium Webdriver & Python.
 It runs tests using included libraries and generates nice test results output.
 
 ## Features
@@ -39,14 +39,14 @@ Webdriver drivers need to be setup (ChromeDriver, InternetExplorerDriver etc.)
 
 ## Quick Start
 
-1. clone Salsa WebQA repository.
-```git clone git@github.com:salsita/salsa-webqa.git```
+1. clone Shishito repository.
+```git clone git@github.com:salsita/shishito.git```
 1. add *salsa_webqa* directory into PYTHONPATH environment variable
-1. clone sample test project repository https://github.com/salsita/salsa-webqa-sample-project
-```git clone git@github.com:salsita/salsa-webqa-sample-project.git```
-1. if you want to use BrowserStack for running your tests, replace "bs_username", "bs_password" values with your credentials in ***salsa-webqa-sample-project/config/server_config.properties***
+1. clone sample test project repository https://github.com/salsita/shishito-sample-project
+```git clone git@github.com:salsita/shishito-sample-project.git```
+1. if you want to use BrowserStack for running your tests, replace "bs_username", "bs_password" values with your credentials in ***shishito-sample-project/config/server_config.properties***
  or pass it to runner python file as command line argument using flag --browserstack username:token
-1. install Firefox or change "driver" value to some other installed driver in ***salsa-webqa-sample-project/config/local_config.properties***
+1. install Firefox or change "driver" value to some other installed driver in ***shishito-sample-project/config/local_config.properties***
 Available values  "BrowserStack", "Firefox", "Chrome", "IE", "PhantomJS", "Opera".
 1. run *google_test_runner.py* in sample project folder!
 
@@ -54,30 +54,30 @@ If you use local driver, you should now observe browser being started and tests 
 There are information about progress shown in console output.
 Once testing is finished, HTML report can be found in:
 ```
-salsa-webqa-sample-project/results folder # HTML report
-salsa-webqa-sample-project/results_archive folder # zipped HTML report
+shishito-sample-project/results folder # HTML report
+shishito-sample-project/results_archive folder # zipped HTML report
 ```
 
 ## Continuous Integration
 
-Using Salsa WebQA with Continuous Integration solution, such as Jenkins, is easy!
-All you need to do is clone Salsa WebQA repo and add it into the PYTHONPATH.
+Using Shishito with Continuous Integration solution, such as Jenkins, is easy!
+All you need to do is clone Shishito repo and add it into the PYTHONPATH.
 
 Example script below (Jenkins "execute shell" build step):
 ```bash
 #!/bin/bash
 ######################
-# clone Salsa WebQA  #
+# clone Shishito  #
 ######################
 
 cd $WORKSPACE
-git clone git@github.com:salsita/salsa-webqa.git
+git clone git@github.com:salsita/shishito.git
 
 ######################
 # VARIABLES          #
 ######################
 
-export PYTHONPATH=${PYTHONPATH}:/$WORKSPACE/salsa-webqa
+export PYTHONPATH=${PYTHONPATH}:/$WORKSPACE/shishito
 
 ######################
 # SCRIPT             #
@@ -108,7 +108,7 @@ os.environ['BROWSERSTACK'] = '{"test_suite": [{"browser": "Firefox", "browser_ve
 --browserstack testuser1:p84asd21d15asd454 # authenticate on BrowserStack using user "testuser1" and token "p84asd21d15asd454"
 ```
 
-If no arguments are specified, Salsa WebQA, by default, searches for BROWSERSTACK combinations in .properties files and runs all tests
+If no arguments are specified, Shishito, by default, searches for BROWSERSTACK combinations in .properties files and runs all tests
 
 ## Configuration
 
@@ -123,13 +123,13 @@ If no arguments are specified, Salsa WebQA, by default, searches for BROWSERSTAC
 * in case variables are not found, it will fall back to values in default *server_config.properties*
 * changes to this file should **not** be maintained in VCS (they serve only for local test execution)
 
-* *conftest.py* - helper file that defines command line arguments, provides fixtures and other information for salsa_webqa runner
+* *conftest.py* - helper file that defines command line arguments, provides fixtures and other information for Shishito runner
 
 ***browserstack.properties & browserstack_smoke.properties***
 
 * contains BrowserStack combinations tests should run on
 * only used if *driver=BrowserStack* in *local_config.properties* or *server_config.properties*
-* default file is *browserstack.properties*; *browserstack_smoke.properties* is used when argument *--tests smoke* is passed to salsa_webqa runner
+* default file is *browserstack.properties*; *browserstack_smoke.properties* is used when argument *--tests smoke* is passed to Shishito runner
 
 ## Browser Extensions
 
@@ -137,9 +137,9 @@ Browser Extensions can be automatically installed before testing using Chrome or
 This works on BrowserStack cloud as well.
 
 In order to automatically install browser extensions into browsers, "with_extension" property (from *local_config.properties* and/or *server_config.properties*) needs to be set to *true*.
-When folder 'extension' is available in project root, Salsa WebQA will then install any extension in this folder before testing (for appropriate browser).
+When folder 'extension' is available in project root, Shishito will then install any extension in this folder before testing (for appropriate browser).
 
-"path_to_extension_code" is optional, but once it is filled with path to extension source code folder (relative to test project root folder), Salsa WebQA will automatically build .crx file from source code, using crxmake https://github.com/bellbind/crxmake-python, and install this extension. Building extension from source option is available only for Chrome browser now.
+"path_to_extension_code" is optional, but once it is filled with path to extension source code folder (relative to test project root folder), Shishito will automatically build .crx file from source code, using crxmake https://github.com/bellbind/crxmake-python, and install this extension. Building extension from source option is available only for Chrome browser now.
 ```
 # Extension settings
 with_extension=true

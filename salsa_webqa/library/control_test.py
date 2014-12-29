@@ -193,6 +193,26 @@ class ControlTest():
             profile = webdriver.FirefoxProfile()
         return profile
 
+    def update_browser_profile(self, capabilities, browser_type=None):
+        """ Returns updated browser profile ready to be passed to driver """
+        browser_profile = None
+        test_mobile = os.environ.get("test_mobile")
+        if browser_type is None:
+            browser_type = capabilities['browser'].lower()
+        if test_mobile == 'none':
+            browser_profile = self.get_browser_profile(browser_type)
+
+            # add extensions to remote driver
+            if bool(self.gid('with_extension')):
+                browser_profile = self.add_extension_to_browser(browser_type, browser_profile)
+
+            # add Chrome options to desired capabilities
+            if browser_type == 'chrome':
+                chrome_capabilities = browser_profile.to_capabilities()
+                capabilities.update(chrome_capabilities)
+                browser_profile = None
+        return browser_profile
+
     def add_extension_to_browser(self, browser_type, browser_profile):
         """ returns browser profile updated with one or more extensions """
         if browser_type == 'chrome':
@@ -221,21 +241,6 @@ class ControlTest():
         # get browser capabilities and profile
         capabilities = self.get_capabilities(build_name, browserstack=True)
         hub_url = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
-        # browser_profile = None
-
-        # if test_mobile == 'none':
-        #     browser_type = capabilities['browser'].lower()
-        #     browser_profile = self.get_browser_profile(browser_type)
-        #
-        #     # add extensions to remote driver
-        #     if bool(self.gid('with_extension')):
-        #         self.add_extension_to_browser(browser_type, browser_profile)
-        #
-        #     # add Chrome options to desired capabilities
-        #     if browser_type == 'chrome':
-        #         chrome_capabilities = browser_profile.to_capabilities()
-        #         capabilities.update(chrome_capabilities)
-        #         browser_profile = None
 
         # call remote driver
         self.start_remote_driver(hub_url, capabilities)
@@ -249,34 +254,17 @@ class ControlTest():
         """ Starts local browser """
         # get browser capabilities and profile
         capabilities = self.get_capabilities()
-        browser_profile = self.get_browser_profile(browser_type)
         remote_hub = self.gid('remote_hub')
 
-        # add extensions to browser
-        if bool(self.gid('with_extension')):
-            browser_profile = self.add_extension_to_browser(browser_type, browser_profile)
-
         if bool(remote_hub):
-            self.start_remote_driver(remote_hub, capabilities, browser_profile, browser_type)
+            self.start_remote_driver(remote_hub, capabilities, browser_type)
         else:
-            self.start_local_driver(capabilities, browser_profile, browser_type)
+            self.start_local_driver(capabilities, browser_type)
 
-    def start_remote_driver(self, remote_driver_url, capabilities, browser_profile=None, browser_type=None):
+    def start_remote_driver(self, remote_driver_url, capabilities, browser_type=None):
         """ Call remote browser (driver) """
-        browser_profile = None
-        test_mobile = os.environ.get("test_mobile")
-        if test_mobile == 'none':
-            browser_profile = self.get_browser_profile(browser_type)
+        browser_profile = self.update_browser_profile(capabilities, browser_type)
 
-            # add extensions to remote driver
-            if bool(self.gid('with_extension')):
-                self.add_extension_to_browser(browser_type, browser_profile)
-
-            # add Chrome options to desired capabilities
-            if browser_type == 'chrome':
-                chrome_capabilities = browser_profile.to_capabilities()
-                capabilities.update(chrome_capabilities)
-                browser_profile = None
         if browser_type is not None:
             driver_capabilities = {}
             if browser_type == "firefox":
@@ -295,7 +283,10 @@ class ControlTest():
             desired_capabilities=capabilities,
             browser_profile=browser_profile)
 
-    def start_local_driver(self, capabilities, browser_profile=None, browser_type=None):
+    def start_local_driver(self, capabilities, browser_type=None):
+        # add extensions to browser
+        browser_profile = self.update_browser_profile(capabilities, browser_type)
+
         # starts local browser
         if browser_type == "firefox":
             self.driver = webdriver.Firefox(browser_profile, capabilities=capabilities)

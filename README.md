@@ -118,14 +118,21 @@ If no arguments are specified, Shishito, by default, searches for BROWSERSTACK c
 * changes to variables should be maintained in VCS; so that configuration can be reused for automated test execution
 
 ```
+# General
 base_url=http://www.google.com
 driver=Firefox
+
+# Remote driver
 remote_hub=http://localhost:4444/wd/hub
+browser_version=34.0
+platform=WINDOWS
 ```
 
 * *base_url* - url that will be loaded by default upon start of each test
 * *driver* - name of driver used. For Browserstack use "BrowserStack"
 * *remote_hub* - remote driver hub. If specified & BrowserStack is not used, tests will be run on remote driver (not on local browsers)
+* *browser_version* - version of browser. Used for remote driver (Selenium Grid, not Browserstack)
+* *platform* - OS platform. Used for remote driver (Selenium Grid, not Browserstack)
 
 ***local_config.properties***
 

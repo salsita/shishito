@@ -265,6 +265,7 @@ class ControlTest():
         """ Call remote browser (driver) """
         browser_profile = self.update_browser_profile(capabilities, browser_type)
 
+        # browser type is specified (test not run on BrowserStack)
         if browser_type is not None:
             driver_capabilities = {}
             if browser_type == "firefox":
@@ -278,6 +279,13 @@ class ControlTest():
             elif browser_type == "opera":
                 driver_capabilities = DesiredCapabilities.OPERA
             capabilities.update(driver_capabilities)
+            browser_version = self.gid('browser_version')
+            platform = self.gid('platform')
+            if browser_version:
+                capabilities['version'] = browser_version
+            if platform:
+                capabilities['platform'] = platform
+
         self.driver = webdriver.Remote(
             command_executor=remote_driver_url,
             desired_capabilities=capabilities,

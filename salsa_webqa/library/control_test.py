@@ -19,7 +19,7 @@ import subprocess
 
 from selenium import webdriver
 import pytest
-
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 from salsa_webqa.library.support.browserstack import BrowserStackAPI
 
@@ -120,26 +120,26 @@ class ControlTest():
             build_name = build_name
         else:
             build_name = self.gid('build_name')
-        test_mobile=os.environ.get("test_mobile")
+        test_mobile = os.environ.get("test_mobile")
         if test_mobile == "yes":
             desired_cap = {'device': pytest.config.getoption('xdevice'),
-                       'platform': pytest.config.getoption('xplatform'),
-                       'deviceOrientation': pytest.config.getoption('xdeviceOrientation'),
-                       'browserName': pytest.config.getoption('xbrowserName'),
-                       'browserstack.debug': self.gid('browserstack_debug').lower(),
-                       'project': self.gid('project_name'),
-                       'build': build_name,
-                       'name': self.get_test_name() + time.strftime('_%Y-%m-%d')}
+                           'platform': pytest.config.getoption('xplatform'),
+                           'deviceOrientation': pytest.config.getoption('xdeviceOrientation'),
+                           'browserName': pytest.config.getoption('xbrowserName'),
+                           'browserstack.debug': self.gid('browserstack_debug').lower(),
+                           'project': self.gid('project_name'),
+                           'build': build_name,
+                           'name': self.get_test_name() + time.strftime('_%Y-%m-%d')}
         else:
             desired_cap = {'os': pytest.config.getoption('xos'),
-                       'os_version': pytest.config.getoption('xosversion'),
-                       'browser': pytest.config.getoption('xbrowser'),
-                       'browser_version': pytest.config.getoption('xbrowserversion'),
-                       'resolution': pytest.config.getoption('xresolution'),
-                       'browserstack.debug': self.gid('browserstack_debug').lower(),
-                       'project': self.gid('project_name'),
-                       'build': build_name,
-                       'name': self.get_test_name() + time.strftime('_%Y-%m-%d')}
+                           'os_version': pytest.config.getoption('xosversion'),
+                           'browser': pytest.config.getoption('xbrowser'),
+                           'browser_version': pytest.config.getoption('xbrowserversion'),
+                           'resolution': pytest.config.getoption('xresolution'),
+                           'browserstack.debug': self.gid('browserstack_debug').lower(),
+                           'project': self.gid('project_name'),
+                           'build': build_name,
+                           'name': self.get_test_name() + time.strftime('_%Y-%m-%d')}
         return desired_cap
 
     def get_capabilities(self, build_name=None, browserstack=False):
@@ -193,6 +193,26 @@ class ControlTest():
             profile = webdriver.FirefoxProfile()
         return profile
 
+    def update_browser_profile(self, capabilities, browser_type=None):
+        """ Returns updated browser profile ready to be passed to driver """
+        browser_profile = None
+        test_mobile = os.environ.get("test_mobile")
+        if browser_type is None:
+            browser_type = capabilities['browser'].lower()
+        if test_mobile == 'none':
+            browser_profile = self.get_browser_profile(browser_type)
+
+            # add extensions to remote driver
+            if bool(self.gid('with_extension')):
+                browser_profile = self.add_extension_to_browser(browser_type, browser_profile)
+
+            # add Chrome options to desired capabilities
+            if browser_type == 'chrome':
+                chrome_capabilities = browser_profile.to_capabilities()
+                capabilities.update(chrome_capabilities)
+                browser_profile = None
+        return browser_profile
+
     def add_extension_to_browser(self, browser_type, browser_profile):
         """ returns browser profile updated with one or more extensions """
         if browser_type == 'chrome':
@@ -212,7 +232,7 @@ class ControlTest():
         """ Starts browser on BrowserStack """
         bs_username = self.gid('bs_username')
         bs_password = self.gid('bs_password')
-        test_mobile=os.environ.get("test_mobile")
+        # test_mobile = os.environ.get("test_mobile")
         # wait until free browserstack session is available
         self.bs_api.wait_for_free_sessions((bs_username, bs_password),
                                            int(self.gid('session_waiting_time')),
@@ -220,48 +240,60 @@ class ControlTest():
 
         # get browser capabilities and profile
         capabilities = self.get_capabilities(build_name, browserstack=True)
-        if test_mobile == 'none':
-            browser_type = capabilities['browser'].lower()
-            browser_profile = self.get_browser_profile(browser_type)
+        hub_url = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
 
-            # add extensions to remote driver
-            if bool(self.gid('with_extension')):
-                self.add_extension_to_browser(browser_type, browser_profile)
-
-            # add Chrome options to desired capabilities
-            if browser_type == 'chrome':
-                chrome_capabilities = browser_profile.to_capabilities()
-                capabilities.update(chrome_capabilities)
-                browser_profile = None
-
-            # start remote driver
-            command_executor = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
-            self.driver = webdriver.Remote(
-                command_executor=command_executor,
-                desired_capabilities=capabilities,
-                browser_profile=browser_profile)
-
-        else:
-            # start remote driver
-            command_executor = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
-            self.driver = webdriver.Remote(
-                command_executor=command_executor,
-                desired_capabilities=capabilities)
+        # call remote driver
+        self.start_remote_driver(hub_url, capabilities)
 
         auth = (bs_username, bs_password)
         session = self.bs_api.get_session(auth, capabilities['build'], 'running')
         self.session_link = self.bs_api.get_session_link(session)
         self.session_id = self.bs_api.get_session_hashed_id(session)
 
-    def call_local_browser(self, browser_type):
+    def call_browser(self, browser_type):
         """ Starts local browser """
         # get browser capabilities and profile
         capabilities = self.get_capabilities()
-        browser_profile = self.get_browser_profile(browser_type)
+        remote_hub = self.gid('remote_hub')
 
+        if bool(remote_hub):
+            self.start_remote_driver(remote_hub, capabilities, browser_type)
+        else:
+            self.start_local_driver(capabilities, browser_type)
+
+    def start_remote_driver(self, remote_driver_url, capabilities, browser_type=None):
+        """ Call remote browser (driver) """
+        browser_profile = self.update_browser_profile(capabilities, browser_type)
+
+        # browser type is specified (test not run on BrowserStack)
+        if browser_type is not None:
+            driver_capabilities = {}
+            if browser_type == "firefox":
+                driver_capabilities = DesiredCapabilities.FIREFOX
+            elif browser_type == "chrome":
+                driver_capabilities = DesiredCapabilities.CHROME
+            elif browser_type == "ie":
+                driver_capabilities = DesiredCapabilities.INTERNETEXPLORER
+            elif browser_type == "phantomjs":
+                driver_capabilities = DesiredCapabilities.PHANTOMJS
+            elif browser_type == "opera":
+                driver_capabilities = DesiredCapabilities.OPERA
+            capabilities.update(driver_capabilities)
+            browser_version = self.gid('browser_version')
+            platform = self.gid('platform')
+            if browser_version:
+                capabilities['version'] = browser_version
+            if platform:
+                capabilities['platform'] = platform
+
+        self.driver = webdriver.Remote(
+            command_executor=remote_driver_url,
+            desired_capabilities=capabilities,
+            browser_profile=browser_profile)
+
+    def start_local_driver(self, capabilities, browser_type=None):
         # add extensions to browser
-        if bool(self.gid('with_extension')):
-            browser_profile = self.add_extension_to_browser(browser_type, browser_profile)
+        browser_profile = self.update_browser_profile(capabilities, browser_type)
 
         # starts local browser
         if browser_type == "firefox":
@@ -287,7 +319,7 @@ class ControlTest():
         if browser.lower() == "browserstack":
             self.call_browserstack_browser(build_name)
         else:
-            self.call_local_browser(browser.lower())
+            self.call_browser(browser.lower())
             self.driver.set_window_size(width, height)
 
         self.test_init(url, browser)
@@ -303,9 +335,9 @@ class ControlTest():
         """ Executed only once after browser starts.
          Suitable for general pre-test logic that do not need to run before every individual test-case. """
         self.driver.get(url)
-        #commented because mobiles haven't such func
-        #if browser.lower() == "browserstack":
-            #self.driver.maximize_window()
+        # commented because mobiles haven't such func
+        # if browser.lower() == "browserstack":
+        # self.driver.maximize_window()
         self.driver.implicitly_wait(int(self.gid('default_implicit_wait')))
 
     def start_test(self, reload=None):

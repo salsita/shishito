@@ -110,7 +110,6 @@ class ZAPI():
         headers = {'content-type': 'application/json'}
         r = requests.post(url, auth=auth, data=json.dumps(data), headers=headers)
         json_res = json.loads(r.text)
-        print json_res
         cycle_id = json_res["id"]
         return cycle_id
 

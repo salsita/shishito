@@ -211,8 +211,7 @@ class ControlTest():
 
     def call_browserstack_browser(self, build_name):
         """ Starts browser on BrowserStack """
-        bs_auth=self.get_browserstack_auth()
-        print bs_auth
+        bs_auth=self.get_auth("browserstack")
         test_mobile=os.environ.get("test_mobile")
         # wait until free browserstack session is available
         self.bs_api.wait_for_free_sessions(bs_auth,
@@ -328,7 +327,7 @@ class ControlTest():
             self.driver.save_screenshot(os.path.join(screenshot_folder, file_name + '.png'))
         if execution_id is not None:
             print "change status in Jira execution"
-            auth = self.get_jira_auth()
+            auth = self.get_auth("jira")
             if test_info.test_status == "failed_execution":
                 self.zapi.update_execution_status(execution_id, "FAIL", auth)
             elif test_info.test_status == "passed":
@@ -376,30 +375,26 @@ class ControlTest():
         except subprocess.CalledProcessError:
             print('There was an issue with building extension!')
 
-    def get_jira_auth(self):
-        jira_auth = pytest.config.getoption('jira_support')
-        jira_credentials = None
-        if jira_auth is not None:
-            jira=jira_auth.split(":")
-            jira_credentials = (str(jira[0]), str(jira[1]))
-        return jira_credentials
-
-    def get_browserstack_auth(self):
-        bs_auth = pytest.config.getoption('browserstack')
-        bs_credentials = None
-        if bs_auth is not None:
-            bs=bs_auth.split(":")
-            bs_credentials = (str(bs[0]), str(bs[1]))
-        return bs_credentials
+    def get_auth(self, parameter):
+        if parameter.lower()=='jira':
+            self.auth = pytest.config.getoption('jira_support')
+        elif parameter.lower() == 'browserstack':
+            self.auth = pytest.config.getoption('browserstack')
+        if self.auth:
+            credentials=self.auth.split(":")
+            return (str(credentials[0]), str(credentials[1]))
+        return None
 
     def create_cycle(self, cycle_name, auth):
         self.cycle_id = self.zapi.create_new_test_cycle(cycle_name+" "+datetime.today().strftime("%d-%m-%y"), self.gid('jira_project'), self.gid('jira_project_version'), auth)
         return self.cycle_id
 
     def get_execution_id(self, jira_id):
-        self.cycle_base = self.gid('jira_base_cycle')
-        self.cycle_id = os.environ.get("cycle_id")
-        self.auth = self.get_jira_auth()
-        self.issue_id = self.zapi.get_issueid(self.cycle_base,jira_id, self.auth)
-        self.execution_id = self.zapi.add_new_execution(self.gid('jira_project'), self.gid('jira_project_version'), self.cycle_id, self.issue_id, self.auth)
-        return self.execution_id
+        self.auth=self.get_auth("jira")
+        if self.auth:
+            self.cycle_base = self.gid('jira_base_cycle')
+            self.cycle_id = os.environ.get("cycle_id")
+            self.issue_id = self.zapi.get_issueid(self.cycle_base,jira_id, self.auth)
+            self.execution_id = self.zapi.add_new_execution(self.gid('jira_project'), self.gid('jira_project_version'), self.cycle_id, self.issue_id, self.auth)
+            return self.execution_id
+        return None

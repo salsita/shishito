@@ -14,11 +14,10 @@ import argparse
 
 import pytest
 from jinja2 import Environment, FileSystemLoader
-
+from datetime import datetime
 from salsa_webqa.library.support.browserstack import BrowserStackAPI
 from salsa_webqa.library.control_test import ControlTest
-
-
+from salsa_webqa.library.support.jira_zephyr_api import ZAPI
 bs_api = BrowserStackAPI()
 
 
@@ -46,23 +45,34 @@ class SalsaRunner():
         self.bs_config_file_smoke = os.path.join(self.project_root, 'config', 'browserstack_smoke.properties')
         self.bs_config_file_mobile = os.path.join(self.project_root, 'config', 'browserstack_mobile.properties')
         self.bs_config = ConfigParser.RawConfigParser()
+        self.jira_username = None
+        self.jira_password = None
+        self.bs_username = None
+        self.bs_password= None
 
         # load cmd arguments and set default values if not specified
         cmd_args = self.get_runner_args()
         self.env_type = cmd_args[0]
         self.test_type = cmd_args[1]
         self.test_mobile = cmd_args[2]
-        self.jira_username = cmd_args[3]
-        self.jira_password = cmd_args[4]
-        os.environ['jira_username'] = self.jira_username
-        os.environ['jira_password'] = self.jira_password
-
         os.environ["test_mobile"] = self.test_mobile
+        # load Jira credentials from cmd argument, if available
+        if cmd_args[3] != 'none':
+            # Jira support activated
+            self.zapi=ZAPI()
+            jira_auth = cmd_args[3].split(':')
+            self.jira_username = jira_auth[0]
+            self.jira_password = jira_auth[1]
+            auth=(jira_auth[0], jira_auth[1])
+            #create test cycle and remember it's id in env variable
+            self.cycle_id=self.tc.create_cycle(self.tc.gid('jira_cycle_name'), auth)
+            os.environ['cycle_id'] = str(self.cycle_id)
+
         # load browserstack credentials from cmd argument, if available
-        if cmd_args[5] != 'none':
-            browserstack_auth = cmd_args[5].split(':')
-            os.environ['bs_username'] = browserstack_auth[0]
-            os.environ['bs_password'] = browserstack_auth[1]
+        if cmd_args[4] != 'none':
+            browserstack_auth = cmd_args[4].split(':')
+            self.bs_username = browserstack_auth[0]
+            self.bs_password= browserstack_auth[1]
 
         # check if configuration files are present
         if self.test_mobile == 'yes':
@@ -98,7 +108,11 @@ class SalsaRunner():
     def run_on_browserstack(self):
         """ Runs tests on BrowserStack """
         test_status = 0
-        if bs_api.wait_for_free_sessions((self.tc.gid('bs_username'), self.tc.gid('bs_password')),
+        #If password not provided in command line look ad server configuration file
+        if self.bs_username is None:
+            self.bs_username = self.tc.gid('bs_username')
+            self.bs_password = self.tc.gid('bs_password')
+        if bs_api.wait_for_free_sessions((self.bs_username, self.bs_password),
                                          self.tc.gid('session_waiting_time'), self.tc.gid('session_waiting_delay')):
             self.cleanup_results()
 
@@ -143,7 +157,6 @@ class SalsaRunner():
 
         # setup pytest arguments for browserstack
         if self.driver_name.lower() == 'browserstack':
-
             # set pytest arguments values from OS environment variable
             if self.env_type == 'direct':
                 browser = config_section['browser']
@@ -151,7 +164,7 @@ class SalsaRunner():
                 os_type = config_section['os']
                 os_version = config_section['os_version']
                 resolution = config_section['resolution']
-                junitxml_path = os.path.join(self.self.tim, browser + browser_version
+                junitxml_path = os.path.join(self.result_folder, browser + browser_version
                                              + os_type + os_version + resolution + '.xml')
                 html_path = os.path.join(self.result_folder, browser + browser_version
                                          + os_type + os_version + resolution + '.html')
@@ -177,9 +190,7 @@ class SalsaRunner():
                         '--xbrowserName=' + browserName,
                         '--xplatform=' + platform,
                         '--xdevice=' + device,
-                        '--xdeviceOrientation=' + orientation,
-                        '--jira_username=' + self.jira_username,
-                        '--jira_password=' + self.jira_password])
+                        '--xdeviceOrientation=' + orientation])
                 else:
                     if self.test_type == 'smoke':
                         self.bs_config.read(self.bs_config_file_smoke)
@@ -206,18 +217,17 @@ class SalsaRunner():
                         '--xos=' + os_type,
                         '--xosversion=' + os_version,
                         '--xresolution=' + resolution,
-                        '--instafail',
-                        '--jira_username=' + self.jira_username,
-                        '--jira_password=' + self.jira_password])
+                        '--instafail'])
 
         # setup pytest arguments for local browser
         else:
-            #pytest_arguments.append('--jirapasswd=' + os.path.join(self.result_folder, self.driver_name + '.html'))
             pytest_arguments.append('--junitxml=' + os.path.join(self.result_folder, self.driver_name + '.xml'))
             pytest_arguments.append('--html=' + os.path.join(self.result_folder, self.driver_name + '.html'))
-            pytest_arguments.append('--jira_username=' + self.jira_username)
-            pytest_arguments.append('--jira_password=' + self.jira_password)
-
+        #check if jira credentails are setup and add it to pytest
+        if self.jira_username and self.jira_password:
+            pytest_arguments.append('--jira_support=' + self.jira_username+":"+self.jira_password)
+        if self.bs_username and self.bs_password:
+            pytest_arguments.append('--browserstack=' + self.bs_username+":"+self.bs_password)
         # run pytest and return its exit code
         return pytest.main(pytest_arguments)
 
@@ -236,18 +246,15 @@ class SalsaRunner():
                             help='Run tests on mobile/tablets, "default:none"'
                                  'for running use "yes"',
                             default='none')
-        parser.add_argument('--jira_username',
-                            help='Jira username',
-                            default='none')
-        parser.add_argument('--jira_password',
-                            help='Jira password',
+        parser.add_argument('--jira_support',
+                            help='Jira credentials; format: "username:password',
                             default='none')
         parser.add_argument('--browserstack',
                             help='BrowserStack credentials; format: "username:token"',
                             default='none')
 
         args = parser.parse_args()
-        return [args.env, args.tests, args.mobile, args.jira_username, args.jira_password, args.browserstack]
+        return [args.env, args.tests, args.mobile, args.jira_support, args.browserstack]
 
     def cleanup_results(self):
         """ Cleans up test result folder """

@@ -16,6 +16,7 @@ import ntpath
 import glob
 import shutil
 import subprocess
+from datetime import datetime
 
 from selenium import webdriver
 import pytest
@@ -23,13 +24,12 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 from salsa_webqa.library.support.browserstack import BrowserStackAPI
 from salsa_webqa.library.support.jira_zephyr_api import ZAPI
-from datetime import datetime
 
 
 class ControlTest():
     def __init__(self):
         self.bs_api = BrowserStackAPI()
-        self.zapi= ZAPI()
+        self.zapi = ZAPI()
         self.project_root = self.get_project_root()
         self.configs = self.load_configs()
         self.session_link = None
@@ -233,7 +233,7 @@ class ControlTest():
 
     def call_browserstack_browser(self, build_name):
         """ Starts browser on BrowserStack """
-        bs_auth=self.get_auth("browserstack")
+        bs_auth = self.get_auth("browserstack")
         # wait until free browserstack session is available
         self.bs_api.wait_for_free_sessions(bs_auth,
                                            int(self.gid('session_waiting_time')),
@@ -407,25 +407,28 @@ class ControlTest():
             print('There was an issue with building extension!')
 
     def get_auth(self, parameter):
-        if parameter.lower()=='jira':
+        if parameter.lower() == 'jira':
             self.auth = pytest.config.getoption('jira_support')
         elif parameter.lower() == 'browserstack':
             self.auth = pytest.config.getoption('browserstack')
         if self.auth:
-            credentials=self.auth.split(":")
+            credentials = self.auth.split(":")
             return (str(credentials[0]), str(credentials[1]))
         return None
 
     def create_cycle(self, cycle_name, auth):
-        self.cycle_id = self.zapi.create_new_test_cycle(cycle_name+" "+datetime.today().strftime("%d-%m-%y"), self.gid('jira_project'), self.gid('jira_project_version'), auth)
+        self.cycle_id = self.zapi.create_new_test_cycle(cycle_name + " " + datetime.today().strftime("%d-%m-%y"),
+                                                        self.gid('jira_project'), self.gid('jira_project_version'),
+                                                        auth)
         return self.cycle_id
 
     def get_execution_id(self, jira_id):
-        self.auth=self.get_auth("jira")
+        self.auth = self.get_auth("jira")
         if self.auth:
             self.cycle_base = self.gid('jira_base_cycle')
             self.cycle_id = os.environ.get("cycle_id")
-            self.issue_id = self.zapi.get_issueid(self.cycle_base,jira_id, self.auth)
-            self.execution_id = self.zapi.add_new_execution(self.gid('jira_project'), self.gid('jira_project_version'), self.cycle_id, self.issue_id, self.auth)
+            self.issue_id = self.zapi.get_issueid(self.cycle_base, jira_id, self.auth)
+            self.execution_id = self.zapi.add_new_execution(self.gid('jira_project'), self.gid('jira_project_version'),
+                                                            self.cycle_id, self.issue_id, self.auth)
             return self.execution_id
         return None

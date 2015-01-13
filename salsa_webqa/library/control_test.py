@@ -16,17 +16,20 @@ import ntpath
 import glob
 import shutil
 import subprocess
+from datetime import datetime
 
 from selenium import webdriver
 import pytest
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 from salsa_webqa.library.support.browserstack import BrowserStackAPI
+from salsa_webqa.library.support.jira_zephyr_api import ZAPI
 
 
 class ControlTest():
     def __init__(self):
         self.bs_api = BrowserStackAPI()
+        self.zapi = ZAPI()
         self.project_root = self.get_project_root()
         self.configs = self.load_configs()
         self.session_link = None
@@ -230,23 +233,20 @@ class ControlTest():
 
     def call_browserstack_browser(self, build_name):
         """ Starts browser on BrowserStack """
-        bs_username = self.gid('bs_username')
-        bs_password = self.gid('bs_password')
-        # test_mobile = os.environ.get("test_mobile")
+        bs_auth = self.get_auth("browserstack")
         # wait until free browserstack session is available
-        self.bs_api.wait_for_free_sessions((bs_username, bs_password),
+        self.bs_api.wait_for_free_sessions(bs_auth,
                                            int(self.gid('session_waiting_time')),
                                            int(self.gid('session_waiting_delay')))
 
         # get browser capabilities and profile
         capabilities = self.get_capabilities(build_name, browserstack=True)
-        hub_url = 'http://' + bs_username + ':' + bs_password + '@hub.browserstack.com:80/wd/hub'
+        hub_url = 'http://' + bs_auth[0] + ':' + bs_auth[1] + '@hub.browserstack.com:80/wd/hub'
 
         # call remote driver
         self.start_remote_driver(hub_url, capabilities)
 
-        auth = (bs_username, bs_password)
-        session = self.bs_api.get_session(auth, capabilities['build'], 'running')
+        session = self.bs_api.get_session(bs_auth, capabilities['build'], 'running')
         self.session_link = self.bs_api.get_session_link(session)
         self.session_id = self.bs_api.get_session_hashed_id(session)
 
@@ -321,7 +321,6 @@ class ControlTest():
         else:
             self.call_browser(browser.lower())
             self.driver.set_window_size(width, height)
-
         self.test_init(url, browser)
         return self.driver
 
@@ -349,7 +348,7 @@ class ControlTest():
             self.driver.implicitly_wait(self.gid('default_implicit_wait'))
             time.sleep(5)
 
-    def stop_test(self, test_info):
+    def stop_test(self, test_info, execution_id=None):
         """ To be executed after every test-case (test function) """
         if test_info.test_status not in ('passed', None):
             # save screenshot in case test fails
@@ -358,6 +357,13 @@ class ControlTest():
                 os.makedirs(screenshot_folder)
             file_name = re.sub('[^A-Za-z0-9_. ]+', '', test_info.test_name)
             self.driver.save_screenshot(os.path.join(screenshot_folder, file_name + '.png'))
+        if execution_id is not None:
+            print "change status in Jira execution"
+            auth = self.get_auth("jira")
+            if test_info.test_status == "failed_execution":
+                self.zapi.update_execution_status(execution_id, "FAIL", auth)
+            elif test_info.test_status == "passed":
+                self.zapi.update_execution_status(execution_id, "PASS", auth)
 
     def get_extension_file_names(self, extension_type):
         """ Method reads extension folder and gets extension file name based on provided extension type"""
@@ -399,3 +405,30 @@ class ControlTest():
             cmd_shell = subprocess.check_call(shell_command, shell=True)
         except subprocess.CalledProcessError:
             print('There was an issue with building extension!')
+
+    def get_auth(self, parameter):
+        if parameter.lower() == 'jira':
+            self.auth = pytest.config.getoption('jira_support')
+        elif parameter.lower() == 'browserstack':
+            self.auth = pytest.config.getoption('browserstack')
+        if self.auth:
+            credentials = self.auth.split(":")
+            return (str(credentials[0]), str(credentials[1]))
+        return None
+
+    def create_cycle(self, cycle_name, auth):
+        self.cycle_id = self.zapi.create_new_test_cycle(cycle_name + " " + datetime.today().strftime("%d-%m-%y"),
+                                                        self.gid('jira_project'), self.gid('jira_project_version'),
+                                                        auth)
+        return self.cycle_id
+
+    def get_execution_id(self, jira_id):
+        self.auth = self.get_auth("jira")
+        if self.auth:
+            self.cycle_base = self.gid('jira_base_cycle')
+            self.cycle_id = os.environ.get("cycle_id")
+            self.issue_id = self.zapi.get_issueid(self.cycle_base, jira_id, self.auth)
+            self.execution_id = self.zapi.add_new_execution(self.gid('jira_project'), self.gid('jira_project_version'),
+                                                            self.cycle_id, self.issue_id, self.auth)
+            return self.execution_id
+        return None

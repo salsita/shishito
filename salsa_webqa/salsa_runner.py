@@ -14,10 +14,11 @@ import argparse
 
 import pytest
 from jinja2 import Environment, FileSystemLoader
-from datetime import datetime
+
 from salsa_webqa.library.support.browserstack import BrowserStackAPI
 from salsa_webqa.library.control_test import ControlTest
-from salsa_webqa.library.support.jira_zephyr_api import ZAPI
+
+
 bs_api = BrowserStackAPI()
 
 
@@ -48,31 +49,18 @@ class SalsaRunner():
         self.jira_username = None
         self.jira_password = None
         self.bs_username = None
-        self.bs_password= None
+        self.bs_password = None
 
-        # load cmd arguments and set default values if not specified
-        cmd_args = self.get_runner_args()
-        self.env_type = cmd_args[0]
-        self.test_type = cmd_args[1]
-        self.test_mobile = cmd_args[2]
-        os.environ["test_mobile"] = self.test_mobile
-        # load Jira credentials from cmd argument, if available
-        if cmd_args[3] != 'none':
-            # Jira support activated
-            self.zapi=ZAPI()
-            jira_auth = cmd_args[3].split(':')
-            self.jira_username = jira_auth[0]
-            self.jira_password = jira_auth[1]
-            auth=(jira_auth[0], jira_auth[1])
-            #create test cycle and remember it's id in env variable
-            self.cycle_id=self.tc.create_cycle(self.tc.gid('jira_cycle_name'), auth)
-            os.environ['cycle_id'] = str(self.cycle_id)
-
-        # load browserstack credentials from cmd argument, if available
-        if cmd_args[4] != 'none':
-            browserstack_auth = cmd_args[4].split(':')
-            self.bs_username = browserstack_auth[0]
-            self.bs_password= browserstack_auth[1]
+        # load credentials
+        credentials = self.load_services_credentials()
+        self.env_type = credentials['env_type']
+        self.test_type = credentials['test_type']
+        self.test_mobile = credentials['test_mobile']
+        self.jira_username = credentials['jira_username']
+        self.jira_password = credentials['jira_password']
+        self.cycle_id = credentials['cycle_id']
+        self.bs_username = credentials['bs_username']
+        self.bs_password = credentials['bs_password']
 
         # check if configuration files are present
         if self.test_mobile == 'yes':
@@ -81,6 +69,36 @@ class SalsaRunner():
         else:
             if not (os.path.exists(self.bs_config_file)) or not (os.path.exists(self.bs_config_file_smoke)):
                 sys.exit('One of browserstack properties files not found! Session terminated.')
+
+    def load_services_credentials(self):
+        # load cmd arguments and set default values if not specified
+        credentials = {}
+        cmd_args = self.get_runner_args()
+        credentials['env_type'] = cmd_args[0]
+        credentials['test_type'] = cmd_args[1]
+        credentials['test_mobile'] = cmd_args[2]
+        credentials['jira_username'] = None
+        credentials['jira_password'] = None
+        credentials['cycle_id'] = None
+        credentials['bs_username'] = None
+        credentials['bs_password'] = None
+
+        # load Jira credentials from cmd argument, if available
+        if cmd_args[3] != 'none':
+            # Jira support activated
+            jira_auth = cmd_args[3].split(':')
+            auth = (jira_auth[0], jira_auth[1])
+            credentials['jira_username'] = jira_auth[0]
+            credentials['jira_password'] = jira_auth[1]
+            # create test cycle and remember it's id in env variable
+            credentials['cycle_id'] = self.tc.create_cycle(self.tc.gid('jira_cycle_name'), auth)
+
+        # load browserstack credentials from cmd argument, if available
+        if cmd_args[4] != 'none':
+            browserstack_auth = cmd_args[4].split(':')
+            credentials['bs_username'] = browserstack_auth[0]
+            credentials['bs_password'] = browserstack_auth[1]
+        return credentials
 
     def set_project_root(self):
         """ Sets tested project root folder into OS environment variable """
@@ -108,7 +126,7 @@ class SalsaRunner():
     def run_on_browserstack(self):
         """ Runs tests on BrowserStack """
         test_status = 0
-        #If password not provided in command line look ad server configuration file
+        # If password not provided in command line look ad server configuration file
         if self.bs_username is None:
             self.bs_username = self.tc.gid('bs_username')
             self.bs_password = self.tc.gid('bs_password')
@@ -155,81 +173,112 @@ class SalsaRunner():
         if self.test_type == 'smoke':
             pytest_arguments.extend(['-m', self.test_type])
 
+        if self.cycle_id:
+            pytest_arguments.extend(['--jira_cycle_id', self.cycle_id])
+
         # setup pytest arguments for browserstack
         if self.driver_name.lower() == 'browserstack':
-            # set pytest arguments values from OS environment variable
-            if self.env_type == 'direct':
-                browser = config_section['browser']
-                browser_version = config_section['browser_version']
-                os_type = config_section['os']
-                os_version = config_section['os_version']
-                resolution = config_section['resolution']
-                junitxml_path = os.path.join(self.result_folder, browser + browser_version
-                                             + os_type + os_version + resolution + '.xml')
-                html_path = os.path.join(self.result_folder, browser + browser_version
-                                         + os_type + os_version + resolution + '.html')
-
-            # set pytest arguments values from configuration files
+            # get arguments for running tests on mobile browsers
+            if self.test_mobile == 'yes':
+                pytest_arguments = self.get_pytest_arguments_mobile(config_section, pytest_arguments)
+            # get arguments for running tests on desktop browsers
             else:
-
-                if self.test_mobile == 'yes':
-                    self.bs_config.read(self.bs_config_file_mobile)
-                    browserName = self.bs_config.get(config_section, 'browserName')
-                    platform = self.bs_config.get(config_section, 'platform')
-                    device = self.bs_config.get(config_section, 'device')
-                    orientation = self.bs_config.get(config_section, 'deviceOrientation')
-                    junitxml_path = os.path.join(self.result_folder, config_section + '.xml')
-                    html_path = os.path.join(self.result_folder, config_section + '.html')
-                    test_result_prefix = '[' + device + ', ' + platform + ', ' + browserName + ']'
-
-                    pytest_arguments.extend([
-                        '--junitxml=' + junitxml_path,
-                        '--junit-prefix=' + test_result_prefix,
-                        '--html=' + html_path,
-                        '--html-prefix=' + test_result_prefix,
-                        '--xbrowserName=' + browserName,
-                        '--xplatform=' + platform,
-                        '--xdevice=' + device,
-                        '--xdeviceOrientation=' + orientation])
-                else:
-                    if self.test_type == 'smoke':
-                        self.bs_config.read(self.bs_config_file_smoke)
-                    else:
-                        self.bs_config.read(self.bs_config_file)
-                    browser = self.bs_config.get(config_section, 'browser')
-                    browser_version = self.bs_config.get(config_section, 'browser_version')
-                    os_type = self.bs_config.get(config_section, 'os')
-                    os_version = self.bs_config.get(config_section, 'os_version')
-                    resolution = self.bs_config.get(config_section, 'resolution')
-                    junitxml_path = os.path.join(self.result_folder, config_section + '.xml')
-                    html_path = os.path.join(self.result_folder, config_section + '.html')
-                    test_result_prefix = '[' + browser + ', ' + browser_version + ', ' + os_type \
-                                         + ', ' + os_version + ', ' + resolution + ']'
-
-                    # prepare pytest arguments into execution list
-                    pytest_arguments.extend([
-                        '--junitxml=' + junitxml_path,
-                        '--junit-prefix=' + test_result_prefix,
-                        '--html=' + html_path,
-                        '--html-prefix=' + test_result_prefix,
-                        '--xbrowser=' + browser,
-                        '--xbrowserversion=' + browser_version,
-                        '--xos=' + os_type,
-                        '--xosversion=' + os_version,
-                        '--xresolution=' + resolution,
-                        '--instafail'])
+                pytest_arguments = self.get_pytest_arguments_desktop(config_section, pytest_arguments)
 
         # setup pytest arguments for local browser
         else:
             pytest_arguments.append('--junitxml=' + os.path.join(self.result_folder, self.driver_name + '.xml'))
             pytest_arguments.append('--html=' + os.path.join(self.result_folder, self.driver_name + '.html'))
-        #check if jira credentails are setup and add it to pytest
+
+        # check if jira credentials are setup and add it to pytest
         if self.jira_username and self.jira_password:
-            pytest_arguments.append('--jira_support=' + self.jira_username+":"+self.jira_password)
+            pytest_arguments.append('--jira_support=' + self.jira_username + ":" + self.jira_password)
         if self.bs_username and self.bs_password:
-            pytest_arguments.append('--browserstack=' + self.bs_username+":"+self.bs_password)
+            pytest_arguments.append('--browserstack=' + self.bs_username + ":" + self.bs_password)
+
         # run pytest and return its exit code
         return pytest.main(pytest_arguments)
+
+    def get_pytest_arguments_desktop(self, config_section, pytest_arguments):
+        """ get pytest arguments to run tests on browserstack desktop browsers """
+        # arguments passed through environment variable
+        if self.env_type == 'direct':
+            browser = config_section['browser']
+            browser_version = config_section['browser_version']
+            os_type = config_section['os']
+            os_version = config_section['os_version']
+            resolution = config_section['resolution']
+            junit_xml_path = os.path.join(self.result_folder, browser + browser_version
+                                          + os_type + os_version + resolution + '.xml')
+            html_path = os.path.join(self.result_folder, browser + browser_version
+                                     + os_type + os_version + resolution + '.html')
+        # arguments passed through config file
+        else:
+            if self.test_type == 'smoke':
+                self.bs_config.read(self.bs_config_file_smoke)
+            else:
+                self.bs_config.read(self.bs_config_file)
+            browser = self.bs_config.get(config_section, 'browser')
+            browser_version = self.bs_config.get(config_section, 'browser_version')
+            os_type = self.bs_config.get(config_section, 'os')
+            os_version = self.bs_config.get(config_section, 'os_version')
+            resolution = self.bs_config.get(config_section, 'resolution')
+            junit_xml_path = os.path.join(self.result_folder, config_section + '.xml')
+            html_path = os.path.join(self.result_folder, config_section + '.html')
+
+        test_result_prefix = '[' + browser + ', ' + browser_version + ', ' + os_type \
+                             + ', ' + os_version + ', ' + resolution + ']'
+
+        # prepare pytest arguments into execution list
+        pytest_arguments.extend([
+            '--junitxml=' + junit_xml_path,
+            '--junit-prefix=' + test_result_prefix,
+            '--html=' + html_path,
+            '--html-prefix=' + test_result_prefix,
+            '--xbrowser=' + browser,
+            '--xbrowserversion=' + browser_version,
+            '--xos=' + os_type,
+            '--xosversion=' + os_version,
+            '--xresolution=' + resolution,
+            '--instafail',
+            '--test_mobile=no'])
+
+        return pytest_arguments
+
+    def get_pytest_arguments_mobile(self, config_section, pytest_arguments):
+        """ get pytest arguments to run tests on browserstack mobile browsers """
+        # arguments passed through environment variable
+        if self.env_type == 'direct':
+            browser_name = config_section['browserName']
+            platform = config_section['platform']
+            device = config_section['device']
+            orientation = config_section['deviceOrientation']
+            junit_xml_path = os.path.join(self.result_folder, browser_name + platform + device + orientation + '.xml')
+            html_path = os.path.join(self.result_folder, browser_name + platform + device + orientation + '.html')
+        # arguments passed through config file
+        else:
+            self.bs_config.read(self.bs_config_file_mobile)
+            browser_name = self.bs_config.get(config_section, 'browserName')
+            platform = self.bs_config.get(config_section, 'platform')
+            device = self.bs_config.get(config_section, 'device')
+            orientation = self.bs_config.get(config_section, 'deviceOrientation')
+            junit_xml_path = os.path.join(self.result_folder, config_section + '.xml')
+            html_path = os.path.join(self.result_folder, config_section + '.html')
+
+        test_result_prefix = '[' + device + ', ' + platform + ', ' + browser_name + ']'
+
+        pytest_arguments.extend([
+            '--junitxml=' + junit_xml_path,
+            '--junit-prefix=' + test_result_prefix,
+            '--html=' + html_path,
+            '--html-prefix=' + test_result_prefix,
+            '--xbrowserName=' + browser_name,
+            '--xplatform=' + platform,
+            '--xdevice=' + device,
+            '--xdeviceOrientation=' + orientation,
+            '--test_mobile=yes'])
+
+        return pytest_arguments
 
     def get_runner_args(self):
         """ Retrieves the command line arguments passed to the script """

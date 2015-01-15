@@ -108,6 +108,10 @@ os.environ['BROWSERSTACK'] = '{"test_suite": [{"browser": "Firefox", "browser_ve
 --browserstack testuser1:p84asd21d15asd454 # authenticate on BrowserStack using user "testuser1" and token "p84asd21d15asd454"
 ```
 
+Combinations yet unsupported by Shishito:
+* `--mobile yes` together with `--tests smoke`
+* `--env direct` together with `--tests smoke`
+
 If no arguments are specified, Shishito, by default, searches for BROWSERSTACK combinations in .properties files and runs all tests
 
 ## Configuration

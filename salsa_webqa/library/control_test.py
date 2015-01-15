@@ -123,7 +123,7 @@ class ControlTest():
             build_name = build_name
         else:
             build_name = self.gid('build_name')
-        test_mobile = os.environ.get("test_mobile")
+        test_mobile = pytest.config.getoption('test_mobile')
         if test_mobile == "yes":
             desired_cap = {'device': pytest.config.getoption('xdevice'),
                            'platform': pytest.config.getoption('xplatform'),
@@ -199,10 +199,10 @@ class ControlTest():
     def update_browser_profile(self, capabilities, browser_type=None):
         """ Returns updated browser profile ready to be passed to driver """
         browser_profile = None
-        test_mobile = os.environ.get("test_mobile")
-        if browser_type is None:
-            browser_type = capabilities['browser'].lower()
+        test_mobile = pytest.config.getoption('test_mobile')
         if test_mobile == 'none':
+            if browser_type is None:
+                browser_type = capabilities['browser'].lower()
             browser_profile = self.get_browser_profile(browser_type)
 
             # add extensions to remote driver
@@ -321,7 +321,7 @@ class ControlTest():
         else:
             self.call_browser(browser.lower())
             self.driver.set_window_size(width, height)
-        self.test_init(url, browser)
+        self.test_init(url)
         return self.driver
 
     def stop_browser(self, delete_cookies=True):
@@ -330,20 +330,17 @@ class ControlTest():
             self.driver.delete_all_cookies()
         self.driver.quit()
 
-    def test_init(self, url, browser):
+    def test_init(self, url):
         """ Executed only once after browser starts.
          Suitable for general pre-test logic that do not need to run before every individual test-case. """
         self.driver.get(url)
-        # commented because mobiles haven't such func
-        # if browser.lower() == "browserstack":
-        # self.driver.maximize_window()
         self.driver.implicitly_wait(int(self.gid('default_implicit_wait')))
 
-    def start_test(self, reload=None):
+    def start_test(self, reload_page=None):
         """ To be executed before every test-case (test function) """
         if self.session_link is not None:
             print ("Link to Browserstack report: %s " % self.session_link)
-        if reload is not None:
+        if reload_page is not None:
             self.driver.get(self.gid('base_url'))
             self.driver.implicitly_wait(self.gid('default_implicit_wait'))
             time.sleep(5)
@@ -402,33 +399,33 @@ class ControlTest():
         os.chdir(shell_path)
         shell_command = 'crxmake ' + extension_name
         try:
-            cmd_shell = subprocess.check_call(shell_command, shell=True)
+            subprocess.check_call(shell_command, shell=True)
         except subprocess.CalledProcessError:
             print('There was an issue with building extension!')
 
     def get_auth(self, parameter):
+        auth = None
         if parameter.lower() == 'jira':
-            self.auth = pytest.config.getoption('jira_support')
+            auth = pytest.config.getoption('jira_support')
         elif parameter.lower() == 'browserstack':
-            self.auth = pytest.config.getoption('browserstack')
-        if self.auth:
-            credentials = self.auth.split(":")
-            return (str(credentials[0]), str(credentials[1]))
+            auth = pytest.config.getoption('browserstack')
+        if auth:
+            credentials = auth.split(":")
+            return str(credentials[0]), str(credentials[1])
         return None
 
     def create_cycle(self, cycle_name, auth):
-        self.cycle_id = self.zapi.create_new_test_cycle(cycle_name + " " + datetime.today().strftime("%d-%m-%y"),
-                                                        self.gid('jira_project'), self.gid('jira_project_version'),
-                                                        auth)
-        return self.cycle_id
+        cycle_id = self.zapi.create_new_test_cycle(cycle_name + " " + datetime.today().strftime("%d-%m-%y"),
+                                                   self.gid('jira_project'), self.gid('jira_project_version'), auth)
+        return cycle_id
 
     def get_execution_id(self, jira_id):
-        self.auth = self.get_auth("jira")
-        if self.auth:
-            self.cycle_base = self.gid('jira_base_cycle')
-            self.cycle_id = os.environ.get("cycle_id")
-            self.issue_id = self.zapi.get_issueid(self.cycle_base, jira_id, self.auth)
-            self.execution_id = self.zapi.add_new_execution(self.gid('jira_project'), self.gid('jira_project_version'),
-                                                            self.cycle_id, self.issue_id, self.auth)
-            return self.execution_id
+        jira_auth = self.get_auth("jira")
+        if jira_auth:
+            cycle_base = self.gid('jira_base_cycle')
+            cycle_id = pytest.config.getoption('jira_cycle_id')
+            issue_id = self.zapi.get_issueid(cycle_base, jira_id, jira_auth)
+            execution_id = self.zapi.add_new_execution(self.gid('jira_project'), self.gid('jira_project_version'),
+                                                       cycle_id, issue_id, jira_auth)
+            return execution_id
         return None

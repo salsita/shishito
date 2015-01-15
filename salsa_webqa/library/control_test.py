@@ -217,7 +217,7 @@ class ControlTest():
         return browser_profile
 
     def add_extension_to_browser(self, browser_type, browser_profile):
-        """ returns browser profile updated with one< or more extensions """
+        """ returns browser profile updated with one or more extensions """
         if browser_type == 'chrome':
             all_extensions = self.get_extension_file_names('crx')
             for chr_extension in all_extensions:

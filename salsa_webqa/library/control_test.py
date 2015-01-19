@@ -200,7 +200,7 @@ class ControlTest():
         """ Returns updated browser profile ready to be passed to driver """
         browser_profile = None
         test_mobile = pytest.config.getoption('test_mobile')
-        if test_mobile == 'none':
+        if not test_mobile:
             if browser_type is None:
                 browser_type = capabilities['browser'].lower()
             browser_profile = self.get_browser_profile(browser_type)

@@ -63,7 +63,7 @@ class SalsaRunner():
         self.bs_username = credentials['bs_username']
         self.bs_password = credentials['bs_password']
         # check if configuration files are present
-        if self.reporting != "simple":
+        if self.reporting != "simple" and self.driver_name is not None:
             if self.test_mobile == 'yes':
                 if not (os.path.exists(self.bs_config_file_mobile)):
                     sys.exit('Browserstack mobile properties file not found! Session terminated.')
@@ -184,6 +184,10 @@ class SalsaRunner():
     def trigger_pytest(self, config_section):
         """ Runs PyTest runner on specific configuration """
         if config_section is None or self.reporting == 'simple':
+            path = os.path.join(self.project_root, 'non_selenium_tests')
+            if not os.path.exists(path):
+                print("Can't run non selenium tests files are not found")
+                return None
             pytest_arguments = [os.path.join(self.project_root, 'non_selenium_tests')]
             pytest_arguments.append('--junitxml=' + os.path.join(self.result_folder, "Non_selenium_report" + '.xml'))
             pytest_arguments.append('--html=' + os.path.join(self.result_folder, "Non_selenium_report" + '.html'))

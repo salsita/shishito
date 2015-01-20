@@ -47,20 +47,20 @@ class ControlTest():
         return project_root
 
     def load_configs(self):
-        """ Loads variables from .properties configuration files """
+        """ Loads variables from .properties configuration files,  check in project didn't contain such folder
+        (for non selenium projects) """
         config_path = os.path.join(self.project_root, 'config')
+        if not os.path.exists(config_path):
+            return None
         config = ConfigParser.ConfigParser()
-
         # load server config variables
         server_config = os.path.join(config_path, 'server_config.properties')
         config.read(server_config)
         server_config_vars = dict(config.defaults())
-
         # load local config variables
         local_config = os.path.join(config_path, 'local_config.properties')
         config.read(local_config)
         local_config_vars = dict(config.defaults())
-
         return_configs = [server_config_vars, local_config_vars]
         return return_configs
 
@@ -69,6 +69,8 @@ class ControlTest():
          If local execution parameter is "True", function will try to search for parameter in local configuration file.
          If such parameter is not found or there is an error while reading the file, server (default) configuration
          file will be used instead. """
+        if self.configs is None:
+            return None
         server_config = self.configs[0]
         local_config = self.configs[1]
         local_execution = local_config.get('local_execution')
@@ -159,7 +161,7 @@ class ControlTest():
     def get_test_name(self):
         """ Returns test name from the call stack, assuming there can be only
          one 'test_' file in the stack. If there are more it means two PyTest
-        tests ran when calling get_test_name, which is invalid use case. """
+        non_selenium_tests ran when calling get_test_name, which is invalid use case. """
         test_name = None
         frames = inspect.getouterframes(inspect.currentframe())
         for frame in frames:

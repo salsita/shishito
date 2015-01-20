@@ -47,7 +47,7 @@ class ControlTest():
         return project_root
 
     def load_configs(self):
-        """ Loads variables from .properties configuration files,  check in project didn't contain such folder
+        """ Loads variables from .properties configuration files,  check if project didn't contain such folder
         (for non selenium projects) """
         config_path = os.path.join(self.project_root, 'config')
         if not os.path.exists(config_path):
@@ -161,7 +161,7 @@ class ControlTest():
     def get_test_name(self):
         """ Returns test name from the call stack, assuming there can be only
          one 'test_' file in the stack. If there are more it means two PyTest
-        non_selenium_tests ran when calling get_test_name, which is invalid use case. """
+        tests ran when calling get_test_name, which is invalid use case. """
         test_name = None
         frames = inspect.getouterframes(inspect.currentframe())
         for frame in frames:

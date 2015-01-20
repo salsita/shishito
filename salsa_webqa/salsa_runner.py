@@ -24,7 +24,7 @@ bs_api = BrowserStackAPI()
 
 class SalsaRunner():
     """ Selenium Webdriver Python test runner.
-    - runs python selenium non_selenium_tests on customizable configurations, locally or on BrowserStack using PyTest
+    - runs python selenium tests on customizable configurations, locally or on BrowserStack using PyTest
     - checks for available BrowserStack sessions and wait if necessary
     - archive the test results in .zip file """
 
@@ -143,7 +143,7 @@ class SalsaRunner():
             return test_status
 
     def run_on_browserstack(self):
-        """ Runs non_selenium_tests on BrowserStack """
+        """ Runs tests on BrowserStack """
         test_status = 0
         # If password not provided in command line look ad server configuration file
         if self.bs_username is None:
@@ -172,12 +172,12 @@ class SalsaRunner():
         return test_status
 
     def run_locally(self):
-        """ Runs non_selenium_tests on local browser """
+        """ Runs tests on local browser """
         print('Running for browser: ' + self.driver_name)
         return self.trigger_pytest(self.driver_name)
 
     def run_non_selenium(self):
-        """ Runs non_selenium_tests on local browser """
+        """ Runs non_selenium_tests"""
         print('Running non selenium tests')
         return self.trigger_pytest(None)
 
@@ -207,10 +207,10 @@ class SalsaRunner():
 
         # setup pytest arguments for browserstack
         if self.driver_name.lower() == 'browserstack':
-            # get arguments for running non_selenium_tests on mobile browsers
+            # get arguments for running tests on mobile browsers
             if self.test_mobile == 'yes':
                 pytest_arguments = self.get_pytest_arguments_mobile(config_section, pytest_arguments)
-            # get arguments for running non_selenium_tests on desktop browsers
+            # get arguments for running tests on desktop browsers
             else:
                 pytest_arguments = self.get_pytest_arguments_desktop(config_section, pytest_arguments)
 
@@ -229,7 +229,7 @@ class SalsaRunner():
         return pytest.main(pytest_arguments)
 
     def get_pytest_arguments_desktop(self, config_section, pytest_arguments):
-        """ get pytest arguments to run non_selenium_tests on browserstack desktop browsers """
+        """ get pytest arguments to run tests on browserstack desktop browsers """
         # arguments passed through environment variable
         if self.env_type == 'direct':
             browser = config_section['browser']
@@ -275,7 +275,7 @@ class SalsaRunner():
         return pytest_arguments
 
     def get_pytest_arguments_mobile(self, config_section, pytest_arguments):
-        """ get pytest arguments to run non_selenium_tests on browserstack mobile browsers """
+        """ get pytest arguments to run tests on browserstack mobile browsers """
         # arguments passed through environment variable
         if self.env_type == 'direct':
             browser_name = config_section['browserName']
@@ -325,7 +325,7 @@ class SalsaRunner():
                             help='Tests to run; options: "smoke", "all" (default)',
                             default='all')
         parser.add_argument('--mobile',
-                            help='Run non_selenium_tests on mobile/tablets, "default:none"'
+                            help='Run tests on mobile/tablets, "default:none"'
                                  'for running use "yes"',
                             default='none')
         parser.add_argument('--jira_support',

@@ -50,19 +50,28 @@ class ControlTest():
         """ Loads variables from .properties configuration files,  check if project didn't contain such folder
         (for non selenium projects) """
         config_path = os.path.join(self.project_root, 'config')
-        if not os.path.exists(config_path):
-            return None
+        #return_configs = []
         config = ConfigParser.ConfigParser()
-        # load server config variables
-        server_config = os.path.join(config_path, 'server_config.properties')
-        config.read(server_config)
-        server_config_vars = dict(config.defaults())
-        # load local config variables
-        local_config = os.path.join(config_path, 'local_config.properties')
-        config.read(local_config)
-        local_config_vars = dict(config.defaults())
-        return_configs = [server_config_vars, local_config_vars]
-        return return_configs
+        '''
+        if not os.path.exists(config_path):
+            return None'''
+        if os.path.exists(config_path):
+            # load server config variables
+            server_config = os.path.join(config_path, 'server_config.properties')
+            config.read(server_config)
+            server_config_vars = dict(config.defaults())
+            # load local config variables
+            local_config = os.path.join(config_path, 'local_config.properties')
+            config.read(local_config)
+            local_config_vars = dict(config.defaults())
+            # load non selenium config variables
+            non_selenium_config = os.path.join(config_path, 'non_selenium_config.properties')
+            config.read(non_selenium_config)
+            non_selenium_config = dict(config.defaults())
+            return_configs = [server_config_vars, local_config_vars, non_selenium_config]
+            return return_configs
+        else:
+            return None
 
     def gid(self, searched_id):
         """ Gets value from config variables based on provided key.
@@ -87,7 +96,7 @@ class ControlTest():
                 else:
                     value_to_return = string_returned
             except:
-                print('There was an error while retrieving value "' + searched_id + '" from local config!.'
+                print('There was an error while retrieving value "' + searched_id + '"from local config!.'
                       + '\nUsing server value instead.')
                 use_server = True
         else:

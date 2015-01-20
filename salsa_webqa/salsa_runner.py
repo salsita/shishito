@@ -119,20 +119,15 @@ class SalsaRunner():
         else:
             self.cleanup_results()
             if self.reporting == 'simple' or self.driver_name is None:
-                test_status = self.run_non_selenium()
+                test_status = self.trigger_pytest()
             elif self.reporting == 'all':
                 if self.driver_name.lower() == 'browserstack':
                     test_status_selenium = self.run_on_browserstack()
-                    test_status_simple = self.run_non_selenium()
                 else:
                     test_status_selenium = self.run_locally()
-                    test_status_simple = self.run_non_selenium()
-                if test_status_selenium != 0:
-                        test_status = test_status_selenium
-                elif test_status_simple != 0:
-                        test_status = test_status_simple
-                else:
-                    test_status = test_status_selenium
+                test_status_simple = self.trigger_pytest()
+                test_status = max(test_status_selenium,test_status_simple)
+
             elif self.reporting == 'selenium':
                 if self.driver_name.lower() == 'browserstack':
                     test_status = self.run_on_browserstack()
@@ -176,21 +171,17 @@ class SalsaRunner():
         print('Running for browser: ' + self.driver_name)
         return self.trigger_pytest(self.driver_name)
 
-    def run_non_selenium(self):
-        """ Runs non_selenium_tests"""
-        print('Running non selenium tests')
-        return self.trigger_pytest(None)
-
-    def trigger_pytest(self, config_section):
+    def trigger_pytest(self, config_section=None):
         """ Runs PyTest runner on specific configuration """
         if config_section is None or self.reporting == 'simple':
             path = os.path.join(self.project_root, 'non_selenium_tests')
+            print('Running non selenium tests')
             if not os.path.exists(path):
                 print("Can't run non selenium tests files are not found")
                 return None
-            pytest_arguments = [os.path.join(self.project_root, 'non_selenium_tests')]
-            pytest_arguments.append('--junitxml=' + os.path.join(self.result_folder, "Non_selenium_report" + '.xml'))
-            pytest_arguments.append('--html=' + os.path.join(self.result_folder, "Non_selenium_report" + '.html'))
+            pytest_arguments = [os.path.join(self.project_root, 'non_selenium_tests'),
+                                '--junitxml=' + os.path.join(self.result_folder, "Non_selenium_report" + '.xml'),
+                                '--html=' + os.path.join(self.result_folder, "Non_selenium_report" + '.html')]
             return pytest.main(pytest_arguments)
         pytest_arguments = [os.path.join(self.project_root, 'tests')]
         # set pytest parallel execution argument

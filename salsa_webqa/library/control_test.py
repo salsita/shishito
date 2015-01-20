@@ -52,9 +52,6 @@ class ControlTest():
         config_path = os.path.join(self.project_root, 'config')
         #return_configs = []
         config = ConfigParser.ConfigParser()
-        '''
-        if not os.path.exists(config_path):
-            return None'''
         if os.path.exists(config_path):
             # load server config variables
             server_config = os.path.join(config_path, 'server_config.properties')

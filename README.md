@@ -106,6 +106,8 @@ os.environ['BROWSERSTACK'] = '{"test_suite": [{"browser": "Firefox", "browser_ve
 --mobile yes # run tests on mobile browserstack combinations that are stored in "browserstack_mobile.properties" - can't be at the same time with smoke, default value is none
 
 --browserstack testuser1:p84asd21d15asd454 # authenticate on BrowserStack using user "testuser1" and token "p84asd21d15asd454"
+--reporting all # generate reports for selenium and non selenium tests, if you want to run only selenium use value "selenium", for non selenium use "simple"
+
 ```
 
 Combinations yet unsupported by Shishito:
@@ -113,6 +115,9 @@ Combinations yet unsupported by Shishito:
 * `--env direct` together with `--tests smoke`
 
 If no arguments are specified, Shishito, by default, searches for BROWSERSTACK combinations in .properties files and runs all tests
+##Run different tests types (selenium and non selenium)
+* to do this use command line parameter: --reporting, default option is "all", other options are "selenium" and "simple"
+* to run non selenium tests with runner: create folder "non_selenium_tests" and put there tests and conftest.py files, if project contain only non selenium tests, then in command line parameter provide --reporting simple
 
 ## Configuration
 

@@ -47,28 +47,35 @@ class ControlTest():
         return project_root
 
     def load_configs(self):
-        """ Loads variables from .properties configuration files """
+        """ Loads variables from .properties configuration files,  check if project didn't contain such folder
+        (for non selenium projects) """
         config_path = os.path.join(self.project_root, 'config')
         config = ConfigParser.ConfigParser()
-
-        # load server config variables
-        server_config = os.path.join(config_path, 'server_config.properties')
-        config.read(server_config)
-        server_config_vars = dict(config.defaults())
-
-        # load local config variables
-        local_config = os.path.join(config_path, 'local_config.properties')
-        config.read(local_config)
-        local_config_vars = dict(config.defaults())
-
-        return_configs = [server_config_vars, local_config_vars]
-        return return_configs
+        if os.path.exists(config_path):
+            # load server config variables
+            server_config = os.path.join(config_path, 'server_config.properties')
+            config.read(server_config)
+            server_config_vars = dict(config.defaults())
+            # load local config variables
+            local_config = os.path.join(config_path, 'local_config.properties')
+            config.read(local_config)
+            local_config_vars = dict(config.defaults())
+            # load non selenium config variables
+            non_selenium_config = os.path.join(config_path, 'non_selenium_config.properties')
+            config.read(non_selenium_config)
+            non_selenium_config = dict(config.defaults())
+            return_configs = [server_config_vars, local_config_vars, non_selenium_config]
+            return return_configs
+        else:
+            return None
 
     def gid(self, searched_id):
         """ Gets value from config variables based on provided key.
          If local execution parameter is "True", function will try to search for parameter in local configuration file.
          If such parameter is not found or there is an error while reading the file, server (default) configuration
          file will be used instead. """
+        if self.configs is None:
+            return None
         server_config = self.configs[0]
         local_config = self.configs[1]
         local_execution = local_config.get('local_execution')
@@ -85,7 +92,7 @@ class ControlTest():
                 else:
                     value_to_return = string_returned
             except:
-                print('There was an error while retrieving value "' + searched_id + '" from local config!.'
+                print('There was an error while retrieving value "' + searched_id + '"from local config!.'
                       + '\nUsing server value instead.')
                 use_server = True
         else:

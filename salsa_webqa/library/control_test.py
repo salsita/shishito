@@ -50,7 +50,6 @@ class ControlTest():
         """ Loads variables from .properties configuration files,  check if project didn't contain such folder
         (for non selenium projects) """
         config_path = os.path.join(self.project_root, 'config')
-        #return_configs = []
         config = ConfigParser.ConfigParser()
         if os.path.exists(config_path):
             # load server config variables

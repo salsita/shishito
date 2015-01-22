@@ -117,6 +117,7 @@ class SalsaRunner():
             sys.exit('The runner cannot be executed directly.'
                      ' You need to import it within project specific runner. Session terminated.')
         else:
+            test_status = 0
             self.cleanup_results()
             if self.reporting == 'simple' or self.driver_name is None:
                 test_status = self.trigger_pytest()
@@ -126,7 +127,7 @@ class SalsaRunner():
                 else:
                     test_status_selenium = self.run_locally()
                 test_status_simple = self.trigger_pytest()
-                test_status = max(test_status_selenium,test_status_simple)
+                test_status = max(test_status_selenium, test_status_simple)
 
             elif self.reporting == 'selenium':
                 if self.driver_name.lower() == 'browserstack':

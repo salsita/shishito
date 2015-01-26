@@ -91,7 +91,7 @@ class ControlTest():
                 use_local = True
             else:
                 value_to_return = string_returned
-        except ValueError:
+        except (AttributeError, ValueError):
             use_local = True
 
         # try to retrieve value from local config

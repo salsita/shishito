@@ -79,12 +79,23 @@ class ControlTest():
         server_config = self.configs[0]
         local_config = self.configs[1]
         local_execution = local_config.get('local_execution')
+        use_local = False
         use_server = False
         use_environment_property = False
         value_to_return = None
 
+        # try to retrieve value from pytest config
+        try:
+            string_returned = pytest.config.getoption(searched_id)
+            if string_returned in (None, ''):
+                use_local = True
+            else:
+                value_to_return = string_returned
+        except ValueError:
+            use_local = True
+
         # try to retrieve value from local config
-        if local_execution.lower() == 'true':
+        if use_local and local_execution.lower() == 'true':
             try:
                 string_returned = local_config.get(searched_id)
                 if string_returned == '':
@@ -130,7 +141,7 @@ class ControlTest():
             build_name = build_name
         else:
             build_name = self.gid('build_name')
-        test_mobile = pytest.config.getoption('test_mobile')
+        test_mobile = self.gid('test_mobile')
         if test_mobile == "yes":
             desired_cap = {'device': pytest.config.getoption('xdevice'),
                            'platform': pytest.config.getoption('xplatform'),
@@ -206,7 +217,7 @@ class ControlTest():
     def update_browser_profile(self, capabilities, browser_type=None):
         """ Returns updated browser profile ready to be passed to driver """
         browser_profile = None
-        test_mobile = pytest.config.getoption('test_mobile')
+        test_mobile = self.gid('test_mobile')
         if not test_mobile:
             if browser_type is None:
                 browser_type = capabilities['browser'].lower()
@@ -413,9 +424,9 @@ class ControlTest():
     def get_auth(self, parameter):
         auth = None
         if parameter.lower() == 'jira':
-            auth = pytest.config.getoption('jira_support')
+            auth = self.gid('jira_support')
         elif parameter.lower() == 'browserstack':
-            auth = pytest.config.getoption('browserstack')
+            auth = self.gid('browserstack')
         if auth:
             credentials = auth.split(":")
             return str(credentials[0]), str(credentials[1])
@@ -430,7 +441,7 @@ class ControlTest():
         jira_auth = self.get_auth("jira")
         if jira_auth:
             cycle_base = self.gid('jira_base_cycle')
-            cycle_id = pytest.config.getoption('jira_cycle_id')
+            cycle_id = self.gid('jira_cycle_id')
             issue_id = self.zapi.get_issueid(cycle_base, jira_id, jira_auth)
             execution_id = self.zapi.add_new_execution(self.gid('jira_project'), self.gid('jira_project_version'),
                                                        cycle_id, issue_id, jira_auth)

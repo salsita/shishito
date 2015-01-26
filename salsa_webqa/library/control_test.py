@@ -95,19 +95,20 @@ class ControlTest():
             use_local = True
 
         # try to retrieve value from local config
-        if use_local and local_execution.lower() == 'true':
-            try:
-                string_returned = local_config.get(searched_id)
-                if string_returned == '':
+        if use_local:
+            if local_execution.lower() == 'true':
+                try:
+                    string_returned = local_config.get(searched_id)
+                    if string_returned == '':
+                        use_server = True
+                    else:
+                        value_to_return = string_returned
+                except:
+                    print('There was an error while retrieving value "' + searched_id + '"from local config!.'
+                          + '\nUsing server value instead.')
                     use_server = True
-                else:
-                    value_to_return = string_returned
-            except:
-                print('There was an error while retrieving value "' + searched_id + '"from local config!.'
-                      + '\nUsing server value instead.')
+            else:
                 use_server = True
-        else:
-            use_server = True
 
         # try to retrieve value from server config
         if use_server:

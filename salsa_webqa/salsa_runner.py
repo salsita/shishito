@@ -143,8 +143,9 @@ class SalsaRunner():
         test_status = 0
         # If password not provided in command line look ad server configuration file
         if self.bs_username is None:
-            self.bs_username = self.tc.gid('bs_username')
-            self.bs_password = self.tc.gid('bs_password')
+            credentials = self.tc.gid('browserstack').split(':')
+            self.bs_username = credentials[0]
+            self.bs_password = credentials[1]
         if bs_api.wait_for_free_sessions((self.bs_username, self.bs_password),
                                          self.tc.gid('session_waiting_time'), self.tc.gid('session_waiting_delay')):
             # load browserstack variables from configuration files

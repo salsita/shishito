@@ -14,17 +14,9 @@ It runs tests using included libraries and generates nice test results output.
 
 ## Pre-requisities
 
-Following python modules needs to be installed
+Install Python moodules from requirements.txt
 
-* selenium
-* pytest
-* pytest-xdist
-* pytest-instafail
-* UnittestZero
-* Jinja2
-
-```pip install selenium pytest pytest-xdist pytest-instafail UnittestZero jinja2```
-*(On linux run as root with 'sudo')*
+```pip install -r requirements.txt```
 
 To build Chrome extension from sources automatically
 

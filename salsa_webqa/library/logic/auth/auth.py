@@ -16,8 +16,8 @@ def log_in(email_field, email, password_field, password, submit_button=None):
 
     email_field.send_keys(email)
     password_field.send_keys(password)
-    if submit_button is None:
-        password_field.send_keys(Keys.RETURN)
-    else:
+    if submit_button:
         submit_button.click()
+    else:
+        password_field.send_keys(Keys.RETURN)
     time.sleep(1)

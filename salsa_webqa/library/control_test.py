@@ -26,7 +26,7 @@ from salsa_webqa.library.support.browserstack import BrowserStackAPI
 from salsa_webqa.library.support.jira_zephyr_api import ZAPI
 
 
-class ControlTest():
+class ControlTest(object):
     def __init__(self):
         self.bs_api = BrowserStackAPI()
         self.zapi = ZAPI()
@@ -66,111 +66,67 @@ class ControlTest():
             non_selenium_config = dict(config.defaults())
             return_configs = [server_config_vars, local_config_vars, non_selenium_config]
             return return_configs
-        else:
-            return None
 
-    def gid(self, searched_id):
+    def gid(self, key):
         """ Gets value from config variables based on provided key.
          If local execution parameter is "True", function will try to search for parameter in local configuration file.
          If such parameter is not found or there is an error while reading the file, server (default) configuration
          file will be used instead. """
-        if self.configs is None:
+        if not self.configs:
             return None
+
+        #first lookup pytest config
+        value = pytest.config.getoption(key)
+        if value:
+            return value
+
         server_config = self.configs[0]
         local_config = self.configs[1]
-        local_execution = local_config.get('local_execution')
-        use_local = False
-        use_server = False
-        use_environment_property = False
-        value_to_return = None
+        configs = []
+        if local_config.get('local_execution').lower() == 'true':
+            configs.append((local_config, 'local config'))
+        configs.extend([(server_config, 'server config'), (os.environ, 'env variables')])
+        for idx, cfg in enumerate(configs):
+            if key in cfg:
+                if idx:
+                    print "%s not found in %s, using value from %s" % (key, configs[0][1], cfg[1])
+                return cfg['searched_id']
+        print "%s not found in any config" % key
 
-        # try to retrieve value from pytest config
-        try:
-            string_returned = pytest.config.getoption(searched_id)
-            if string_returned in (None, ''):
-                use_local = True
-            else:
-                value_to_return = string_returned
-        except (AttributeError, ValueError):
-            use_local = True
-
-        # try to retrieve value from local config
-        if use_local:
-            if local_execution.lower() == 'true':
-                try:
-                    string_returned = local_config.get(searched_id)
-                    if string_returned == '':
-                        use_server = True
-                    else:
-                        value_to_return = string_returned
-                except:
-                    print('There was an error while retrieving value "' + searched_id + '"from local config!.'
-                          + '\nUsing server value instead.')
-                    use_server = True
-            else:
-                use_server = True
-
-        # try to retrieve value from server config
-        if use_server:
-            try:
-                string_returned = server_config.get(searched_id)
-                if string_returned == '':
-                    use_environment_property = True
-                else:
-                    value_to_return = string_returned
-            except:
-                print('There was an error while retrieving value "' + searched_id + '" from server config!.'
-                      + '\nLooking for environment property value instead.')
-                use_environment_property = True
-
-        # try to retrieve value from environment property
-        if use_environment_property:
-            env_property_value = os.environ.get(searched_id)
-            if env_property_value is not None:
-                value_to_return = env_property_value
-
-        # raise an exception in case value could not be retrieved by any means
-        if value_to_return is None:
-            print('Property "' + searched_id + '" has not been found within local, server configs, neither'
-                                               ' it was defined in environment property. Returning empty string')
-            return ''
-        return value_to_return
 
     def get_browserstack_capabilities(self, build_name=None):
-        """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
-        if build_name is not None:
-            build_name = build_name
-        else:
-            build_name = self.gid('build_name')
-        test_mobile = self.gid('test_mobile')
+        """Returns dictionary of capabilities for specific Browserstack browser/os combination """
+        build_name = build_name or self.gid('build_name')
+        cfg = pytest.config
+        test_mobile = cfg.getoption('test_mobile')
+        capabilities = {
+            'browserstack.debug': self.gid('browserstack_debug').lower(),
+            'project': self.gid('project_name'),
+            'build': build_name,
+            'name': self.get_test_name() + time.strftime('_%Y-%m-%d')
+        }
         if test_mobile == "yes":
-            desired_cap = {'device': pytest.config.getoption('xdevice'),
-                           'platform': pytest.config.getoption('xplatform'),
-                           'deviceOrientation': pytest.config.getoption('xdeviceOrientation'),
-                           'browserName': pytest.config.getoption('xbrowserName'),
-                           'browserstack.debug': self.gid('browserstack_debug').lower(),
-                           'project': self.gid('project_name'),
-                           'build': build_name,
-                           'name': self.get_test_name() + time.strftime('_%Y-%m-%d')}
+            capabilities.update({
+                'device': cfg.getoption('xdevice'),
+                'platform': cfg.getoption('xplatform'),
+                'deviceOrientation': cfg.getoption('xdeviceOrientation'),
+                'browserName': cfg.getoption('xbrowserName'),
+            })
         else:
-            desired_cap = {'os': pytest.config.getoption('xos'),
-                           'os_version': pytest.config.getoption('xosversion'),
-                           'browser': pytest.config.getoption('xbrowser'),
-                           'browser_version': pytest.config.getoption('xbrowserversion'),
-                           'resolution': pytest.config.getoption('xresolution'),
-                           'browserstack.debug': self.gid('browserstack_debug').lower(),
-                           'project': self.gid('project_name'),
-                           'build': build_name,
-                           'name': self.get_test_name() + time.strftime('_%Y-%m-%d')}
-        return desired_cap
+            capabilities.update({
+                'os': cfg.getoption('xos'),
+                'os_version': cfg.getoption('xosversion'),
+                'browser': cfg.getoption('xbrowser'),
+                'browser_version': cfg.getoption('xbrowserversion'),
+                'resolution': cfg.getoption('xresolution'),
+            })
+        return capabilities
 
     def get_capabilities(self, build_name=None, browserstack=False):
         """ Returns dictionary of browser capabilities """
-        desired_cap = {}
-        if bool(self.gid('accept_ssl_cert').lower() == 'false'):
-            desired_cap['acceptSslCerts'] = False
-        else:
-            desired_cap['acceptSslCerts'] = True
+        desired_cap = {
+            'acceptSslCerts': self.gid('accept_ssl_cert').lower() == 'false'
+        }
         if browserstack:
             desired_cap.update(self.get_browserstack_capabilities(build_name))
         return desired_cap
@@ -179,41 +135,34 @@ class ControlTest():
         """ Returns test name from the call stack, assuming there can be only
          one 'test_' file in the stack. If there are more it means two PyTest
         tests ran when calling get_test_name, which is invalid use case. """
-        test_name = None
         frames = inspect.getouterframes(inspect.currentframe())
         for frame in frames:
             if re.match('test_.*', ntpath.basename(frame[1])):
-                test_name = ntpath.basename(frame[1])[:-3]
-                break
-        if test_name is None:
-            test_name = self.gid('project_name')
-        return test_name
+                return ntpath.basename(frame[1])[:-3]
+
+        return self.gid('project_name')
 
     def get_default_browser_attributes(self, browser, height, url, width):
         """ Returns default browser values if not initially set """
-        if url is None:
-            url = self.gid('base_url')
-        if browser is None:
-            browser = self.gid('driver')
-        if width is None:
-            width = self.gid('window_width')
-        if height is None:
-            height = self.gid('window_height')
-        return browser, height, url, width
+        return (
+            url or self.gid('base_url'),
+            browser or self.gid('driver'),
+            width or self.gid('window_width'),
+            height or self.gid('window_height')
+        )
 
     def get_browser_profile(self, browser_type):
         """ returns ChromeOptions or FirefoxProfile with default settings, based on browser """
-        profile = None
         if browser_type.lower() == 'chrome':
             profile = webdriver.ChromeOptions()
             profile.add_experimental_option("excludeSwitches", ["ignore-certificate-errors"])
             # set mobile device emulation
             mobile_browser_emulation = self.gid('mobile_browser_emulation')
-            if bool(mobile_browser_emulation):
+            if mobile_browser_emulation:
                 profile.add_experimental_option("mobileEmulation", {"deviceName": mobile_browser_emulation})
+            return profile
         elif browser_type.lower() == 'firefox':
-            profile = webdriver.FirefoxProfile()
-        return profile
+            return webdriver.FirefoxProfile()
 
     def update_browser_profile(self, capabilities, browser_type=None):
         """ Returns updated browser profile ready to be passed to driver """
@@ -225,7 +174,7 @@ class ControlTest():
             browser_profile = self.get_browser_profile(browser_type)
 
             # add extensions to remote driver
-            if bool(self.gid('with_extension')):
+            if self.gid('with_extension'):
                 browser_profile = self.add_extension_to_browser(browser_type, browser_profile)
 
             # add Chrome options to desired capabilities
@@ -260,7 +209,7 @@ class ControlTest():
 
         # get browser capabilities and profile
         capabilities = self.get_capabilities(build_name, browserstack=True)
-        hub_url = 'http://' + bs_auth[0] + ':' + bs_auth[1] + '@hub.browserstack.com:80/wd/hub'
+        hub_url = 'http://{0}:{1}@hub.browserstack.com:80/wd/hub'.format(*bs_auth)
 
         # call remote driver
         self.start_remote_driver(hub_url, capabilities)
@@ -275,7 +224,7 @@ class ControlTest():
         capabilities = self.get_capabilities()
         remote_hub = self.gid('remote_hub')
 
-        if bool(remote_hub):
+        if remote_hub:
             self.start_remote_driver(remote_hub, capabilities, browser_type)
         else:
             self.start_local_driver(capabilities, browser_type)
@@ -285,19 +234,9 @@ class ControlTest():
         browser_profile = self.update_browser_profile(capabilities, browser_type)
 
         # browser type is specified (test not run on BrowserStack)
-        if browser_type is not None:
-            driver_capabilities = {}
-            if browser_type == "firefox":
-                driver_capabilities = DesiredCapabilities.FIREFOX
-            elif browser_type == "chrome":
-                driver_capabilities = DesiredCapabilities.CHROME
-            elif browser_type == "ie":
-                driver_capabilities = DesiredCapabilities.INTERNETEXPLORER
-            elif browser_type == "phantomjs":
-                driver_capabilities = DesiredCapabilities.PHANTOMJS
-            elif browser_type == "opera":
-                driver_capabilities = DesiredCapabilities.OPERA
-            capabilities.update(driver_capabilities)
+        if browser_type:
+            attr = 'INTERNETEXPLORER' if browser_type == 'ie' else browser_type.upper()
+            capabilities.update(getattr(DesiredCapabilities, attr, {}))
             browser_version = self.gid('browser_version')
             platform = self.gid('platform')
             if browser_version:
@@ -357,9 +296,9 @@ class ControlTest():
 
     def start_test(self, reload_page=None):
         """ To be executed before every test-case (test function) """
-        if self.session_link is not None:
-            print ("Link to Browserstack report: %s " % self.session_link)
-        if reload_page is not None:
+        if self.session_link:
+            print "Link to Browserstack report: %s " % self.session_link
+        if reload_page:
             self.driver.get(self.gid('base_url'))
             self.driver.implicitly_wait(self.gid('default_implicit_wait'))
             time.sleep(5)
@@ -373,7 +312,7 @@ class ControlTest():
                 os.makedirs(screenshot_folder)
             file_name = re.sub('[^A-Za-z0-9_. ]+', '', test_info.test_name)
             self.driver.save_screenshot(os.path.join(screenshot_folder, file_name + '.png'))
-        if execution_id is not None:
+        if execution_id:
             print "change status in Jira execution"
             auth = self.get_auth("jira")
             if test_info.test_status == "failed_execution":
@@ -420,7 +359,7 @@ class ControlTest():
         try:
             subprocess.check_call(shell_command, shell=True)
         except subprocess.CalledProcessError:
-            print('There was an issue with building extension!')
+            print 'There was an issue with building extension!'
 
     def get_auth(self, parameter):
         auth = None
@@ -429,12 +368,11 @@ class ControlTest():
         elif parameter.lower() == 'browserstack':
             auth = self.gid('browserstack')
         if auth:
-            credentials = auth.split(":")
-            return str(credentials[0]), str(credentials[1])
+            return [str(tok) for tok in auth.split(":")]
         return None
 
     def create_cycle(self, cycle_name, auth):
-        cycle_id = self.zapi.create_new_test_cycle(cycle_name + " " + datetime.today().strftime("%d-%m-%y"),
+        cycle_id = self.zapi.create_new_test_cycle("%s %S" % (cycle_name, datetime.today().strftime("%d-%m-%y")),
                                                    self.gid('jira_project'), self.gid('jira_project_version'), auth)
         return cycle_id
 
@@ -447,4 +385,3 @@ class ControlTest():
             execution_id = self.zapi.add_new_execution(self.gid('jira_project'), self.gid('jira_project_version'),
                                                        cycle_id, issue_id, jira_auth)
             return execution_id
-        return None

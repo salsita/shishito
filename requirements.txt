@@ -1,0 +1,6 @@
+selenium
+pytest
+pytest-xdist
+pytest-instafail
+UnittestZero
+Jinja2

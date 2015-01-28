@@ -77,9 +77,7 @@ class ControlTest(object):
 
         # first lookup pytest config
         try:
-            value = pytest.config.getoption(key)
-            if value:
-                return value
+            return pytest.config.getoption(key)
         except (ValueError, AttributeError):
             server_config = self.configs[0]
             local_config = self.configs[1]
@@ -202,21 +200,24 @@ class ControlTest(object):
     def call_browserstack_browser(self, build_name):
         """ Starts browser on BrowserStack """
         bs_auth = self.get_auth("browserstack")
-        # wait until free browserstack session is available
-        self.bs_api.wait_for_free_sessions(bs_auth,
-                                           int(self.gid('session_waiting_time')),
-                                           int(self.gid('session_waiting_delay')))
+        if bs_auth:
+            # wait until free browserstack session is available
+            self.bs_api.wait_for_free_sessions(bs_auth,
+                                               int(self.gid('session_waiting_time')),
+                                               int(self.gid('session_waiting_delay')))
 
-        # get browser capabilities and profile
-        capabilities = self.get_capabilities(build_name, browserstack=True)
-        hub_url = 'http://{0}:{1}@hub.browserstack.com:80/wd/hub'.format(*bs_auth)
+            # get browser capabilities and profile
+            capabilities = self.get_capabilities(build_name, browserstack=True)
+            hub_url = 'http://{0}:{1}@hub.browserstack.com:80/wd/hub'.format(*bs_auth)
 
-        # call remote driver
-        self.start_remote_driver(hub_url, capabilities)
+            # call remote driver
+            self.start_remote_driver(hub_url, capabilities)
 
-        session = self.bs_api.get_session(bs_auth, capabilities['build'], 'running')
-        self.session_link = self.bs_api.get_session_link(session)
-        self.session_id = self.bs_api.get_session_hashed_id(session)
+            session = self.bs_api.get_session(bs_auth, capabilities['build'], 'running')
+            self.session_link = self.bs_api.get_session_link(session)
+            self.session_id = self.bs_api.get_session_hashed_id(session)
+        else:
+            sys.exit('Browserstack credentials were not specified! Unable to start browser.')
 
     def call_browser(self, browser_type):
         """ Starts local browser """
@@ -368,7 +369,7 @@ class ControlTest(object):
         elif parameter.lower() == 'browserstack':
             auth = self.gid('browserstack')
         if auth:
-            return tuple([str(tok) for tok in auth.split(":")])
+            return tuple(auth.split(":"))
         return None
 
     def create_cycle(self, cycle_name, auth):

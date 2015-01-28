@@ -98,7 +98,7 @@ class ControlTest(object):
         """Returns dictionary of capabilities for specific Browserstack browser/os combination """
         build_name = build_name or self.gid('build_name')
         cfg = pytest.config
-        test_mobile = cfg.getoption('test_mobile')
+        test_mobile = self.gid('test_mobile')
         capabilities = {
             'browserstack.debug': self.gid('browserstack_debug').lower(),
             'project': self.gid('project_name'),

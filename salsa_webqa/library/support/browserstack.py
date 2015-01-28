@@ -13,7 +13,7 @@ class BrowserStackAPI(object):
     def get_projects(self, auth):
         url = "https://www.browserstack.com/automate/projects.json"
         r = requests.get(url, auth=auth)
-        return r.json
+        return r.json()
 
     def get_project(self, auth, project_name):
         for project in self.get_projects(auth):
@@ -21,13 +21,13 @@ class BrowserStackAPI(object):
                 project_id = project['automation_project']['id']
                 url = "https://browserstack.com/automate/projects/%s.json" % project_id
                 r = requests.get(url, auth=auth)
-                return r.json
+                return r.json()
 
 
     def get_builds(self, auth):
         url = "https://www.browserstack.com/automate/builds.json"
         r = requests.get(url, auth=auth)
-        return r.json
+        return r.json()
 
     def get_build_hash_id(self, auth, build_name):
         for build in self.get_builds(auth):
@@ -38,7 +38,7 @@ class BrowserStackAPI(object):
         hashed_id = self.get_build_hash_id(auth, build_name)
         url = "https://www.browserstack.com/automate/builds/%s/sessions.json" % hashed_id
         r = requests.get(url, auth=auth)
-        return r.json
+        return r.json()
 
     def get_session(self, auth, build_name, status):
         for session in self.get_sessions(auth, build_name):
@@ -56,7 +56,7 @@ class BrowserStackAPI(object):
     def is_session_available(self, auth):
         url = "https://www.browserstack.com/automate/plan.json"
         r = requests.get(url, auth=auth)
-        session = r.json
+        session = r.json()
         session_running = session["parallel_sessions_running"]
         session_all = session["parallel_sessions_max_allowed"]
         return int(session_all) - int(session_running)

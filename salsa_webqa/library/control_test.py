@@ -75,24 +75,24 @@ class ControlTest(object):
         if not self.configs:
             return None
 
-        #first lookup pytest config
-        value = pytest.config.getoption(key)
-        if value:
-            return value
-
-        server_config = self.configs[0]
-        local_config = self.configs[1]
-        configs = []
-        if local_config.get('local_execution').lower() == 'true':
-            configs.append((local_config, 'local config'))
-        configs.extend([(server_config, 'server config'), (os.environ, 'env variables')])
-        for idx, cfg in enumerate(configs):
-            if key in cfg:
-                if idx:
-                    print "%s not found in %s, using value from %s" % (key, configs[0][1], cfg[1])
-                return cfg['searched_id']
-        print "%s not found in any config" % key
-
+        # first lookup pytest config
+        try:
+            value = pytest.config.getoption(key)
+            if value:
+                return value
+        except (ValueError, AttributeError):
+            server_config = self.configs[0]
+            local_config = self.configs[1]
+            configs = []
+            if local_config.get('local_execution').lower() == 'true':
+                configs.append((local_config, 'local config'))
+            configs.extend([(server_config, 'server config'), (os.environ, 'env variables')])
+            for idx, cfg in enumerate(configs):
+                if key in cfg[0] and cfg[0][key] != '':
+                    if idx:
+                        print "%s not found in %s, using value from %s" % (key, configs[0][1], cfg[1])
+                    return cfg[0][key]
+            print "%s not found in any config" % key
 
     def get_browserstack_capabilities(self, build_name=None):
         """Returns dictionary of capabilities for specific Browserstack browser/os combination """
@@ -145,10 +145,10 @@ class ControlTest(object):
     def get_default_browser_attributes(self, browser, height, url, width):
         """ Returns default browser values if not initially set """
         return (
-            url or self.gid('base_url'),
             browser or self.gid('driver'),
-            width or self.gid('window_width'),
-            height or self.gid('window_height')
+            height or self.gid('window_height'),
+            url or self.gid('base_url'),
+            width or self.gid('window_width')
         )
 
     def get_browser_profile(self, browser_type):
@@ -368,7 +368,7 @@ class ControlTest(object):
         elif parameter.lower() == 'browserstack':
             auth = self.gid('browserstack')
         if auth:
-            return [str(tok) for tok in auth.split(":")]
+            return tuple([str(tok) for tok in auth.split(":")])
         return None
 
     def create_cycle(self, cycle_name, auth):

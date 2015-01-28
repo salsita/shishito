@@ -6,7 +6,7 @@ import re
 from salsa_webqa.library.control_test import ControlTest
 
 
-class EmailIMAP():
+class EmailIMAP(object):
     def __init__(self):
         self.test_control = ControlTest()
         self.email_address = self.test_control.gid('email_address')
@@ -23,13 +23,10 @@ class EmailIMAP():
         count = 0
         while count < timeout:
             id_list = self.get_all_email_ids()
-            print id_list
-            if len(id_list) > 0:
-                return self.get_latest_message()
-            else:
-                time.sleep(5)
-                count += 1
-        return None
+            if id_list:
+                return self.get_message(id_list[-1])
+            time.sleep(5)
+            count += 1
 
     def cleanup_emails(self):
         """ cleans up email folder """
@@ -43,20 +40,14 @@ class EmailIMAP():
 
     # SUPPORT METHODS
 
-    def get_latest_message(self):
-        """ gets last email message """
-        id_list = self.get_all_email_ids()
-        latest_email_id = id_list[-1]  # get the latest email
-
-        result, data = self.mail.fetch(latest_email_id, "(RFC822)")  # fetch the email body (RFC822) for the given ID
+    def get_message(self, message_id):
+        """ gets email message """
+        data = self.mail.fetch(message_id, "(RFC822)")[1]  # fetch the email body (RFC822) for the given ID
         raw_email = data[0][1]  # here's the body, which is raw text of the whole email
         return email.message_from_string(raw_email)
 
     def get_all_email_ids(self):
         """ connects to gmail account and return list of all email ids """
         self.mail.select(self.email_mailbox)
-        result, data = self.mail.search(None, "ALL")
-
-        ids = data[0]
-        id_list = ids.split()
-        return id_list
+        data = self.mail.search(None, "ALL")[1]
+        return data[0].split() #ids split

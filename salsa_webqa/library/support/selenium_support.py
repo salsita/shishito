@@ -22,7 +22,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from salsa_webqa.library.control_test import ControlTest
 
 
-class SeleniumTest():
+class SeleniumTest(object):
     def __init__(self, driver):
         self.driver = driver
         self.tc = ControlTest()
@@ -39,27 +39,29 @@ class SeleniumTest():
 
     def save_file_from_url(self, file_path, url):
         """ Saves file from url """
-        if not os.path.isfile(file_path):
-            save_file = open(file_path, 'wb')
-            response = requests.get(url, stream=True)
+        if os.path.isfile(file_path):
+            print 'File %s already exists.' % file_path
+            return
 
-            if not response.ok:
-                print('Something went wrong when requesting file from url "' + str(url) + '".')
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
 
+        with open(file_path, 'wb') as save_file:
             for block in response.iter_content(1024):
                 if not block:
                     break
-
                 save_file.write(block)
-            save_file.close()
-        else:
-            print('File "' + str(file_path) + '" already exists.')
 
+    # Deprecated use property directly
     def get_base_url(self):
-        """ Return the url for the current page."""
         return self.base_url
 
+    # Deprecated use property directly
     def get_current_url(self):
+        return self.current_url
+
+    @property
+    def current_url(self):
         """ Return the url for the current page."""
         return self.driver.current_url
 
@@ -76,21 +78,20 @@ class SeleniumTest():
     def click_and_wait(self, element, locator=None):
         """ clicks on a element and then waits for specific element to be present or simply waits implicitly """
         element.click()
-        if locator is None:
-            self.driver.implicitly_wait(10)
-        else:
+        if locator:
             self.wait_for_element_ready(locator)
+        else:
+            self.driver.implicitly_wait(10)
 
     def check_images_are_loaded(self):
         """ checks all images on the pages and verifies if they are properly loaded """
+        script = 'return arguments[0].complete && typeof arguments[0].naturalWidth' \
+                 ' != "undefined" && arguments[0].naturalWidth > 0'
         images_not_loaded = []
         for image in self.driver.find_elements_by_tag_name('img'):
-            script = 'return arguments[0].complete && typeof arguments[0].naturalWidth' \
-                     ' != "undefined" && arguments[0].naturalWidth > 0'
-            image_loaded = bool(self.driver.execute_script(script, image))
-            if not image_loaded:
-                if image.get_attribute('src') is not None:
-                    images_not_loaded.append(self.driver.title + ': ' + str(image.get_attribute('src')))
+            loaded = self.driver.execute_script(script, image)
+            if not loaded and image.get_attribute('src'):
+                images_not_loaded.append('%s: %s' % (self.driver.title, image.get_attribute('src')))
         return images_not_loaded
 
     def is_element_present(self, locator):
@@ -135,46 +136,42 @@ class SeleniumTest():
     def wait_for_element_present(self, locator, timeout=None):
         """ Wait for the element at the specified locator
         to be present in the DOM. """
-        if timeout is None:
-            timeout = self.timeout
+        timeout = timeout or self.timeout
         count = 0
         while not self.is_element_present(locator):
             time.sleep(1)
             count += 1
             if count == timeout:
-                raise Exception(str(locator) + ' has not loaded')
+                raise Exception('%s has not loaded' % locator)
 
     def wait_for_element_visible(self, locator, timeout=None):
         """
         Wait for the element at the specified locator to be visible.
         """
-        if timeout is None:
-            timeout = self.timeout
+        timeout = timeout or self.timeout
         count = 0
         while not self.is_element_visible(locator):
             time.sleep(1)
             count += 1
             if count == timeout:
-                raise Exception(str(locator) + " is not visible")
+                raise Exception("%s is not visible" % locator)
 
     def wait_for_element_not_visible(self, locator, timeout=None):
         """
         Wait for the element at the specified locator not to be visible anymore.
         """
-        if timeout is None:
-            timeout = self.timeout
+        timeout = timeout or self.timeout
         count = 0
         while self.is_element_visible(locator):
             time.sleep(1)
             count += 1
             if count == timeout:
-                raise Exception(str(locator) + " is still visible")
+                raise Exception("%s is still visible" % locator)
 
     def wait_for_element_not_present(self, locator, timeout=None):
         """ Wait for the element at the specified locator
          not to be present in the DOM. """
-        if timeout is None:
-            timeout = self.timeout
+        timeout = timeout or self.timeout
         self.driver.implicitly_wait(0)
         try:
             WebDriverWait(self.driver, timeout).until(
@@ -214,13 +211,11 @@ class SeleniumTest():
 
     def wait_for_element_ready(self, locator, timeout=None):
         """ Waits until certain element is present and clickable """
-        if timeout is None:
-            timeout = self.timeout
+        timeout = timeout or self.timeout
         WebDriverWait(self.driver, timeout).until(EC.presence_of_element_located(locator),
-                                                  'Element specified by ' + str(locator) + ' was not present!')
+                                                  'Element specified by %s was not present!' % locator)
         WebDriverWait(self.driver, timeout).until(EC.element_to_be_clickable(locator),
-                                                  'Element specified by ' + str(
-                                                      locator) + ' did not become clickable!')
+                                                  'Element specified by %s did not become clickable!' % locator)
 
     def find_element(self, locator):
         """ Return the element at the specified locator."""
@@ -234,10 +229,8 @@ class SeleniumTest():
         """ Find elements that have specified text """
         elements = self.driver.find_elements(*locator)
         selected = [item for item in elements if item.text == text]
-        if len(selected) == 1:
-            return selected[0]
-        else:
-            return selected
+        return selected[0] if len(selected) == 1 else selected
+
 
     def link_destination(self, locator):
         """ Return the href attribute of the element at the specified locator."""

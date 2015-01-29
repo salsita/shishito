@@ -87,10 +87,10 @@ class ControlTest(object):
             configs.extend([(server_config, 'server config'), (os.environ, 'env variables')])
             for idx, cfg in enumerate(configs):
                 if key in cfg[0] and cfg[0][key] != '':
-                    if idx:
-                        print "%s not found in %s, using value from %s" % (key, configs[0][1], cfg[1])
+                    # if idx:
+                        # print "%s not found in %s, using value from %s" % (key, configs[0][1], cfg[1])
                     return cfg[0][key]
-            print "%s not found in any config" % key
+            # print "%s not found in any config" % key
 
     def get_browserstack_capabilities(self, build_name=None):
         """Returns dictionary of capabilities for specific Browserstack browser/os combination """

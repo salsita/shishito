@@ -110,7 +110,7 @@ class ControlTest(object):
             'build': build_name,
             'name': self.get_test_name() + time.strftime('_%Y-%m-%d')
         }
-        if test_mobile == "yes":
+        if test_mobile == 'yes':
             capabilities.update({
                 'device': cfg.getoption('xdevice'),
                 'platform': cfg.getoption('xplatform'),
@@ -173,7 +173,7 @@ class ControlTest(object):
         """ Returns updated browser profile ready to be passed to driver """
         browser_profile = None
         test_mobile = self.gid('test_mobile')
-        if not test_mobile:
+        if test_mobile != 'yes':
             if browser_type is None:
                 browser_type = capabilities['browser'].lower()
             browser_profile = self.get_browser_profile(browser_type)

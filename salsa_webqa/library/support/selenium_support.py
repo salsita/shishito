@@ -142,7 +142,7 @@ class SeleniumTest(object):
             time.sleep(1)
             count += 1
             if count == timeout:
-                raise Exception('%s has not loaded' % locator)
+                raise Exception('{0} has not loaded'.format(locator))
 
     def wait_for_element_visible(self, locator, timeout=None):
         """
@@ -154,7 +154,7 @@ class SeleniumTest(object):
             time.sleep(1)
             count += 1
             if count == timeout:
-                raise Exception("%s is not visible" % locator)
+                raise Exception("{0} is not visible".format(locator))
 
     def wait_for_element_not_visible(self, locator, timeout=None):
         """
@@ -166,7 +166,7 @@ class SeleniumTest(object):
             time.sleep(1)
             count += 1
             if count == timeout:
-                raise Exception("%s is still visible" % locator)
+                raise Exception("{0} is still visible".format(locator))
 
     def wait_for_element_not_present(self, locator, timeout=None):
         """ Wait for the element at the specified locator
@@ -213,9 +213,9 @@ class SeleniumTest(object):
         """ Waits until certain element is present and clickable """
         timeout = timeout or self.timeout
         WebDriverWait(self.driver, timeout).until(EC.presence_of_element_located(locator),
-                                                  'Element specified by %s was not present!' % locator)
+                                                  'Element specified by {0} was not present!'.format(locator))
         WebDriverWait(self.driver, timeout).until(EC.element_to_be_clickable(locator),
-                                                  'Element specified by %s did not become clickable!' % locator)
+                                                  'Element specified by {0} did not become clickable!'.format(locator))
 
     def find_element(self, locator):
         """ Return the element at the specified locator."""

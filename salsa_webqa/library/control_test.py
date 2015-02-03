@@ -75,10 +75,17 @@ class ControlTest(object):
         if not self.configs:
             return None
 
-        # first lookup pytest config
+        # first try to lookup pytest config
         try:
-            return pytest.config.getoption(key)
+            value = pytest.config.getoption(key)
+            if value:
+                return value
+            else:
+                use_logs = True
         except (ValueError, AttributeError):
+            use_logs = True
+        # lookup value from config files
+        if use_logs:
             server_config = self.configs[0]
             local_config = self.configs[1]
             configs = []
@@ -88,9 +95,9 @@ class ControlTest(object):
             for idx, cfg in enumerate(configs):
                 if key in cfg[0] and cfg[0][key] != '':
                     # if idx:
-                        # print "%s not found in %s, using value from %s" % (key, configs[0][1], cfg[1])
+                    # print "%s not found in %s, using value from %s" % (key, configs[0][1], cfg[1])
                     return cfg[0][key]
-            # print "%s not found in any config" % key
+                    # print "%s not found in any config" % key
 
     def get_browserstack_capabilities(self, build_name=None):
         """Returns dictionary of capabilities for specific Browserstack browser/os combination """

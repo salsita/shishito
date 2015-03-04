@@ -35,6 +35,8 @@ class ControlTest(object):
         self.session_link = None
         self.session_id = None
         self.driver = None
+        self.bs_config_file = os.path.join(self.project_root, 'config', 'web.properties')
+        self.config = ConfigParser.RawConfigParser()
 
     def get_project_root(self):
         project_root = os.environ.get('SALSA_WEBQA_PROJECT')
@@ -127,13 +129,41 @@ class ControlTest(object):
             })
         return capabilities
 
-    def get_capabilities(self, build_name=None, browserstack=False):
+    def get_appium_capabilities(self, platform):
+        """Returns dictionary of capabilities for specific Appium combination """
+        cfg = pytest.config
+        if platform == 'ios':
+            capabilities = {
+                'platformName': cfg.getoption('platformName'),
+                'platformVersion': cfg.getoption('platformVersion'),
+                'deviceName': cfg.getoption('deviceName'),
+                'appiumVersion': cfg.getoption('appiumVersion'),
+                'app': cfg.getoption('app')
+            }
+        elif platform == 'android':
+            capabilities = {
+                'platformName': cfg.getoption('platformName'),
+                'platformVersion': cfg.getoption('platformVersion'),
+                'deviceName': cfg.getoption('deviceName'),
+                'appPackage': cfg.getoption('appPackage'),
+                'appActivity': cfg.getoption('appActivity'),
+                'appiumVersion': cfg.getoption('appiumVersion'),
+                'app': cfg.getoption('app')
+            }
+            capabilities = {c: cfg.getoption(c) for c in []}
+        else:
+            sys.exit('Incorrect platform was specified. Acceptable values: "ios", "android".')
+        return capabilities
+
+    def get_capabilities(self, build_name=None, browserstack=False, appium_platform=False):
         """ Returns dictionary of browser capabilities """
         desired_cap = {
             'acceptSslCerts': self.gid('accept_ssl_cert').lower() == 'false'
         }
         if browserstack:
             desired_cap.update(self.get_browserstack_capabilities(build_name))
+        if appium_platform:
+            desired_cap.update(self.get_appium_capabilities(appium_platform))
         return desired_cap
 
     def get_test_name(self):
@@ -173,7 +203,8 @@ class ControlTest(object):
         """ Returns updated browser profile ready to be passed to driver """
         browser_profile = None
         test_mobile = self.gid('test_mobile')
-        if test_mobile != 'yes':
+        appium_platform = self.gid('appium_platform')
+        if test_mobile != 'yes' and appium_platform not in ('android', 'ios'):
             if browser_type is None:
                 browser_type = capabilities['browser'].lower()
             browser_profile = self.get_browser_profile(browser_type)
@@ -229,7 +260,11 @@ class ControlTest(object):
     def call_browser(self, browser_type):
         """ Starts local browser """
         # get browser capabilities and profile
-        capabilities = self.get_capabilities()
+        appium_platform = self.gid('appium_platform')
+        if appium_platform:
+            capabilities = self.get_capabilities(appium_platform=appium_platform)
+        else:
+            capabilities = self.get_capabilities()
         remote_hub = self.gid('remote_hub')
 
         if remote_hub:

@@ -46,7 +46,8 @@ class SalsaRunner():
             self.bs_config_file = os.path.join(self.project_root, 'config', 'browserstack.properties')
             self.bs_config_file_smoke = os.path.join(self.project_root, 'config', 'browserstack_smoke.properties')
             self.bs_config_file_mobile = os.path.join(self.project_root, 'config', 'browserstack_mobile.properties')
-            self.bs_config = ConfigParser.RawConfigParser()
+            self.config_file_appium = os.path.join(self.project_root, 'config', 'appium.properties')
+            self.config = ConfigParser.RawConfigParser()
         self.bs_username = None
         self.bs_password = None
         self.jira_username = None
@@ -62,6 +63,7 @@ class SalsaRunner():
         self.cycle_id = credentials['cycle_id']
         self.bs_username = credentials['bs_username']
         self.bs_password = credentials['bs_password']
+        self.appium_platform = self.tc.gid('appium_platform')
         # check if configuration files are present
         if self.reporting != "simple" and self.driver_name is not None:
             if self.test_mobile == 'yes':
@@ -70,7 +72,11 @@ class SalsaRunner():
             else:
                 if not (os.path.exists(self.bs_config_file)) or not (os.path.exists(self.bs_config_file_smoke)):
                     sys.exit('One of browserstack properties files not found! Session terminated.')
+        if self.appium_platform:
+            if not (os.path.exists(self.config_file_appium)):
+                sys.exit('Appium properties file not found! Session terminated.')
 
+    # TODO rename to clearer name which would show the purpose: parse cmd arguments
     def load_services_credentials(self):
         # load cmd arguments and set default values if not specified
         credentials = {}
@@ -151,12 +157,12 @@ class SalsaRunner():
             # load browserstack variables from configuration files
             if self.env_type == 'versioned':
                 if self.test_type == 'smoke':
-                    self.bs_config.read(self.bs_config_file_smoke)
+                    self.config.read(self.bs_config_file_smoke)
                 elif self.test_mobile == 'yes':
-                    self.bs_config.read(self.bs_config_file_mobile)
+                    self.config.read(self.bs_config_file_mobile)
                 else:
-                    self.bs_config.read(self.bs_config_file)
-                for config_section in self.bs_config.sections():
+                    self.config.read(self.bs_config_file)
+                for config_section in self.config.sections():
                     print('Running combination: ' + config_section)
                     test_status = self.trigger_pytest(config_section)
 
@@ -204,6 +210,8 @@ class SalsaRunner():
             if self.test_mobile == 'yes':
                 pytest_arguments = self.get_pytest_arguments_mobile(config_section, pytest_arguments)
             # get arguments for running tests on desktop browsers
+            elif self.appium_platform:
+                pytest_arguments = self.get_pytest_arguments_appium(config_section, pytest_arguments)
             else:
                 pytest_arguments = self.get_pytest_arguments_desktop(config_section, pytest_arguments)
 
@@ -237,14 +245,14 @@ class SalsaRunner():
         # arguments passed through config file
         else:
             if self.test_type == 'smoke':
-                self.bs_config.read(self.bs_config_file_smoke)
+                self.config.read(self.bs_config_file_smoke)
             else:
-                self.bs_config.read(self.bs_config_file)
-            browser = self.bs_config.get(config_section, 'browser')
-            browser_version = self.bs_config.get(config_section, 'browser_version')
-            os_type = self.bs_config.get(config_section, 'os')
-            os_version = self.bs_config.get(config_section, 'os_version')
-            resolution = self.bs_config.get(config_section, 'resolution')
+                self.config.read(self.bs_config_file)
+            browser = self.config.get(config_section, 'browser')
+            browser_version = self.config.get(config_section, 'browser_version')
+            os_type = self.config.get(config_section, 'os')
+            os_version = self.config.get(config_section, 'os_version')
+            resolution = self.config.get(config_section, 'resolution')
             junit_xml_path = os.path.join(self.result_folder, config_section + '.xml')
             html_path = os.path.join(self.result_folder, config_section + '.html')
 
@@ -279,11 +287,46 @@ class SalsaRunner():
             html_path = os.path.join(self.result_folder, browser_name + platform + device + orientation + '.html')
         # arguments passed through config file
         else:
-            self.bs_config.read(self.bs_config_file_mobile)
-            browser_name = self.bs_config.get(config_section, 'browserName')
-            platform = self.bs_config.get(config_section, 'platform')
-            device = self.bs_config.get(config_section, 'device')
-            orientation = self.bs_config.get(config_section, 'deviceOrientation')
+            self.config.read(self.bs_config_file_mobile)
+            browser_name = self.config.get(config_section, 'browserName')
+            platform = self.config.get(config_section, 'platform')
+            device = self.config.get(config_section, 'device')
+            orientation = self.config.get(config_section, 'deviceOrientation')
+            junit_xml_path = os.path.join(self.result_folder, config_section + '.xml')
+            html_path = os.path.join(self.result_folder, config_section + '.html')
+
+        test_result_prefix = '[' + device + ', ' + platform + ', ' + browser_name + ']'
+
+        pytest_arguments.extend([
+            '--junitxml=' + junit_xml_path,
+            '--junit-prefix=' + test_result_prefix,
+            '--html=' + html_path,
+            '--html-prefix=' + test_result_prefix,
+            '--xbrowserName=' + browser_name,
+            '--xplatform=' + platform,
+            '--xdevice=' + device,
+            '--xdeviceOrientation=' + orientation,
+            '--test_mobile=yes'])
+
+        return pytest_arguments
+
+    def get_pytest_arguments_appium(self, config_section, pytest_arguments):
+        """ get pytest arguments to run tests on browserstack mobile browsers """
+        # arguments passed through environment variable
+        if self.env_type == 'direct':
+            browser_name = config_section['browserName']
+            platform = config_section['platform']
+            device = config_section['device']
+            orientation = config_section['deviceOrientation']
+            junit_xml_path = os.path.join(self.result_folder, browser_name + platform + device + orientation + '.xml')
+            html_path = os.path.join(self.result_folder, browser_name + platform + device + orientation + '.html')
+        # arguments passed through config file
+        else:
+            self.config.read(self.bs_config_file_mobile)
+            browser_name = self.config.get(config_section, 'browserName')
+            platform = self.config.get(config_section, 'platform')
+            device = self.config.get(config_section, 'device')
+            orientation = self.config.get(config_section, 'deviceOrientation')
             junit_xml_path = os.path.join(self.result_folder, config_section + '.xml')
             html_path = os.path.join(self.result_folder, config_section + '.html')
 
@@ -303,20 +346,25 @@ class SalsaRunner():
         return pytest_arguments
 
     def get_runner_args(self):
+        # TODO pass those arguments to modules
         """ Retrieves the command line arguments passed to the script """
         parser = argparse.ArgumentParser(description='Selenium Python test runner execution arguments.')
+        # TODO = rename this and allow to run test for each "module" ?
         parser.add_argument('--reporting',
                             help='Generate reports for non selenium non_selenium_tests;'
                                  'options: "all, selenium, simple"',
                             default='all')
+        # TODO = possibly remove this option: is it even used? (too much complexity)
         parser.add_argument('--env',
                             help='BrowserStack environments; '
                                  'options: "direct" - passed as OS environment variable '
                                  '(JSON format), "versioned" (default) - loaded from *.properties configuration files',
                             default='versioned')
+        # TODO = change this to just "smoke" and remove the smoke properties file (too much complexity)
         parser.add_argument('--tests',
                             help='Tests to run; options: "smoke", "all" (default)',
                             default='all')
+        # TODO = possibly remove this and keep it just in config files (too much complexity)
         parser.add_argument('--mobile',
                             help='Run tests on mobile/tablets, "default:none"'
                                  'for running use "yes"',
@@ -330,33 +378,3 @@ class SalsaRunner():
 
         args = parser.parse_args()
         return [args.reporting, args.env, args.tests, args.mobile, args.jira_support, args.browserstack]
-
-    def cleanup_results(self):
-        """ Cleans up test result folder """
-        if os.path.exists(os.path.join(self.project_root, 'results')):
-            shutil.rmtree(os.path.join(self.project_root, 'results'))
-        os.makedirs(self.result_folder)
-
-    def archive_results(self):
-        """ Archives test results in zip package """
-        archive_folder = os.path.join(self.project_root, 'results_archive')
-        if not (os.path.exists(archive_folder)):
-            os.makedirs(archive_folder)
-        shutil.make_archive(os.path.join(archive_folder, self.timestamp), "zip",
-                            os.path.join(self.project_root, 'results'))
-
-    def generate_combined_report(self):
-        data = os.listdir(os.path.join(self.project_root, 'results', self.timestamp))
-        result_reports = [item[:-5] for item in data if item.endswith('.html')]
-        if len(result_reports) > 0:
-            env = Environment(
-                loader=FileSystemLoader(os.path.join(self.current_folder, 'library', 'report', 'resources')))
-            template = env.get_template('CombinedReportTemplate.html')
-            template_vars = {'data': result_reports}
-            output = template.render(template_vars)
-            formatted_output = output.encode('utf8').strip()
-            final_report = open(os.path.join(self.project_root, 'results', self.timestamp, 'CombinedReport.html'), 'w')
-            final_report.write(formatted_output)
-            final_report.close()
-            shutil.copy(os.path.join(self.current_folder, 'library', 'report', 'resources', 'combined_report.js'),
-                        os.path.join(self.project_root, 'results', self.timestamp))

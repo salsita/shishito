@@ -31,7 +31,7 @@ class Reporter(object):
         result_reports = [item[:-5] for item in data if item.endswith('.html')]
         if len(result_reports) > 0:
             env = Environment(
-                loader=FileSystemLoader(os.path.join(self.current_folder, 'library', 'report', 'resources')))
+                loader=FileSystemLoader(os.path.join(self.current_folder, 'resources')))
             template = env.get_template('CombinedReportTemplate.html')
             template_vars = {'data': result_reports}
             output = template.render(template_vars)
@@ -39,5 +39,5 @@ class Reporter(object):
             final_report = open(os.path.join(self.project_root, 'results', self.timestamp, 'CombinedReport.html'), 'w')
             final_report.write(formatted_output)
             final_report.close()
-            shutil.copy(os.path.join(self.current_folder, 'library', 'report', 'resources', 'combined_report.js'),
+            shutil.copy(os.path.join(self.current_folder, 'resources', 'combined_report.js'),
                         os.path.join(self.project_root, 'results', self.timestamp))

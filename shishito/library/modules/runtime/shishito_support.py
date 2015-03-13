@@ -3,10 +3,12 @@ import os
 from importlib import import_module
 
 import pytest
+import sys
 
 
 class ShishitoSupport(object):
     def __init__(self):
+        # TODO this does not work without a runner
         self.project_root = os.getcwd()
         self.configs = self.load_configs()
         self.config = ConfigParser.RawConfigParser()
@@ -64,8 +66,25 @@ class ShishitoSupport(object):
                     return cfg[0][key]
                     # print "%s not found in any config" % key
 
-    def get_modules(self, platform_module_name, environment_module_name):
-        platform_path = 'shishito.library.modules.runtime.platform.' + platform_module_name + '.control_execution'
-        environment_path = 'shishito.library.modules.runtime.environment.' + environment_module_name + '.environment_control'
-        return {'platform': getattr(import_module(platform_path), 'ControlExecution'),
-                'environment': getattr(import_module(environment_path), 'ControlEnvironment')}
+    def get_environment_config(self, platform_name, environment_name):
+        """ gets config """
+        # TODO review the functionality (is it what we want?)
+        config = ConfigParser.ConfigParser()
+        config_path = os.path.join(self.project_root, 'config', platform_name, environment_name + '.properties')
+        if config_path:
+            config.read(config_path)
+            return config
+        else:
+            sys.exit('Config file in location {0} was not found! Terminating test.'.format(config_path))
+
+    def get_modules(self, platform, environment):
+        platform_execution = 'shishito.library.modules.runtime.platform.' + platform + '.control_execution'
+        platform_test = 'shishito.library.modules.runtime.platform.' + platform + '.control_test'
+        test_environment = 'shishito.library.modules.runtime.environment.' + environment + '.control_environment'
+        return {'platform_execution': getattr(import_module(platform_execution), 'ControlExecution'),
+                'platform_test': getattr(import_module(platform_test), 'ControlTest'),
+                'test_environment': getattr(import_module(test_environment), 'ControlEnvironment')}
+
+    def get_test_control(self):
+        platform_test = 'shishito.library.modules.runtime.platform.' + self.gid('test_platform') + '.control_test'
+        return getattr(import_module(platform_test), 'ControlTest')()

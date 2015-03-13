@@ -12,41 +12,48 @@ import time
 import re
 
 # from salsa_webqa.library.support.jira_zephyr_api import ZAPI
-from shishito.library.modules.runtime.environment.local.environment_control import EnvironmentControl
-from shishito.library.modules.runtime.platform.web.control_execution import ControlExecution
 from shishito.library.modules.runtime.shishito_support import ShishitoSupport
 
 
 class ControlTest(object):
     def __init__(self):
+        # TODO os.getcwd() may not always work (if runner is not used)
         self.project_root = os.getcwd()
-        # TODO load from pytest config
-        self.environment_module = EnvironmentControl()
-        self.platform_module = ControlExecution()
-        self.driver = None
-        self.config_file = os.path.join(self.project_root, 'config', self.platform_module.module_name,
-                                        self.environment_module.module_name + '.properties')
-        self.config = ConfigParser.RawConfigParser()
         self.shishito_support = ShishitoSupport()
+        self.platform_name = self.shishito_support.gid('test_platform')
+        self.environment_name = self.shishito_support.gid('test_environment')
+        self.modules = self.shishito_support.get_modules(self.platform_name, self.environment_name)
+        self.driver = None
 
-    def get_default_browser_attributes(self, browser, height, url, width):
-        """ Returns default browser values if not initially set """
-        return (
-            browser or self.shishito_support.gid('driver'),
-            height or self.shishito_support.gid('window_height'),
-            url or self.shishito_support.gid('base_url'),
-            width or self.shishito_support.gid('window_width')
-        )
+        # load config file
+        self.config_file = os.path.join(self.project_root, 'config', self.platform_name,
+                                        self.environment_name + '.properties')
+        self.config = ConfigParser.RawConfigParser()
 
-    def start_browser(self, url=None, browser=None, width=None, height=None):
+    # def get_default_browser_attributes(self, browser, height, url, width):
+    # """ Returns default browser values if not initially set """
+    #     # TODO remove this probably in favor of .properties file
+    #     return (
+    #         browser or self.shishito_support.gid('driver').lower(),
+    #         height or self.shishito_support.gid('window_height').lower(),
+    #         url or self.shishito_support.gid('base_url').lower(),
+    #         width or self.shishito_support.gid('window_width').lower()
+    #     )
+
+    def start_browser(self):
         """ Browser startup function.
          Initialize session over Browserstack or local browser. """
         # get default parameter values
-        browser, height, url, width = self.get_default_browser_attributes(browser, height, url, width)
+        # browser, height, url, width = self.get_default_browser_attributes(browser, height, url, width)
+        # TODO pass combination (config section) from pytest argument OR environment .properties file (if runner not used)
+        # self.shishito_support.gid('environment_configuration')
+        combination = 'Chrome'
 
-        self.environment_module.call_browser(browser_type=browser)
-        self.driver.set_window_size(width, height)
-        self.test_init(url)
+        self.driver = self.modules['test_environment']().call_browser(combination=combination)
+        # self.driver.set_window_size(width, height)
+        url = self.shishito_support.gid('base_url')
+        if url:
+            self.test_init(url)
         return self.driver
 
     def stop_browser(self, delete_cookies=True):

@@ -94,7 +94,6 @@ class ControlTest(object):
             if local_config.get('local_execution').lower() == 'true':
                 configs.append((local_config, 'local config'))
             configs.extend([(server_config, 'server config'), (os.environ, 'env variables')])
-            for idx, cfg in enumerate(configs):
                 if key in cfg[0] and cfg[0][key] != '':
                     # if idx:
                     # print "%s not found in %s, using value from %s" % (key, configs[0][1], cfg[1])

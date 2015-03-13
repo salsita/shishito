@@ -5,38 +5,18 @@
 @summary: Selenium Webdriver Python test runner
 """
 import os
-import ConfigParser
-import time
 import argparse
 
 import pytest
 
-from shishito.library.modules.reporting.reporter import Reporter
-from shishito.library.modules.runtime.environment.local.environment_control import EnvironmentControl
-from shishito.library.modules.runtime.shishito_support import ShishitoSupport
+from shishito.library.modules.runtime.platform.shishito_execution import ShishitoExecution
 
 
-class ControlExecution():
+class ControlExecution(ShishitoExecution):
     """ """
 
-    def __init__(self):
-
-        self.module_name = 'web'
-        self.shishito_support = ShishitoSupport()
-         # TODO this will have to passed as argument to constructor (not through pytest, pytest not yet triggered at this point)
-        self.environment = EnvironmentControl()
-
-        self.current_folder = os.path.dirname(os.path.abspath(__file__))
-        self.project_root = os.getcwd()
-
-        self.reporter = Reporter()
-
-        self.timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
-        self.result_folder = os.path.join(self.project_root, 'results', self.timestamp)
-        self.config_file = os.path.join(self.project_root, 'config', self.module_name,
-                                        self.environment.module_name + '.properties')
-        self.config = ConfigParser.RawConfigParser()
-        # self.arguments = self.get_runner_args()
+    def __init__(self, environment_name):
+        ShishitoExecution.__init__(self, environment_name)
 
     def run_tests(self):
         """ Triggers PyTest runner locally or on BrowserStack.
@@ -62,6 +42,9 @@ class ControlExecution():
 
         # prepare pytest arguments into execution list
         pytest_arguments = [os.path.join(self.project_root, 'tests'),
+                            '--test_platform=' + self.platform_name,
+                            '--test_environment=' + self.environment_name,
+                            '--environment_configuration=' + config_section,
                             '--junitxml=' + junit_xml_path,
                             '--junit-prefix=' + test_result_prefix,
                             '--html=' + html_path,
@@ -75,7 +58,7 @@ class ControlExecution():
 
         # # set pytest smoke test argument
         # if self.arguments['test_type'] == 'smoke':
-        #     pytest_arguments.extend(['-m', self.arguments['test_type']])
+        # pytest_arguments.extend(['-m', self.arguments['test_type']])
 
         # if self.cycle_id:
         # pytest_arguments.extend(['--jira_cycle_id', self.cycle_id])

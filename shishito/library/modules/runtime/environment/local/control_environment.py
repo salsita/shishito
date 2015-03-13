@@ -40,11 +40,12 @@ class ControlEnvironment(ShishitoEnvironment):
         capabilities = {
             'acceptSslCerts': self.shishito_support.gid('accept_ssl_cert').lower() == 'false',
         }
-        capabilities.update({
-            'browser': self.config.get(combination, 'browser'),
-            'browser_version': self.config.get(combination, 'browser_version'),
-            'resolution': self.config.get(combination, 'resolution'),
-        })
+        # TODO should not need to update capabilies for local webdriver
+        # capabilities.update({
+        #     'browser': self.config.get(combination, 'browser'),
+        #     'browser_version': self.config.get(combination, 'browser_version'),
+        #     'resolution': self.config.get(combination, 'resolution'),
+        # })
         return capabilities
 
     def get_browser_profile(self, browser_type, capabilities):

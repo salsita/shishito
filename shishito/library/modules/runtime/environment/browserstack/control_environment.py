@@ -1,10 +1,10 @@
 import inspect
-import pytest
 import time
-from selenium import webdriver
 import re
 import sys
 import ntpath
+
+from selenium import webdriver
 
 from shishito.library.modules.runtime.environment.shishito_environment import ShishitoEnvironment
 from shishito.library.modules.services.browserstack import BrowserStackAPI
@@ -14,9 +14,11 @@ class ControlEnvironment(ShishitoEnvironment):
     def __init__(self):
         ShishitoEnvironment.__init__(self)
         self.bs_api = BrowserStackAPI()
+        self.platform_name = self.shishito_support.gid('test_platform')
+        self.environment_name = self.shishito_support.gid('test_environment')
         self.config = self.shishito_support.get_environment_config(
-            platform_name=self.shishito_support.gid('platform'),
-            environment_name=self.shishito_support.gid('environment'))
+            platform_name=self.platform_name,
+            environment_name=self.environment_name)
 
     def call_browser(self, combination, capabilities=None):
         bs_auth = tuple(self.shishito_support.gid('browserstack').split(':'))
@@ -27,15 +29,16 @@ class ControlEnvironment(ShishitoEnvironment):
                                                int(self.shishito_support.gid('session_waiting_delay')))
 
             # get browser capabilities and profile
-            capabilities = self.get_capabilities()
+            capabilities = self.get_capabilities(combination)
             hub_url = 'http://{0}:{1}@hub.browserstack.com:80/wd/hub'.format(*bs_auth)
 
             # call remote driver
-            self.start_driver(hub_url, capabilities)
+            driver = self.start_driver(hub_url, capabilities)
 
             session = self.bs_api.get_session(bs_auth, capabilities['build'], 'running')
             self.session_link = self.bs_api.get_session_link(session)
             self.session_id = self.bs_api.get_session_hashed_id(session)
+            return driver
         else:
             sys.exit('Browserstack credentials were not specified! Unable to start browser.')
 
@@ -49,12 +52,10 @@ class ControlEnvironment(ShishitoEnvironment):
             browser_profile=browser_profile)
         return driver
 
-    def get_capabilities(self):
+    def get_capabilities(self, combination):
         """Returns dictionary of capabilities for specific Browserstack browser/os combination """
         build_name = self.shishito_support.gid('build_name')
-        test_mobile = self.shishito_support.gid('test_mobile')
-        cfg = pytest.config
-
+        # test_mobile = self.shishito_support.gid('test_mobile')
         capabilities = {
             'acceptSslCerts': self.shishito_support.gid('accept_ssl_cert').lower() == 'false',
             'browserstack.debug': self.shishito_support.gid('browserstack_debug').lower(),
@@ -62,22 +63,22 @@ class ControlEnvironment(ShishitoEnvironment):
             'build': build_name,
             'name': self.get_test_name() + time.strftime('_%Y-%m-%d')
         }
-        # TODO take this information from "platform" module
-        if test_mobile == 'yes':
-            capabilities.update({
-                'device': self.config['device'],
-                'platform': self.config['platform'],
-                'deviceOrientation': self.config['deviceOrientation'],
-                'browserName': self.config['browserName'],
-            })
-        else:
-            capabilities.update({
-                'os': cfg.getoption('xos'),
-                'os_version': cfg.getoption('xosversion'),
-                'browser': cfg.getoption('xbrowser'),
-                'browser_version': cfg.getoption('xbrowserversion'),
-                'resolution': cfg.getoption('xresolution'),
-            })
+        # TODO take this information (test mobile) from "platform" module
+        # if test_mobile == 'yes':
+        # capabilities.update({
+        #         'device': self.config['device'],
+        #         'platform': self.config['platform'],
+        #         'deviceOrientation': self.config['deviceOrientation'],
+        #         'browserName': self.config['browserName'],
+        #     })
+        # else:
+        capabilities.update({
+            'os': self.config.get(combination, 'os'),
+            'os_version': self.config.get(combination, 'os_version'),
+            'browser': self.config.get(combination, 'browser'),
+            'browser_version': self.config.get(combination, 'browser_version'),
+            'resolution': self.config.get(combination, 'resolution'),
+        })
         return capabilities
 
     def get_browser_profile(self, browser_type, capabilities):
@@ -100,7 +101,7 @@ class ControlEnvironment(ShishitoEnvironment):
     # TODO will need to implement some edge cases from there (mobile emulation etc..)
     # def get_browser_profile(self, browser_type):
     # """ returns ChromeOptions or FirefoxProfile with default settings, based on browser """
-    #     if browser_type.lower() == 'chrome':
+    # if browser_type.lower() == 'chrome':
     #         profile = webdriver.ChromeOptions()
     #         profile.add_experimental_option("excludeSwitches", ["ignore-certificate-errors"])
     #         # set mobile device emulation

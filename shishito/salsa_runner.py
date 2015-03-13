@@ -9,6 +9,7 @@ from importlib import import_module
 import sys
 
 from shishito.library.modules.reporting.reporter import Reporter
+from shishito.library.modules.runtime.shishito_support import ShishitoSupport
 
 
 class ShishitoRunner():
@@ -19,6 +20,7 @@ class ShishitoRunner():
 
     def __init__(self):
         self.reporter = Reporter()
+        self.shishito_support = ShishitoSupport()
 
     def run_tests(self):
         self.reporter.cleanup_results()
@@ -49,10 +51,12 @@ class ShishitoRunner():
         args = parser.parse_args()
 
         # TODO hardcoded test data
-        args.platform = 'web'
-        args.environment = 'local'
+        # args.platform = 'web'
+        # args.environment = 'local'
+        platform = self.shishito_support.gid('test_platform')
+        environment = self.shishito_support.gid('test_environment')
 
-        return {'platform': args.platform, 'environment': args.environment}
+        return {'platform': platform, 'environment': environment}
 
 
 ShishitoRunner().run_tests()

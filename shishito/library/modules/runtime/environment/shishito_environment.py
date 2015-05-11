@@ -99,6 +99,7 @@ class ShishitoEnvironment(object):
         if self.shishito_support.gid('with_extension'):
             # TODO: add support for extensions again
             # profile = self.add_extension_to_browser(browser_type, profile)
+            pass
 
         # add Chrome options to desired capabilities
         if browser_type == 'chrome':

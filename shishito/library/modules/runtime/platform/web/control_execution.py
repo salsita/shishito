@@ -38,7 +38,7 @@ class ControlExecution(ShishitoExecution):
         junit_xml_path = os.path.join(self.result_folder, config_section + '.xml')
         html_path = os.path.join(self.result_folder, config_section + '.html')
 
-        test_result_prefix = '[' + browser + ', ' + browser_version + ', ' + resolution + ']'
+        test_result_prefix = '[%s, %s, %s]' % (browser, browser_version, resolution)
 
         # prepare pytest arguments into execution list
         pytest_arguments_dict = {

@@ -38,26 +38,13 @@ class ShishitoRunner(object):
 
         parser.add_argument('--platform',
                             help='Platform on which run tests.',
-                            default='web')
+                            dest='test_platform')
         parser.add_argument('--environment',
                             help='Environment for which run tests.',
-                            default='local')
-
-        # TODO: = rename this and allow to run test for each "module" ?
-        parser.add_argument('--reporting',
-                            help='Generate reports for non selenium non_selenium_tests;'
-                                 'options: "all, selenium, simple"',
-                            default='all')
-
-        # TODO: = change this to just "smoke" and remove the smoke properties file (too much complexity)
-        parser.add_argument('--tests',
-                            help='Tests to run; options: "smoke", "all" (default)',
-                            default='all')
-
-        parser.add_argument('--jira_support',
-                            help='Jira credentials; format: "username:password',
-                            default='none')
-
+                            dest='test_environment')
+        parser.add_argument('--smoke',
+                            help='Run only smoke tests',
+                            action='store_true')
         parser.add_argument('--browserstack',
                             help='BrowserStack credentials; format: "username:token"',
                             default='none')
@@ -65,14 +52,7 @@ class ShishitoRunner(object):
         args = parser.parse_args()
 
         # return args dict --> for use in other classes
-        return {
-            'test_environment': args.environment,
-            'test_platform': args.platform,
-            'reporting': args.reporting,
-            'test': args.tests,
-            'jira_support': args.jira_support,
-            'browserstack': args.browserstack
-        }
+        return vars(args)
 
     def run_tests(self):
         if __name__ == "__main__":

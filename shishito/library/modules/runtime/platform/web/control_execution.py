@@ -52,14 +52,6 @@ class ControlExecution(ShishitoExecution):
             '--instafail': '--instafail'
         }
 
-
-        # # set pytest smoke test argument
-        # if self.arguments['test_type'] == 'smoke':
-        # pytest_arguments.extend(['-m', self.arguments['test_type']])
-
-        # if self.cycle_id:
-        # pytest_arguments.extend(['--jira_cycle_id', self.cycle_id])
-
         # extend pytest_arguments with environment specific args
         extra_pytest_arguments = self.environment.get_pytest_arguments(config_section)
         if extra_pytest_arguments:
@@ -75,5 +67,10 @@ class ControlExecution(ShishitoExecution):
         parallel_tests = int(self.shishito_support.gid('parallel_tests'))
         if parallel_tests > 1:
             pytest_arguments.extend(['-n', str(parallel_tests)])
+
+        # set pytest smoke test argument
+        smoke = self.shishito_support.gid('smoke')
+        if smoke:
+            pytest_arguments.extend(['-m', 'smoke'])
 
         return pytest.main(pytest_arguments)

@@ -67,8 +67,9 @@ class ControlEnvironment(ShishitoEnvironment):
         junit_xml_path = os.path.join(self.result_folder, config_section + '.xml')
         html_path = os.path.join(self.result_folder, config_section + '.html')
 
-        test_result_prefix = '[' + browser + ', ' + browser_version + ', ' + os_type \
-                             + ', ' + os_version + ', ' + resolution + ']'
+        test_result_prefix = '[%s, %s, %s, %s, %s]' % (
+            browser, browser_version, os_type, os_version, resolution
+        )
 
         # Add browserstack credentials
         bs_auth = self.shishito_support.gid('browserstack')
@@ -84,7 +85,7 @@ class ControlEnvironment(ShishitoEnvironment):
             '--xos=': '--xos=' + os_type,
             '--xosversion=': '--xosversion=' + os_version,
             '--xresolution=': '--xresolution=' + resolution,
-            '--browserstack=': '--browserstack=' + bs_auth
+            '--browserstack=': '--browserstack=' + bs_auth,
         }
 
     def get_capabilities(self, combination):
@@ -102,7 +103,7 @@ class ControlEnvironment(ShishitoEnvironment):
             'os_version': self.config.get(combination, 'os_version'),
             'browser': self.config.get(combination, 'browser'),
             'browser_version': self.config.get(combination, 'browser_version'),
-            'resolution': self.config.get(combination, 'resolution')
+            'resolution': self.config.get(combination, 'resolution'),
         }
 
         return capabilities

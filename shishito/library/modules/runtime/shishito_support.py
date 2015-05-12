@@ -14,14 +14,14 @@ class ShishitoSupport(object):
         """
 
         # parsed arguments from commad_line
-        self.args_config = {} if cmd_args is None else cmd_args
+        self.args_config = cmd_args or {}
 
         # called without cmd_args
         # if True gid will use only pytest.config
         # if False gid uses pytest.config, cmd_args and config files
         self.used_in_test = True if cmd_args is None else False
 
-        if project_root is not None:
+        if project_root:
             self.project_root = project_root
         else:
             self.project_root = os.getcwd()
@@ -132,11 +132,9 @@ class ShishitoSupport(object):
 
         if module == 'platform_execution':
             return getattr(import_module(platform_execution), 'ControlExecution')
-
-        if module == 'platform_test':
+        elif module == 'platform_test':
             return getattr(import_module(platform_test), 'ControlTest')
-
-        if module == 'test_environment':
+        elif module == 'test_environment':
             return getattr(import_module(test_environment), 'ControlEnvironment')
 
         return {

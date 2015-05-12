@@ -62,12 +62,12 @@ class ShishitoEnvironment(object):
         """ Returns dictionary of browser capabilities """
         pass
 
-    def start_driver(self, browser_type, capabilities, remote_driver_url=None):
+    def start_driver(self, browser_type, capabilities, remote_driver_url):
         """ Starts driver """
 
         browser_profile = self.get_browser_profile(browser_type, capabilities)
 
-        if remote_driver_url is None:
+        if not remote_driver_url:
             sys.exit('Base start driver: missing remote_driver_url')
 
         driver = webdriver.Remote(

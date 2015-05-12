@@ -8,7 +8,7 @@ from jinja2 import Environment, FileSystemLoader
 class Reporter(object):
 
     def __init__(self, project_root=None):
-        if project_root is not None:
+        if project_root:
             self.project_root = project_root
         else:
             self.project_root = os.getcwd()
@@ -35,7 +35,7 @@ class Reporter(object):
         data = os.listdir(os.path.join(self.project_root, 'results', self.timestamp))
         result_reports = [item[:-5] for item in data if item.endswith('.html')]
 
-        if len(result_reports) <= 0:
+        if not result_reports:
             return
 
         env = Environment(

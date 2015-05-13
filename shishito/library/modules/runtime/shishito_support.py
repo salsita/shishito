@@ -69,10 +69,6 @@ class ShishitoSupport(object):
 
         # first try to lookup pytest config
         try:
-            # TODO: find out why these options have '='
-            if self.used_in_test and key in ['test_platform', 'test_environment', 'environment_configuration']:
-                key += '='
-
             value = pytest.config.getoption(key)
             if value:
                 return value

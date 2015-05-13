@@ -9,13 +9,7 @@ class ShishitoEnvironment(object):
         self.shishito_support = shishito_support
         self.capabilities = None
 
-        self.platform_name = self.shishito_support.gid('test_platform')
-        self.environment_name = self.shishito_support.gid('test_environment')
-
-        self.config = self.shishito_support.get_environment_config(
-            platform_name=self.platform_name,
-            environment_name=self.environment_name
-        )
+        self.config = self.shishito_support.get_environment_config()
 
         self.project_root = os.getcwd()
 

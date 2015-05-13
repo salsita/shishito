@@ -1,6 +1,5 @@
 import inspect
 import ntpath
-import os
 import re
 import sys
 import time
@@ -17,17 +16,15 @@ class ControlEnvironment(ShishitoEnvironment):
 
         self.bs_api = BrowserStackAPI()
 
-        self.project_root = os.getcwd() # TODO:
-        self.timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
-        self.result_folder = os.path.join(self.project_root, 'results', self.timestamp)
-
     def call_browser(self, combination, capabilities=None):
         """ Starts browser """
 
         # get browser stack credentials
+        bs_credentials = self.shishito_support.gid('browserstack')
+        if not bs_credentials or ':' not in bs_credentials:
+            raise ValueError('Browserstack credentials were not specified! Unable to start browser.')
+
         bs_auth = tuple(self.shishito_support.gid('browserstack').split(':'))
-        if not bs_auth:
-            sys.exit('Browserstack credentials were not specified! Unable to start browser.')
 
         # wait until free browserstack session is available
         if not self.bs_api.wait_for_free_sessions(
@@ -64,8 +61,6 @@ class ControlEnvironment(ShishitoEnvironment):
         os_type = self.config.get(config_section, 'os')
         os_version = self.config.get(config_section, 'os_version')
         resolution = self.config.get(config_section, 'resolution')
-        junit_xml_path = os.path.join(self.result_folder, config_section + '.xml')
-        html_path = os.path.join(self.result_folder, config_section + '.html')
 
         test_result_prefix = '[%s, %s, %s, %s, %s]' % (
             browser, browser_version, os_type, os_version, resolution
@@ -76,9 +71,7 @@ class ControlEnvironment(ShishitoEnvironment):
 
         # prepare pytest arguments into execution list
         return {
-            '--junitxml=': '--junitxml=' + junit_xml_path,
             '--junit-prefix=': '--junit-prefix=' + test_result_prefix,
-            '--html=': '--html=' + html_path,
             '--html-prefix=': '--html-prefix=' + test_result_prefix,
             '--xbrowser=': '--xbrowser=' + browser,
             '--xbrowserversion=': '--xbrowserversion=' + browser_version,

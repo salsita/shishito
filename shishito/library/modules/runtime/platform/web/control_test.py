@@ -6,12 +6,11 @@
  Various startup and termination procedures, helper functions etc.
  Not to be used for directly testing the system under test (must not contain Asserts etc.)
 """
-import ConfigParser
+
 import os
 import time
 import re
 
-# from salsa_webqa.library.support.jira_zephyr_api import ZAPI
 from shishito.library.modules.runtime.shishito_support import ShishitoSupport
 
 
@@ -20,21 +19,14 @@ class ControlTest(object):
     def __init__(self):
         # TODO: os.getcwd() may not always work (if runner is not used)
         self.project_root = os.getcwd()
+
         self.shishito_support = ShishitoSupport()
 
-        self.platform_name = self.shishito_support.gid('test_platform')
-        self.environment_name = self.shishito_support.gid('test_environment')
-
-        self.modules = self.shishito_support.get_modules(self.platform_name, self.environment_name)
-        self.test_environment = self.modules['test_environment'](self.shishito_support)
+        # create control environment object
+        control_env_obj = self.shishito_support.get_modules(module='test_environment')
+        self.test_environment = control_env_obj(self.shishito_support)
 
         self.driver = None
-
-        # load config file
-        self.config_file = os.path.join(self.project_root, 'config', self.platform_name,
-                                        self.environment_name + '.properties')
-        self.config = ConfigParser.ConfigParser()
-        self.config.read(self.config_file)
 
     def start_browser(self):
         """ Browser startup function.

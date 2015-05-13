@@ -32,31 +32,31 @@ class ShishitoSupport(object):
         self.test_platform = self.gid('test_platform')
 
     def load_configs(self):
-        """ Loads variables from .properties configuration files,  check if project didn't contain such folder
-        (for non selenium projects) """
+        """ Loads variables from .properties configuration files """
 
         config_path = os.path.join(self.project_root, 'config')
-        config = ConfigParser.ConfigParser()
         if not os.path.exists(config_path):
             return None
 
+        configs = []
+
         # load server config variables
+        config = ConfigParser.ConfigParser()
         server_config = os.path.join(config_path, 'server_config.properties')
         config.read(server_config)
         server_config_vars = dict(config.defaults())
+        configs.append((server_config_vars, 'server config'))
 
         # load local config variables
+        config = ConfigParser.ConfigParser()
         local_config = os.path.join(config_path, 'local_config.properties')
         config.read(local_config)
         local_config_vars = dict(config.defaults())
 
-        # load non selenium config variables
-        non_selenium_config = os.path.join(config_path, 'non_selenium_config.properties')
-        config.read(non_selenium_config)
-        non_selenium_config = dict(config.defaults())
-        return_configs = [server_config_vars, local_config_vars, non_selenium_config]
+        if local_config_vars.get('local_execution').lower() == 'true':
+            configs.insert(0, (local_config_vars, 'local config'))
 
-        return return_configs
+        return configs
 
     def gid(self, key):
         """ Gets value from config variables based on provided key.
@@ -64,8 +64,6 @@ class ShishitoSupport(object):
          If such parameter is not found or there is an error while reading the file, server (default) configuration
          file will be used instead. """
 
-        if not self.configs:
-            return None
 
         # first try to lookup pytest config
         try:
@@ -80,20 +78,13 @@ class ShishitoSupport(object):
         if value:
             return value
 
-        # lookup value from config files
-        server_config = self.configs[0]
-        local_config = self.configs[1]
+        if not self.configs:
+            return None
 
-        configs = []
-
-        # TOOD: this can be done in __init__ instead of each gid call
-        if local_config.get('local_execution').lower() == 'true':
-            configs.append((local_config, 'local config'))
-
-        configs.extend([(server_config, 'server config'), (os.environ, 'env variables')])
-        for cfg in configs:
-            if key in cfg[0] and cfg[0][key] != '':
-                return cfg[0][key]
+        for cfg, cfg_name in self.configs:
+            if key in cfg and cfg[key] != '':
+                print key + ' taken from config file "' + cfg_name + '"'
+                return cfg[key]
 
     def get_environment_config(self, platform_name=None, environment_name=None):
         """ gets config """
@@ -101,10 +92,10 @@ class ShishitoSupport(object):
         # TODO: review the functionality (is it what we want?)
 
         if platform_name is None:
-            platform_name = self.gid('test_platform')
+            platform_name = self.test_platform
 
         if environment_name is None:
-            environment_name = self.gid('test_environment')
+            environment_name = self.test_environment
 
         config = ConfigParser.ConfigParser()
         config_path = os.path.join(self.project_root, 'config', platform_name, environment_name + '.properties')
@@ -117,10 +108,10 @@ class ShishitoSupport(object):
 
     def get_modules(self, platform=None, environment=None, module=None):
         if platform is None:
-            platform = self.gid('test_platform')
+            platform = self.test_platform
 
         if environment is None:
-            environment = self.gid('test_environment')
+            environment = self.test_environment
 
         platform_execution = 'shishito.library.modules.runtime.platform.' + platform + '.control_execution'
         platform_test = 'shishito.library.modules.runtime.platform.' + platform + '.control_test'
@@ -140,4 +131,5 @@ class ShishitoSupport(object):
         }
 
     def get_test_control(self):
+        """ Used in tests for getting ControlTest object"""
         return self.get_modules(module='platform_test')()

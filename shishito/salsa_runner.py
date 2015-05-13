@@ -7,6 +7,7 @@
 
 import argparse
 import sys
+import time
 
 from shishito.library.modules.reporting.reporter import Reporter
 from shishito.library.modules.runtime.shishito_support import ShishitoSupport
@@ -22,10 +23,13 @@ class ShishitoRunner(object):
         # set project root
         self.project_root = project_root
 
+        # test timestamp - for storing results
+        self.test_timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+
         # parse cmd  args
         self.cmd_args = self.handle_cmd_args()
 
-        self.reporter = Reporter(project_root)
+        self.reporter = Reporter(project_root, self.test_timestamp)
         self.shishito_support = ShishitoSupport(
             cmd_args=self.cmd_args,
             project_root=self.project_root
@@ -65,7 +69,7 @@ class ShishitoRunner(object):
         # import execution class
         executor_class = self.shishito_support.get_modules(module='platform_execution')
         # executor_class = getattr(import_module(platform_path), 'ControlExecution')
-        executor = executor_class(self.shishito_support)
+        executor = executor_class(self.shishito_support, self.test_timestamp)
 
         # run test
         executor.run_tests()

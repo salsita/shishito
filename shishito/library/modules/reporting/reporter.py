@@ -7,14 +7,19 @@ from jinja2 import Environment, FileSystemLoader
 
 class Reporter(object):
 
-    def __init__(self, project_root=None):
+    def __init__(self, project_root=None, test_timestamp=None):
         if project_root:
             self.project_root = project_root
         else:
             self.project_root = os.getcwd()
 
         self.current_folder = os.path.dirname(os.path.abspath(__file__))
-        self.timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+
+        if test_timestamp:
+            self.timestamp = test_timestamp
+        else:
+            self.timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+
         self.result_folder = os.path.join(self.project_root, 'results', self.timestamp)
 
     def cleanup_results(self):

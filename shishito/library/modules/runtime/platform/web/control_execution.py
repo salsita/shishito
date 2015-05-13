@@ -15,13 +15,11 @@ class ControlExecution(ShishitoExecution):
     """ ControlExecution for web platform. """
 
     def run_tests(self):
-        """ Triggers PyTest runner locally or on BrowserStack.
-        It runs PyTest for each BS combination, taken from either versioned .properties file or environment variable """
+        """ Triggers PyTest runner.
+        It runs PyTest for each BS combination, taken from versioned .properties file """
 
         # check that runner is not run directly
         test_status = 0
-
-        self.config.read(self.config_file)
 
         for config_section in self.config.sections():
             print 'Running combination: ' + config_section
@@ -31,7 +29,6 @@ class ControlExecution(ShishitoExecution):
 
     def trigger_pytest(self, config_section):
         """ Runs PyTest runner on specific configuration """
-        self.config.read(self.config_file)
         browser = self.config.get(config_section, 'browser')
         browser_version = self.config.get(config_section, 'browser_version')
         resolution = self.config.get(config_section, 'resolution')
@@ -49,7 +46,7 @@ class ControlExecution(ShishitoExecution):
             '--junit-prefix=': '--junit-prefix=' + test_result_prefix,
             '--html=': '--html=' + html_path,
             '--html-prefix=': '--html-prefix=' + test_result_prefix,
-            '--instafail': '--instafail'
+            '--instafail': '--instafail',
         }
 
         # extend pytest_arguments with environment specific args

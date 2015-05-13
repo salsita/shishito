@@ -7,15 +7,12 @@
 
 import os
 import ConfigParser
-import time
-
-from shishito.library.modules.reporting.reporter import Reporter
 
 
 class ShishitoExecution(object):
     """ """
 
-    def __init__(self, shishito_support):
+    def __init__(self, shishito_support, test_timestamp):
         self.current_folder = os.path.dirname(os.path.abspath(__file__))
 
         self.shishito_support = shishito_support
@@ -27,13 +24,15 @@ class ShishitoExecution(object):
 
         # TODO: this may not work well if runner is not used
         self.project_root = os.getcwd()
-        self.reporter = Reporter()
 
-        self.timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
-        self.result_folder = os.path.join(self.project_root, 'results', self.timestamp)
-        self.config_file = os.path.join(self.project_root, 'config', self.platform_name,
-                                        self.environment_name + '.properties')
+        self.result_folder = os.path.join(self.project_root, 'results', test_timestamp)
+        self.config_file = os.path.join(
+            self.project_root, 'config', self.platform_name,
+            '%s.properties' % self.environment_name
+        )
+
         self.config = ConfigParser.RawConfigParser()
+        self.config.read(self.config_file)
 
     def run_tests(self):
         """ Triggers PyTest runner locally or on BrowserStack.

@@ -4,59 +4,92 @@
 @author: Vojtech Burian
 @summary: Selenium Webdriver Python test runner
 """
+
 import argparse
-from importlib import import_module
 import sys
 
 from shishito.library.modules.reporting.reporter import Reporter
 from shishito.library.modules.runtime.shishito_support import ShishitoSupport
 
 
-class ShishitoRunner():
+class ShishitoRunner(object):
     """ Selenium Webdriver Python test runner.
     - runs python selenium tests on customizable configurations, locally or on BrowserStack using PyTest
     - checks for available BrowserStack sessions and wait if necessary
     - archive the test results in .zip file """
 
-    def __init__(self):
-        self.reporter = Reporter()
-        self.shishito_support = ShishitoSupport()
+    def __init__(self, project_root):
+        # set project root
+        self.project_root = project_root
+
+        # parse cmd  args
+        self.cmd_args = self.handle_cmd_args()
+
+        self.reporter = Reporter(project_root)
+        self.shishito_support = ShishitoSupport(
+            cmd_args=self.cmd_args,
+            project_root=self.project_root
+        )
+
+    def handle_cmd_args(self):
+        """ Retrieves the command line arguments passed to the script """
+
+        parser = argparse.ArgumentParser(description='Selenium Python test runner execution arguments.')
+
+        parser.add_argument('--platform',
+                            help='Platform on which run tests.',
+                            default='web')
+        parser.add_argument('--environment',
+                            help='Environment for which run tests.',
+                            default='local')
+
+        # TODO: = rename this and allow to run test for each "module" ?
+        parser.add_argument('--reporting',
+                            help='Generate reports for non selenium non_selenium_tests;'
+                                 'options: "all, selenium, simple"',
+                            default='all')
+
+        # TODO: = change this to just "smoke" and remove the smoke properties file (too much complexity)
+        parser.add_argument('--tests',
+                            help='Tests to run; options: "smoke", "all" (default)',
+                            default='all')
+
+        parser.add_argument('--jira_support',
+                            help='Jira credentials; format: "username:password',
+                            default='none')
+
+        parser.add_argument('--browserstack',
+                            help='BrowserStack credentials; format: "username:token"',
+                            default='none')
+
+        args = parser.parse_args()
+
+        # return args dict --> for use in other classes
+        return {
+            'test_environment': args.environment,
+            'test_platform': args.platform,
+            'reporting': args.reporting,
+            'test': args.tests,
+            'jira_support': args.jira_support,
+            'browserstack': args.browserstack
+        }
 
     def run_tests(self):
-        self.reporter.cleanup_results()
-
-        # import execution class
-        modules = self.select_modules()
-        platform_path = 'shishito.library.modules.runtime.platform.' + modules['platform'] + '.control_execution'
-        executor_class = getattr(import_module(platform_path), 'ControlExecution')
-        executor = executor_class(modules['environment'])
-
         if __name__ == "__main__":
             sys.exit('The runner cannot be executed directly.'
                      ' You need to import it within project specific runner. Session terminated.')
-        else:
-            executor.run_tests()
+
+        # cleanup previous results
+        self.reporter.cleanup_results()
+
+        # import execution class
+        executor_class = self.shishito_support.get_modules(module='platform_execution')
+        # executor_class = getattr(import_module(platform_path), 'ControlExecution')
+        executor = executor_class(self.shishito_support)
+
+        # run test
+        executor.run_tests()
+
+        # archive results + generate combined report
         self.reporter.archive_results()
         self.reporter.generate_combined_report()
-
-    def select_modules(self):
-        """ Retrieves the command line arguments passed to the script """
-        parser = argparse.ArgumentParser(description='Selenium Python test runner execution arguments.')
-        # parser.add_argument('--platform',
-        # help='',
-        # default='web')
-        # parser.add_argument('--environment',
-        # help='',
-        # default='local')
-        args = parser.parse_args()
-
-        # TODO hardcoded test data
-        # args.platform = 'web'
-        # args.environment = 'local'
-        platform = self.shishito_support.gid('test_platform')
-        environment = self.shishito_support.gid('test_environment')
-
-        return {'platform': platform, 'environment': environment}
-
-
-ShishitoRunner().run_tests()

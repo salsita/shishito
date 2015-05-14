@@ -21,7 +21,7 @@ class ControlExecution(ShishitoExecution):
         # check that runner is not run directly
         test_status = 0
 
-        for config_section in self.config.sections():
+        for config_section in self.shishito_support.env_config.sections():
             print 'Running combination: ' + config_section
             test_status = self.trigger_pytest(config_section)
 
@@ -29,9 +29,11 @@ class ControlExecution(ShishitoExecution):
 
     def trigger_pytest(self, config_section):
         """ Runs PyTest runner on specific configuration """
-        browser = self.config.get(config_section, 'browser')
-        browser_version = self.config.get(config_section, 'browser_version')
-        resolution = self.config.get(config_section, 'resolution')
+
+        browser = self.shishito_support.gid('browser', config_section)
+        browser_version = self.shishito_support.gid('browser_version', config_section)
+        resolution = self.shishito_support.gid('resolution', config_section)
+
         junit_xml_path = os.path.join(self.result_folder, config_section + '.xml')
         html_path = os.path.join(self.result_folder, config_section + '.html')
 
@@ -39,8 +41,8 @@ class ControlExecution(ShishitoExecution):
 
         # prepare pytest arguments into execution list
         pytest_arguments_dict = {
-            '--test_platform=': '--test_platform=' + self.platform_name,
-            '--test_environment=': '--test_environment=' + self.environment_name,
+            '--test_platform=': '--test_platform=' + self.shishito_support.test_platform,
+            '--test_environment=': '--test_environment=' + self.shishito_support.test_environment,
             '--environment_configuration=': '--environment_configuration=' + config_section,
             '--junitxml=': '--junitxml=' + junit_xml_path,
             '--junit-prefix=': '--junit-prefix=' + test_result_prefix,
@@ -55,7 +57,7 @@ class ControlExecution(ShishitoExecution):
             pytest_arguments_dict.update(extra_pytest_arguments)
 
         pytest_arguments = [
-            os.path.join(self.project_root, 'tests'),
+            os.path.join(self.shishito_support.project_root, 'tests'),
         ]
 
         pytest_arguments.extend(pytest_arguments_dict.values())

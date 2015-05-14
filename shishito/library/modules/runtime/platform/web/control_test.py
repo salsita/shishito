@@ -17,9 +17,6 @@ from shishito.library.modules.runtime.shishito_support import ShishitoSupport
 class ControlTest(object):
 
     def __init__(self):
-        # TODO: os.getcwd() may not always work (if runner is not used)
-        self.project_root = os.getcwd()
-
         self.shishito_support = ShishitoSupport()
 
         # create control environment object
@@ -73,7 +70,7 @@ class ControlTest(object):
         """ To be executed after every test-case (test function) """
         if test_info.test_status not in ('passed', None):
             # save screenshot in case test fails
-            screenshot_folder = os.path.join(self.project_root, 'screenshots')
+            screenshot_folder = os.path.join(self.shishito_support.project_root, 'screenshots')
             if not os.path.exists(screenshot_folder):
                 os.makedirs(screenshot_folder)
 

@@ -26,10 +26,14 @@ class ShishitoSupport(object):
         else:
             self.project_root = os.getcwd()
 
+        # get configs
         self.configs = self.load_configs()
 
         self.test_environment = self.gid('test_environment')
         self.test_platform = self.gid('test_platform')
+
+        # get environment config
+        self.env_config = self.get_environment_config()
 
     def load_configs(self):
         """ Loads variables from .properties configuration files """
@@ -58,12 +62,15 @@ class ShishitoSupport(object):
 
         return configs
 
-    def gid(self, key):
+    def gid(self, key, section=None):
         """ Gets value from config variables based on provided key.
          If local execution parameter is "True", function will try to search for parameter in local configuration file.
          If such parameter is not found or there is an error while reading the file, server (default) configuration
          file will be used instead. """
 
+        if section:
+            # use env config
+            return self.env_config.get(section, key)
 
         # first try to lookup pytest config
         try:

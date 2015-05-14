@@ -42,16 +42,17 @@ def pytest_addoption(parser):
                      help="Environment Configuration")
 
     # BROWSERSTACK
-    parser.addoption("--xbrowser", action="store", default="Chrome",
+    parser.addoption("--browser", action="store",
                      help="BrowserStack browser: Chrome, Firefox, IE, PhantomJS, Opera, Safari")
-    parser.addoption("--xbrowserversion", action="store", default="38.0",
+    parser.addoption("--browser_version", action="store",
                      help="BrowserStack browser version. Value depends on selected browser.")
-    parser.addoption("--xos", action="store", default="Windows",
+    parser.addoption("--os", action="store",
                      help="BrowserStack operating system: Windows, OS X")
-    parser.addoption("--xosversion", action="store", default="7",
+    parser.addoption("--os_version", action="store",
                      help="BrowserStack operating system version. Depends on selected OS.")
-    parser.addoption("--xresolution", action="store", default="1280x1024",
+    parser.addoption("--resolution", action="store",
                      help="Screen resolution: 1024x768, 1280x960, 1280x1024, 1600x1200, 1920x1080")
+
     parser.addoption("--xbuildname", action="store", default="Unnamed",
                      help="Test build name")
     parser.addoption("--xbrowserName", action="store", default="iPad",
@@ -143,28 +144,28 @@ def test_status(request):
 
 
 @pytest.fixture(scope='class')
-def xbrowser(request):
-    return request.config.getoption("--xbrowser")
+def browser(request):
+    return request.config.getoption("--browser")
 
 
 @pytest.fixture
-def xbrowserversion(request):
-    return request.config.getoption("--xbrowserversion")
+def browser_version(request):
+    return request.config.getoption("--browser_version")
 
 
 @pytest.fixture
-def xos(request):
-    return request.config.getoption("--xos")
+def os(request):
+    return request.config.getoption("--os")
 
 
 @pytest.fixture
-def xosversion(request):
-    return request.config.getoption("--xosversion")
+def os_version(request):
+    return request.config.getoption("--os_version")
 
 
 @pytest.fixture
-def xresolution(request):
-    return request.config.getoption("--xresolution")
+def resolution(request):
+    return request.config.getoption("--resolution")
 
 
 @pytest.fixture

@@ -9,21 +9,18 @@ class ShishitoEnvironment(object):
         self.shishito_support = shishito_support
         self.capabilities = None
 
-        self.config = self.shishito_support.get_environment_config()
-
-        self.project_root = os.getcwd()
-
     def add_extension_to_browser(self, browser_type, browser_profile):
         """ returns browser profile updated with one or more extensions """
 
         if browser_type == 'chrome':
             all_extensions = self.get_extension_file_names('crx')
             for chr_extension in all_extensions:
-                browser_profile.add_extension(os.path.join(self.project_root, 'extension', chr_extension + '.crx'))
+                browser_profile.add_extension(os.path.join(self.shishito_support.project_root, 'extension', chr_extension + '.crx'))
+
         elif browser_type == 'firefox':
             all_extensions = self.get_extension_file_names('xpi')
             for ff_extension in all_extensions:
-                browser_profile.add_extension(os.path.join(self.project_root, 'extension', ff_extension + '.xpi'))
+                browser_profile.add_extension(os.path.join(self.shishito_support.project_root, 'extension', ff_extension + '.xpi'))
 
         return browser_profile
 
@@ -37,14 +34,14 @@ class ShishitoEnvironment(object):
             capabilities = self.get_capabilities(combination)
 
         # get browser type
-        browser_type = self.config.get(combination, 'browser')
+        browser_type = self.shishito_support.gid('browser', section=combination)
         browser_type = browser_type.lower()
 
         # get driver
         driver = self.start_driver(browser_type, capabilities)
 
         # set browser size is defined
-        browser_size = self.config.get(combination, 'resolution')
+        browser_size = self.shishito_support.gid('resolution', section=combination)
         if browser_size:
             # default size --> leave it on webdriver
             width, height = browser_size.split('x')

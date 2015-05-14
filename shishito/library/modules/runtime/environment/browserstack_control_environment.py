@@ -41,7 +41,7 @@ class ControlEnvironment(ShishitoEnvironment):
         hub_url = 'http://{0}:{1}@hub.browserstack.com:80/wd/hub'.format(*bs_auth)
 
         # get browser type
-        browser_type = self.config.get(combination, 'browser')
+        browser_type = self.shishito_support.gid('browser', section=combination)
         browser_type = browser_type.lower()
 
         # call remote driver
@@ -56,11 +56,11 @@ class ControlEnvironment(ShishitoEnvironment):
     def get_pytest_arguments(self, config_section):
         """ Get environment specific arguments for pytest. """
 
-        browser = self.config.get(config_section, 'browser')
-        browser_version = self.config.get(config_section, 'browser_version')
-        os_type = self.config.get(config_section, 'os')
-        os_version = self.config.get(config_section, 'os_version')
-        resolution = self.config.get(config_section, 'resolution')
+        browser = self.shishito_support.gid('browser', section=config_section)
+        browser_version = self.shishito_support.gid('browser_version', section=config_section)
+        os_type = self.shishito_support.gid('os', section=config_section)
+        os_version = self.shishito_support.gid('os_version', section=config_section)
+        resolution = self.shishito_support.gid('resolution', section=config_section)
 
         test_result_prefix = '[%s, %s, %s, %s, %s]' % (
             browser, browser_version, os_type, os_version, resolution
@@ -73,30 +73,28 @@ class ControlEnvironment(ShishitoEnvironment):
         return {
             '--junit-prefix=': '--junit-prefix=' + test_result_prefix,
             '--html-prefix=': '--html-prefix=' + test_result_prefix,
-            '--xbrowser=': '--xbrowser=' + browser,
-            '--xbrowserversion=': '--xbrowserversion=' + browser_version,
-            '--xos=': '--xos=' + os_type,
-            '--xosversion=': '--xosversion=' + os_version,
-            '--xresolution=': '--xresolution=' + resolution,
+            '--browser=': '--browser=' + browser,
+            '--browser_version=': '--browser_version=' + browser_version,
+            '--os=': '--os=' + os_type,
+            '--os_version=': '--os_version=' + os_version,
+            '--resolution=': '--resolution=' + resolution,
             '--browserstack=': '--browserstack=' + bs_auth,
         }
 
     def get_capabilities(self, combination):
         """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
 
-        build_name = self.shishito_support.gid('build_name')
-
         capabilities = {
             'acceptSslCerts': self.shishito_support.gid('accept_ssl_cert').lower() == 'false',
             'browserstack.debug': self.shishito_support.gid('browserstack_debug').lower(),
             'project': self.shishito_support.gid('project_name'),
-            'build': build_name,
+            'build': self.shishito_support.gid('build_name'),
             'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
-            'os': self.config.get(combination, 'os'),
-            'os_version': self.config.get(combination, 'os_version'),
-            'browser': self.config.get(combination, 'browser'),
-            'browser_version': self.config.get(combination, 'browser_version'),
-            'resolution': self.config.get(combination, 'resolution'),
+            'os': self.shishito_support.gid('os', section=combination),
+            'os_version': self.shishito_support.gid('os_version', section=combination),
+            'browser': self.shishito_support.gid('browser', section=combination),
+            'browser_version': self.shishito_support.gid('browser_version', section=combination),
+            'resolution': self.shishito_support.gid('resolution', section=combination),
         }
 
         return capabilities

@@ -4,15 +4,13 @@ import time
 
 from jinja2 import Environment, FileSystemLoader
 
+from shishito.library.modules.runtime.shishito_support import ShishitoSupport
+
 
 class Reporter(object):
 
     def __init__(self, project_root=None, test_timestamp=None):
-        if project_root:
-            self.project_root = project_root
-        else:
-            self.project_root = os.getcwd()
-
+        self.project_root = project_root or ShishitoSupport().project_root
         self.current_folder = os.path.dirname(os.path.abspath(__file__))
 
         if test_timestamp:

@@ -19,12 +19,9 @@ class ShishitoSupport(object):
         # called without cmd_args
         # if True gid will use only pytest.config
         # if False gid uses pytest.config, cmd_args and config files
-        self.used_in_test = True if cmd_args is None else False
+        self.used_in_test = cmd_args is None
 
-        if project_root:
-            self.project_root = project_root
-        else:
-            self.project_root = os.getcwd()
+        self.project_root = project_root or self.find_project_root()
 
         # get configs
         self.configs = self.load_configs()
@@ -35,12 +32,22 @@ class ShishitoSupport(object):
         # get environment config
         self.env_config = self.get_environment_config()
 
+    def find_project_root(self):
+        """ Try to find config directory on sys.path """
+
+        for path in sys.path:
+            config_dir = os.path.join(path, 'config')
+            if os.path.exists(config_dir):
+                return path
+
+        raise ValueError('Can not find config dir on sys.path')
+
     def load_configs(self):
         """ Loads variables from .properties configuration files """
 
         config_path = os.path.join(self.project_root, 'config')
         if not os.path.exists(config_path):
-            return None
+            raise ValueError('Configuration path does not exist (%s)' % config_path)
 
         configs = []
 
@@ -90,25 +97,16 @@ class ShishitoSupport(object):
 
         for cfg, cfg_name in self.configs:
             if key in cfg and cfg[key] != '':
-                print key + ' taken from config file "' + cfg_name + '"'
                 return cfg[key]
 
-    def get_environment_config(self, platform_name=None, environment_name=None):
-        """ gets config """
-
-        # TODO: review the functionality (is it what we want?)
-
-        if platform_name is None:
-            platform_name = self.test_platform
-
-        if environment_name is None:
-            environment_name = self.test_environment
+    def get_environment_config(self):
+        """ Get config file for current platform and environment """
 
         config = ConfigParser.ConfigParser()
-        config_path = os.path.join(self.project_root, 'config', platform_name, environment_name + '.properties')
+        config_path = os.path.join(self.project_root, 'config', self.test_platform, self.test_environment + '.properties')
 
-        if not config_path:
-            sys.exit('Config file in location {0} was not found! Terminating test.'.format(config_path))
+        if not os.path.exists(config_path):
+            raise ValueError('Config file in location {0} was not found!'.format(config_path))
 
         config.read(config_path)
         return config

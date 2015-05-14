@@ -12,8 +12,6 @@ class ShishitoExecution(object):
     """ """
 
     def __init__(self, shishito_support, test_timestamp):
-        self.current_folder = os.path.dirname(os.path.abspath(__file__))
-
         self.shishito_support = shishito_support
 
         environment_class = self.shishito_support.get_modules(module='test_environment')

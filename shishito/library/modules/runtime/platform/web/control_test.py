@@ -1,5 +1,3 @@
-# /usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 @author: Vojtech Burian
 @summary: Common configuration functions supporting test execution.
@@ -7,41 +5,13 @@
  Not to be used for directly testing the system under test (must not contain Asserts etc.)
 """
 
-import os
 import time
-import re
 
-from shishito.library.modules.runtime.shishito_support import ShishitoSupport
+from shishito.library.modules.runtime.platform.shishito_control_test import ShishitoControlTest
 
 
-class ControlTest(object):
-
-    def __init__(self):
-        self.shishito_support = ShishitoSupport()
-
-        # create control environment object
-        control_env_obj = self.shishito_support.get_modules(module='test_environment')
-        self.test_environment = control_env_obj(self.shishito_support)
-
-        self.driver = None
-
-    def start_browser(self):
-        """ Browser startup function.
-         Initialize session over Browserstack or local browser. """
-
-        base_url = self.shishito_support.gid('base_url')
-        combination = self.shishito_support.gid('environment_configuration')
-
-        # call browser from proper environment
-        self.driver = self.test_environment.call_browser(combination)
-
-        # set_window_size moved to call_browser
-
-        # load init url
-        if base_url:
-            self.test_init(base_url)
-
-        return self.driver
+class ControlTest(ShishitoControlTest):
+    """ Web platform """
 
     def stop_browser(self, delete_cookies=True):
         """ Browser termination function """
@@ -65,14 +35,3 @@ class ControlTest(object):
             self.driver.get(self.shishito_support.gid('base_url'))
             self.driver.implicitly_wait(self.shishito_support.gid('default_implicit_wait'))
             time.sleep(5)
-
-    def stop_test(self, test_info):
-        """ To be executed after every test-case (test function) """
-        if test_info.test_status not in ('passed', None):
-            # save screenshot in case test fails
-            screenshot_folder = os.path.join(self.shishito_support.project_root, 'screenshots')
-            if not os.path.exists(screenshot_folder):
-                os.makedirs(screenshot_folder)
-
-            file_name = re.sub('[^A-Za-z0-9_. ]+', '', test_info.test_name)
-            self.driver.save_screenshot(os.path.join(screenshot_folder, file_name + '.png'))

@@ -87,6 +87,8 @@ def pytest_addoption(parser):
                      help="Android default activity, e.g. '.NotesList'")
     parser.addoption('--app', action="store", default=None,
                      help="File path or link to iOS app.zip file / Android apk file")
+    parser.addoption("--saucelabs", action="store", default=None,
+                     help="Saucelabs username and password")
 
     # REPORTS
     group = parser.getgroup("terminal reporting")

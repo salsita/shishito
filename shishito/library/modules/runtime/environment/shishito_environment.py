@@ -1,13 +1,14 @@
 import os
 from selenium import webdriver
-import sys
 
 
 class ShishitoEnvironment(object):
 
+    # (name, config_name, use_section, function),
+    CAPABILITIES = ()
+
     def __init__(self, shishito_support):
         self.shishito_support = shishito_support
-        self.capabilities = None
 
     def add_extension_to_browser(self, browser_type, browser_profile):
         """ returns browser profile updated with one or more extensions """
@@ -50,23 +51,23 @@ class ShishitoEnvironment(object):
         return driver
 
     def get_capabilities(self, combination):
-        """ Returns dictionary of browser capabilities """
-        pass
+        """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
+        capabilities = {}
+        for name, config_name, use_section, func in self.CAPABILITIES:
+            if use_section:
+                value = self.shishito_support.gid(config_name, combination)
+            else:
+                value = self.shishito_support.gid(config_name)
 
-    def start_driver(self, browser_type, capabilities, remote_driver_url):
+            if func:
+                value = func(value)
+
+            capabilities[name] = value
+
+        return capabilities
+
+    def start_driver(self, browser_type, capabilities):
         """ Starts driver """
-
-        browser_profile = self.get_browser_profile(browser_type, capabilities)
-
-        if not remote_driver_url:
-            sys.exit('Base start driver: missing remote_driver_url')
-
-        driver = webdriver.Remote(
-            command_executor=remote_driver_url,
-            desired_capabilities=capabilities,
-            browser_profile=browser_profile)
-
-        return driver
 
     def get_browser_profile(self, browser_type, capabilities):
         """ Returns updated browser profile ready to be passed to driver """

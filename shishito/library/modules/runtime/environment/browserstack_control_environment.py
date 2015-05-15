@@ -1,6 +1,7 @@
 import inspect
 import ntpath
 import re
+from selenium import webdriver
 import sys
 import time
 
@@ -10,6 +11,19 @@ from shishito.library.modules.services.browserstack import BrowserStackAPI
 
 class ControlEnvironment(ShishitoEnvironment):
     """ Browserstack control environment. """
+
+    CAPABILITIES = (
+        # (name, config_name, use_section, function),
+        ('acceptSslCerts', 'accept_ssl_cert', False, lambda v: v.lower() == 'false'),
+        ('browserstack.debug', 'browserstack_debug', False, lambda v: v.lower()),
+        ('project', 'project_name', False, None),
+        ('build', 'build_name', False, None),
+        ('os', 'os', True, None),
+        ('os_version', 'os_version', True, None),
+        ('browser', 'browser', True, None),
+        ('browser_version', 'browser_version', True, None),
+        ('resolution', 'resolution', True, None),
+    )
 
     def __init__(self, shishito_support):
         super(ControlEnvironment, self).__init__(shishito_support)
@@ -84,19 +98,8 @@ class ControlEnvironment(ShishitoEnvironment):
     def get_capabilities(self, combination):
         """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
 
-        capabilities = {
-            'acceptSslCerts': self.shishito_support.gid('accept_ssl_cert').lower() == 'false',
-            'browserstack.debug': self.shishito_support.gid('browserstack_debug').lower(),
-            'project': self.shishito_support.gid('project_name'),
-            'build': self.shishito_support.gid('build_name'),
-            'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
-            'os': self.shishito_support.gid('os', section=combination),
-            'os_version': self.shishito_support.gid('os_version', section=combination),
-            'browser': self.shishito_support.gid('browser', section=combination),
-            'browser_version': self.shishito_support.gid('browser_version', section=combination),
-            'resolution': self.shishito_support.gid('resolution', section=combination),
-        }
-
+        capabilities = super(ControlEnvironment, self).get_capabilities(combination)
+        capabilities['name'] = self.get_test_name() + time.strftime('_%Y-%m-%d')
         return capabilities
 
     # TODO will need to implement some edge cases from there (mobile emulation etc..)
@@ -144,3 +147,18 @@ class ControlEnvironment(ShishitoEnvironment):
                 return ntpath.basename(frame[1])[:-3]
 
         return self.shishito_support.gid('project_name')
+
+    def start_driver(self, browser_type, capabilities, remote_driver_url):
+        """ Starts driver """
+
+        browser_profile = self.get_browser_profile(browser_type, capabilities)
+
+        if not remote_driver_url:
+            raise ValueError('Base start driver: missing remote_driver_url')
+
+        driver = webdriver.Remote(
+            command_executor=remote_driver_url,
+            desired_capabilities=capabilities,
+            browser_profile=browser_profile)
+
+        return driver

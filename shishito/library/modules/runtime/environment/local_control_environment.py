@@ -6,6 +6,11 @@ from shishito.library.modules.runtime.environment.shishito_environment import Sh
 class ControlEnvironment(ShishitoEnvironment):
     """ Local control environment. """
 
+    CAPABILITIES = (
+        # (name, config_name, use_section, function),
+        ('acceptSslCerts', 'accept_ssl_cert', False, lambda v: v.lower() == 'false'),
+    )
+
     def start_driver(self, browser_type, capabilities, remote_driver_url=None):
         """ Starts driver """
 
@@ -32,12 +37,3 @@ class ControlEnvironment(ShishitoEnvironment):
             raise ValueError('Unknown type of browser.')
 
         return driver
-
-    def get_capabilities(self, combination):
-        """Returns dictionary of capabilities for specific Browserstack browser/os combination """
-
-        capabilities = {
-            'acceptSslCerts': self.shishito_support.gid('accept_ssl_cert').lower() == 'false',
-        }
-
-        return capabilities

@@ -1,6 +1,3 @@
-import inspect
-import ntpath
-import re
 from selenium import webdriver
 import sys
 import time
@@ -136,17 +133,6 @@ class ControlEnvironment(ShishitoEnvironment):
     #             capabilities.update(chrome_capabilities)
     #             browser_profile = None
     #     return browser_profile
-
-    def get_test_name(self):
-        """ Returns test name from the call stack, assuming there can be only
-         one 'test_' file in the stack. If there are more it means two PyTest
-        tests ran when calling get_test_name, which is invalid use case. """
-        frames = inspect.getouterframes(inspect.currentframe())
-        for frame in frames:
-            if re.match('test_.*', ntpath.basename(frame[1])):
-                return ntpath.basename(frame[1])[:-3]
-
-        return self.shishito_support.gid('project_name')
 
     def start_driver(self, browser_type, capabilities, remote_driver_url):
         """ Starts driver """

@@ -1,5 +1,6 @@
-#from appium import webdriver
-from selenium import webdriver
+from appium import webdriver
+#from selenium import webdriver
+import time
 
 from shishito.library.modules.runtime.environment.shishito_environment import ShishitoEnvironment
 
@@ -12,7 +13,7 @@ class ControlEnvironment(ShishitoEnvironment):
         ('platformVersion', 'platformVersion', True, None),
         ('deviceName', 'deviceName', True, None),
         ('app', 'app', True, None),
-        ('appiumVersion', 'appiumVersion', True, None)
+        ('appiumVersion', 'appiumVersion', True, None),
     )
 
     def call_browser(self, combination, capabilities=None):
@@ -24,7 +25,8 @@ class ControlEnvironment(ShishitoEnvironment):
         else:
             capabilities = self.get_capabilities(combination)
 
-        if self.shishito_support.gid('use_saucelabs'):
+        use_saucelabs = self.shishito_support.gid('use_saucelabs')
+        if use_saucelabs is not None and use_saucelabs.lower() == 'true':
             saucelabs = self.shishito_support.gid('saucelabs')
             remote_url = 'http://%s@ondemand.saucelabs.com:80/wd/hub' % saucelabs
         else:
@@ -32,6 +34,13 @@ class ControlEnvironment(ShishitoEnvironment):
 
         # get driver
         return self.start_driver(capabilities, remote_url)
+
+    def get_capabilities(self, combination):
+        """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
+
+        capabilities = super(ControlEnvironment, self).get_capabilities(combination)
+        capabilities['name'] = self.get_test_name() + time.strftime('_%Y-%m-%d')
+        return capabilities
 
     def get_pytest_arguments(self, config_section):
         """ """
@@ -43,7 +52,8 @@ class ControlEnvironment(ShishitoEnvironment):
             '--app': '--app=%s' % self.shishito_support.gid('app', config_section),
         }
 
-        if self.shishito_support.gid('use_saucelabs'):
+        use_saucelabs = self.shishito_support.gid('use_saucelabs')
+        if use_saucelabs is not None and use_saucelabs.lower() == 'true':
             saucelabs = self.shishito_support.gid('saucelabs')
             pytest_args['--saucelabs'] = '--saucelabs=%s' % saucelabs
 
@@ -58,4 +68,3 @@ class ControlEnvironment(ShishitoEnvironment):
         )
 
         return driver
-

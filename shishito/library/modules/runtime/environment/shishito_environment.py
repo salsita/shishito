@@ -1,4 +1,7 @@
+import inspect
+import ntpath
 import os
+import re
 from selenium import webdriver
 
 
@@ -104,3 +107,14 @@ class ShishitoEnvironment(object):
     def get_pytest_arguments(self, config_section):
         """ Get environment specific arguments for pytest. """
         pass
+
+    def get_test_name(self):
+        """ Returns test name from the call stack, assuming there can be only
+         one 'test_' file in the stack. If there are more it means two PyTest
+        tests ran when calling get_test_name, which is invalid use case. """
+        frames = inspect.getouterframes(inspect.currentframe())
+        for frame in frames:
+            if re.match('test_.*', ntpath.basename(frame[1])):
+                return ntpath.basename(frame[1])[:-3]
+
+        return self.shishito_support.gid('project_name')

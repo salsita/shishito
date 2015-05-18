@@ -49,9 +49,12 @@ class ControlExecution(ShishitoExecution):
         if extra_pytest_arguments:
             pytest_arguments_dict.update(extra_pytest_arguments)
 
+        test_directory = self.shishito_support.gid('test_directory')
+        if not test_directory:
+            test_directory = 'tests'
+
         pytest_arguments = [
-            # TODO: add test dir to settings
-            os.path.join(self.shishito_support.project_root, 'appium_tests'),
+            os.path.join(self.shishito_support.project_root, test_directory),
         ]
 
         pytest_arguments.extend(pytest_arguments_dict.values())

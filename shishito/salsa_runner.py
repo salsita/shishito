@@ -50,8 +50,9 @@ class ShishitoRunner(object):
                             help='Run only smoke tests',
                             action='store_true')
         parser.add_argument('--browserstack',
-                            help='BrowserStack credentials; format: "username:token"',
-                            default='none')
+                            help='BrowserStack credentials; format: "username:token"')
+        parser.add_argument('--saucelabs',
+                            help='Saucelabs credentials; format: "username:token"')
 
         args = parser.parse_args()
 

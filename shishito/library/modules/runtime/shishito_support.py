@@ -92,9 +92,6 @@ class ShishitoSupport(object):
         if value:
             return value
 
-        if not self.configs:
-            return None
-
         for cfg, cfg_name in self.configs:
             if key in cfg and cfg[key] != '':
                 return cfg[key]

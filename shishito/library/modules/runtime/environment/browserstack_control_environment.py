@@ -31,15 +31,14 @@ class ControlEnvironment(ShishitoEnvironment):
         """ Starts browser """
 
         # get browser stack credentials
-        bs_credentials = self.shishito_support.gid('browserstack')
-        if not bs_credentials or ':' not in bs_credentials:
+        try:
+            bs_user, bs_password = self.shishito_support.gid('browserstack').split(':', 1)
+        except (AttributeError, ValueError):
             raise ValueError('Browserstack credentials were not specified! Unable to start browser.')
-
-        bs_auth = tuple(self.shishito_support.gid('browserstack').split(':'))
 
         # wait until free browserstack session is available
         if not self.bs_api.wait_for_free_sessions(
-            bs_auth,
+            (bs_user, bs_password),
             int(self.shishito_support.gid('session_waiting_time')),
             int(self.shishito_support.gid('session_waiting_delay'))
         ):
@@ -49,7 +48,7 @@ class ControlEnvironment(ShishitoEnvironment):
         capabilities = self.get_capabilities(combination)
 
         # prepare remote driver url
-        hub_url = 'http://{0}:{1}@hub.browserstack.com:80/wd/hub'.format(*bs_auth)
+        hub_url = 'http://{0}:{1}@hub.browserstack.com:80/wd/hub'.format(bs_user, bs_password)
 
         # get browser type
         browser_type = self.shishito_support.gid('browser', section=combination)
@@ -58,7 +57,7 @@ class ControlEnvironment(ShishitoEnvironment):
         # call remote driver
         driver = self.start_driver(browser_type, capabilities, remote_driver_url=hub_url)
 
-        session = self.bs_api.get_session(bs_auth, capabilities['build'], 'running')
+        session = self.bs_api.get_session((bs_user, bs_password), capabilities['build'], 'running')
         self.session_link = self.bs_api.get_session_link(session)
         self.session_id = self.bs_api.get_session_hashed_id(session)
 

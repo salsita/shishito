@@ -12,11 +12,7 @@ class Reporter(object):
     def __init__(self, project_root=None, test_timestamp=None):
         self.project_root = project_root or ShishitoSupport().project_root
         self.current_folder = os.path.dirname(os.path.abspath(__file__))
-
-        if test_timestamp:
-            self.timestamp = test_timestamp
-        else:
-            self.timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+        self.timestamp = test_timestamp or time.strftime("%Y-%m-%d_%H-%M-%S")
 
         self.result_folder = os.path.join(self.project_root, 'results', self.timestamp)
 

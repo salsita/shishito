@@ -9,8 +9,8 @@ import argparse
 import sys
 import time
 
-from shishito.library.modules.reporting.reporter import Reporter
-from shishito.library.modules.runtime.shishito_support import ShishitoSupport
+from shishito.reporting.reporter import Reporter
+from shishito.runtime.shishito_support import ShishitoSupport
 
 
 class ShishitoRunner(object):

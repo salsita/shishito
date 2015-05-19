@@ -2,8 +2,8 @@ from selenium import webdriver
 import sys
 import time
 
-from shishito.library.modules.runtime.environment.shishito_environment import ShishitoEnvironment
-from shishito.library.modules.services.browserstack import BrowserStackAPI
+from shishito.runtime.environment.shishito import ShishitoEnvironment
+from shishito.services.browserstack import BrowserStackAPI
 
 
 class ControlEnvironment(ShishitoEnvironment):

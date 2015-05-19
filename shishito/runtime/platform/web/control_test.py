@@ -7,7 +7,7 @@
 
 import time
 
-from shishito.library.modules.runtime.platform.shishito_control_test import ShishitoControlTest
+from shishito.runtime.platform.shishito_control_test import ShishitoControlTest
 
 
 class ControlTest(ShishitoControlTest):

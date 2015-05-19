@@ -1,7 +1,7 @@
 import os
 import re
 
-from shishito.library.modules.runtime.shishito_support import ShishitoSupport
+from shishito.runtime.shishito_support import ShishitoSupport
 
 
 class ShishitoControlTest(object):

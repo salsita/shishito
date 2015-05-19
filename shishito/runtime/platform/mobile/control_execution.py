@@ -1,4 +1,4 @@
-from shishito.library.modules.runtime.platform.shishito_execution import ShishitoExecution
+from shishito.runtime.platform.shishito_execution import ShishitoExecution
 
 
 class ControlExecution(ShishitoExecution):

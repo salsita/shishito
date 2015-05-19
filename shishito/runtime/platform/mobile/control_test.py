@@ -4,7 +4,7 @@
  Not to be used for directly testing the system under test (must not contain Asserts etc.)
 """
 
-from shishito.library.modules.runtime.platform.shishito_control_test import ShishitoControlTest
+from shishito.runtime.platform.shishito_control_test import ShishitoControlTest
 
 
 class ControlTest(ShishitoControlTest):

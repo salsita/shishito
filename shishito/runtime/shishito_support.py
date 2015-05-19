@@ -127,9 +127,9 @@ class ShishitoSupport(object):
         if environment is None:
             environment = self.test_environment
 
-        platform_execution = 'shishito.library.modules.runtime.platform.' + platform + '.control_execution'
-        platform_test = 'shishito.library.modules.runtime.platform.' + platform + '.control_test'
-        test_environment = 'shishito.library.modules.runtime.environment.' + environment + '_control_environment'
+        platform_execution = 'shishito.runtime.platform.' + platform + '.control_execution'
+        platform_test = 'shishito.runtime.platform.' + platform + '.control_test'
+        test_environment = 'shishito.runtime.environment.' + environment
 
         if module == 'platform_execution':
             return getattr(import_module(platform_execution), 'ControlExecution')

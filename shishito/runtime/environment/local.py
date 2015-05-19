@@ -1,6 +1,6 @@
 from selenium import webdriver
 
-from shishito.library.modules.runtime.environment.shishito_environment import ShishitoEnvironment
+from shishito.runtime.environment.shishito import ShishitoEnvironment
 
 
 class ControlEnvironment(ShishitoEnvironment):

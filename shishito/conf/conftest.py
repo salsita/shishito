@@ -4,7 +4,7 @@
 """
 import pytest
 
-from shishito.library.modules.reporting.junithtml import LogHTML
+from shishito.reporting.junithtml import LogHTML
 
 
 # CURRENT TEST INFO OBJECT #

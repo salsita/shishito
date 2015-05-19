@@ -19,7 +19,7 @@ from unittestzero import Assert
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 
-from shishito.library.modules.runtime.shishito_support import ShishitoSupport
+from shishito.runtime.shishito_support import ShishitoSupport
 
 
 class SeleniumTest(object):

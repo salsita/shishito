@@ -138,9 +138,6 @@ class ControlEnvironment(ShishitoEnvironment):
 
         browser_profile = self.get_browser_profile(browser_type, capabilities)
 
-        if not remote_driver_url:
-            raise ValueError('Base start driver: missing remote_driver_url')
-
         driver = webdriver.Remote(
             command_executor=remote_driver_url,
             desired_capabilities=capabilities,

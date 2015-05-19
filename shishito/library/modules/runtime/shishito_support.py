@@ -19,60 +19,68 @@ class ShishitoSupport(object):
         # called without cmd_args
         # if True gid will use only pytest.config
         # if False gid uses pytest.config, cmd_args and config files
-        self.used_in_test = True if cmd_args is None else False
+        self.used_in_test = cmd_args is None
 
-        if project_root:
-            self.project_root = project_root
-        else:
-            self.project_root = os.getcwd()
+        self.project_root = project_root or self.find_project_root()
 
+        # get configs
         self.configs = self.load_configs()
 
         self.test_environment = self.gid('test_environment')
         self.test_platform = self.gid('test_platform')
 
+        # get environment config
+        self.env_config = self.get_environment_config()
+
+    def find_project_root(self):
+        """ Try to find config directory on sys.path """
+
+        for path in sys.path:
+            config_dir = os.path.join(path, 'config')
+            if os.path.exists(config_dir):
+                return path
+
+        raise ValueError('Can not find config dir on sys.path')
+
     def load_configs(self):
-        """ Loads variables from .properties configuration files,  check if project didn't contain such folder
-        (for non selenium projects) """
+        """ Loads variables from .properties configuration files """
 
         config_path = os.path.join(self.project_root, 'config')
-        config = ConfigParser.ConfigParser()
         if not os.path.exists(config_path):
-            return None
+            raise ValueError('Configuration path does not exist (%s)' % config_path)
+
+        configs = []
 
         # load server config variables
+        config = ConfigParser.ConfigParser()
         server_config = os.path.join(config_path, 'server_config.properties')
         config.read(server_config)
         server_config_vars = dict(config.defaults())
+        configs.append((server_config_vars, 'server config'))
 
         # load local config variables
+        config = ConfigParser.ConfigParser()
         local_config = os.path.join(config_path, 'local_config.properties')
         config.read(local_config)
         local_config_vars = dict(config.defaults())
 
-        # load non selenium config variables
-        non_selenium_config = os.path.join(config_path, 'non_selenium_config.properties')
-        config.read(non_selenium_config)
-        non_selenium_config = dict(config.defaults())
-        return_configs = [server_config_vars, local_config_vars, non_selenium_config]
+        if local_config_vars.get('local_execution').lower() == 'true':
+            configs.insert(0, (local_config_vars, 'local config'))
 
-        return return_configs
+        return configs
 
-    def gid(self, key):
+    def gid(self, key, section=None):
         """ Gets value from config variables based on provided key.
          If local execution parameter is "True", function will try to search for parameter in local configuration file.
          If such parameter is not found or there is an error while reading the file, server (default) configuration
          file will be used instead. """
 
-        if not self.configs:
-            return None
+        if section:
+            # use env config
+            return self.env_config.get(section, key)
 
         # first try to lookup pytest config
         try:
-            # TODO: find out why these options have '='
-            if self.used_in_test and key in ['test_platform', 'test_environment', 'environment_configuration']:
-                key += '='
-
             value = pytest.config.getoption(key)
             if value:
                 return value
@@ -84,47 +92,28 @@ class ShishitoSupport(object):
         if value:
             return value
 
-        # lookup value from config files
-        server_config = self.configs[0]
-        local_config = self.configs[1]
+        for cfg, cfg_name in self.configs:
+            if key in cfg and cfg[key] != '':
+                return cfg[key]
 
-        configs = []
-
-        # TOOD: this can be done in __init__ instead of each gid call
-        if local_config.get('local_execution').lower() == 'true':
-            configs.append((local_config, 'local config'))
-
-        configs.extend([(server_config, 'server config'), (os.environ, 'env variables')])
-        for cfg in configs:
-            if key in cfg[0] and cfg[0][key] != '':
-                return cfg[0][key]
-
-    def get_environment_config(self, platform_name=None, environment_name=None):
-        """ gets config """
-
-        # TODO: review the functionality (is it what we want?)
-
-        if platform_name is None:
-            platform_name = self.gid('test_platform')
-
-        if environment_name is None:
-            environment_name = self.gid('test_environment')
+    def get_environment_config(self):
+        """ Get config file for current platform and environment """
 
         config = ConfigParser.ConfigParser()
-        config_path = os.path.join(self.project_root, 'config', platform_name, environment_name + '.properties')
+        config_path = os.path.join(self.project_root, 'config', self.test_platform, self.test_environment + '.properties')
 
-        if not config_path:
-            sys.exit('Config file in location {0} was not found! Terminating test.'.format(config_path))
+        if not os.path.exists(config_path):
+            raise ValueError('Config file in location {0} was not found!'.format(config_path))
 
         config.read(config_path)
         return config
 
     def get_modules(self, platform=None, environment=None, module=None):
         if platform is None:
-            platform = self.gid('test_platform')
+            platform = self.test_platform
 
         if environment is None:
-            environment = self.gid('test_environment')
+            environment = self.test_environment
 
         platform_execution = 'shishito.library.modules.runtime.platform.' + platform + '.control_execution'
         platform_test = 'shishito.library.modules.runtime.platform.' + platform + '.control_test'
@@ -144,4 +133,5 @@ class ShishitoSupport(object):
         }
 
     def get_test_control(self):
+        """ Used in tests for getting ControlTest object"""
         return self.get_modules(module='platform_test')()

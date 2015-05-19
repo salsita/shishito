@@ -4,17 +4,16 @@ import time
 
 from jinja2 import Environment, FileSystemLoader
 
+from shishito.library.modules.runtime.shishito_support import ShishitoSupport
+
 
 class Reporter(object):
 
-    def __init__(self, project_root=None):
-        if project_root:
-            self.project_root = project_root
-        else:
-            self.project_root = os.getcwd()
-
+    def __init__(self, project_root=None, test_timestamp=None):
+        self.project_root = project_root or ShishitoSupport().project_root
         self.current_folder = os.path.dirname(os.path.abspath(__file__))
-        self.timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+        self.timestamp = test_timestamp or time.strftime("%Y-%m-%d_%H-%M-%S")
+
         self.result_folder = os.path.join(self.project_root, 'results', self.timestamp)
 
     def cleanup_results(self):

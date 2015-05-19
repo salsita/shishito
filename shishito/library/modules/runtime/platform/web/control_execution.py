@@ -15,15 +15,13 @@ class ControlExecution(ShishitoExecution):
     """ ControlExecution for web platform. """
 
     def run_tests(self):
-        """ Triggers PyTest runner locally or on BrowserStack.
-        It runs PyTest for each BS combination, taken from either versioned .properties file or environment variable """
+        """ Triggers PyTest runner.
+        It runs PyTest for each BS combination, taken from versioned .properties file """
 
         # check that runner is not run directly
         test_status = 0
 
-        self.config.read(self.config_file)
-
-        for config_section in self.config.sections():
+        for config_section in self.shishito_support.env_config.sections():
             print 'Running combination: ' + config_section
             test_status = self.trigger_pytest(config_section)
 
@@ -31,10 +29,11 @@ class ControlExecution(ShishitoExecution):
 
     def trigger_pytest(self, config_section):
         """ Runs PyTest runner on specific configuration """
-        self.config.read(self.config_file)
-        browser = self.config.get(config_section, 'browser')
-        browser_version = self.config.get(config_section, 'browser_version')
-        resolution = self.config.get(config_section, 'resolution')
+
+        browser = self.shishito_support.gid('browser', config_section)
+        browser_version = self.shishito_support.gid('browser_version', config_section)
+        resolution = self.shishito_support.gid('resolution', config_section)
+
         junit_xml_path = os.path.join(self.result_folder, config_section + '.xml')
         html_path = os.path.join(self.result_folder, config_section + '.html')
 
@@ -42,23 +41,15 @@ class ControlExecution(ShishitoExecution):
 
         # prepare pytest arguments into execution list
         pytest_arguments_dict = {
-            '--test_platform=': '--test_platform=' + self.platform_name,
-            '--test_environment=': '--test_environment=' + self.environment_name,
+            '--test_platform=': '--test_platform=' + self.shishito_support.test_platform,
+            '--test_environment=': '--test_environment=' + self.shishito_support.test_environment,
             '--environment_configuration=': '--environment_configuration=' + config_section,
             '--junitxml=': '--junitxml=' + junit_xml_path,
             '--junit-prefix=': '--junit-prefix=' + test_result_prefix,
             '--html=': '--html=' + html_path,
             '--html-prefix=': '--html-prefix=' + test_result_prefix,
-            '--instafail': '--instafail'
+            '--instafail': '--instafail',
         }
-
-
-        # # set pytest smoke test argument
-        # if self.arguments['test_type'] == 'smoke':
-        # pytest_arguments.extend(['-m', self.arguments['test_type']])
-
-        # if self.cycle_id:
-        # pytest_arguments.extend(['--jira_cycle_id', self.cycle_id])
 
         # extend pytest_arguments with environment specific args
         extra_pytest_arguments = self.environment.get_pytest_arguments(config_section)
@@ -66,7 +57,7 @@ class ControlExecution(ShishitoExecution):
             pytest_arguments_dict.update(extra_pytest_arguments)
 
         pytest_arguments = [
-            os.path.join(self.project_root, 'tests'),
+            os.path.join(self.shishito_support.project_root, 'tests'),
         ]
 
         pytest_arguments.extend(pytest_arguments_dict.values())
@@ -75,5 +66,10 @@ class ControlExecution(ShishitoExecution):
         parallel_tests = int(self.shishito_support.gid('parallel_tests'))
         if parallel_tests > 1:
             pytest_arguments.extend(['-n', str(parallel_tests)])
+
+        # set pytest smoke test argument
+        smoke = self.shishito_support.gid('smoke')
+        if smoke:
+            pytest_arguments.extend(['-m', 'smoke'])
 
         return pytest.main(pytest_arguments)

@@ -19,11 +19,11 @@ class ShishitoControlTest(object):
         """ Browser startup function.
          Initialize session over Browserstack or local browser. """
 
-        base_url = self.shishito_support.gid('base_url')
-        combination = self.shishito_support.gid('environment_configuration')
+        base_url = self.shishito_support.get_opt('base_url')
+        config_section = self.shishito_support.get_opt('environment_configuration')
 
         # call browser from proper environment
-        self.driver = self.test_environment.call_browser(combination)
+        self.driver = self.test_environment.call_browser(config_section)
 
         # load init url
         if base_url:

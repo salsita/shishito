@@ -26,12 +26,12 @@ class ControlTest(ShishitoControlTest):
          Suitable for general pre-test logic that do not need to run before every individual test-case. """
 
         self.driver.get(url)
-        self.driver.implicitly_wait(int(self.shishito_support.gid('default_implicit_wait')))
+        self.driver.implicitly_wait(int(self.shishito_support.get_opt('default_implicit_wait')))
 
     def start_test(self, reload_page=None):
         """ To be executed before every test-case (test function) """
 
         if reload_page:
-            self.driver.get(self.shishito_support.gid('base_url'))
-            self.driver.implicitly_wait(self.shishito_support.gid('default_implicit_wait'))
+            self.driver.get(self.shishito_support.get_opt('base_url'))
+            self.driver.implicitly_wait(self.shishito_support.get_opt('default_implicit_wait'))
             time.sleep(5)

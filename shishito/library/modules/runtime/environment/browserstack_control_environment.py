@@ -9,49 +9,36 @@ from shishito.library.modules.services.browserstack import BrowserStackAPI
 class ControlEnvironment(ShishitoEnvironment):
     """ Browserstack control environment. """
 
-    CAPABILITIES = (
-        # (name, config_name, use_section, function),
-        ('acceptSslCerts', 'accept_ssl_cert', False, lambda v: v.lower() == 'false'),
-        ('browserstack.debug', 'browserstack_debug', False, lambda v: v.lower()),
-        ('project', 'project_name', False, None),
-        ('build', 'build_name', False, None),
-        ('os', 'os', True, None),
-        ('os_version', 'os_version', True, None),
-        ('browser', 'browser', True, None),
-        ('browser_version', 'browser_version', True, None),
-        ('resolution', 'resolution', True, None),
-    )
-
     def __init__(self, shishito_support):
         super(ControlEnvironment, self).__init__(shishito_support)
 
         self.bs_api = BrowserStackAPI()
 
-    def call_browser(self, combination, capabilities=None):
+    def call_browser(self, config_section):
         """ Starts browser """
 
         # get browser stack credentials
         try:
-            bs_user, bs_password = self.shishito_support.gid('browserstack').split(':', 1)
+            bs_user, bs_password = self.shishito_support.get_opt('browserstack').split(':', 1)
         except (AttributeError, ValueError):
             raise ValueError('Browserstack credentials were not specified! Unable to start browser.')
 
         # wait until free browserstack session is available
         if not self.bs_api.wait_for_free_sessions(
             (bs_user, bs_password),
-            int(self.shishito_support.gid('session_waiting_time')),
-            int(self.shishito_support.gid('session_waiting_delay'))
+            int(self.shishito_support.get_opt('session_waiting_time')),
+            int(self.shishito_support.get_opt('session_waiting_delay'))
         ):
             sys.exit('No free browserstack session - exit.')
 
-        # get browser capabilities and profile
-        capabilities = self.get_capabilities(combination)
+        # get browser capabilities
+        capabilities = self.get_capabilities(config_section)
 
         # prepare remote driver url
         hub_url = 'http://{0}:{1}@hub.browserstack.com:80/wd/hub'.format(bs_user, bs_password)
 
         # get browser type
-        browser_type = self.shishito_support.gid('browser', section=combination)
+        browser_type = self.shishito_support.get_opt(config_section, 'browser')
         browser_type = browser_type.lower()
 
         # call remote driver
@@ -66,18 +53,18 @@ class ControlEnvironment(ShishitoEnvironment):
     def get_pytest_arguments(self, config_section):
         """ Get environment specific arguments for pytest. """
 
-        browser = self.shishito_support.gid('browser', section=config_section)
-        browser_version = self.shishito_support.gid('browser_version', section=config_section)
-        os_type = self.shishito_support.gid('os', section=config_section)
-        os_version = self.shishito_support.gid('os_version', section=config_section)
-        resolution = self.shishito_support.gid('resolution', section=config_section)
+        browser = self.shishito_support.get_opt(config_section, 'browser')
+        browser_version = self.shishito_support.get_opt(config_section, 'browser_version')
+        os_type = self.shishito_support.get_opt(config_section, 'os')
+        os_version = self.shishito_support.get_opt(config_section, 'os_version')
+        resolution = self.shishito_support.get_opt(config_section, 'resolution')
 
         test_result_prefix = '[%s, %s, %s, %s, %s]' % (
             browser, browser_version, os_type, os_version, resolution
         )
 
         # Add browserstack credentials
-        bs_auth = self.shishito_support.gid('browserstack')
+        bs_auth = self.shishito_support.get_opt('browserstack')
 
         # prepare pytest arguments into execution list
         return {
@@ -91,12 +78,23 @@ class ControlEnvironment(ShishitoEnvironment):
             '--browserstack=': '--browserstack=' + bs_auth,
         }
 
-    def get_capabilities(self, combination):
+    def get_capabilities(self, config_section):
         """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
 
-        capabilities = super(ControlEnvironment, self).get_capabilities(combination)
-        capabilities['name'] = self.get_test_name() + time.strftime('_%Y-%m-%d')
-        return capabilities
+        get_opt = self.shishito_support.get_opt
+
+        return {
+            'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'false',
+            'browserstack.debug': get_opt('browserstack_debug').lower(),
+            'project': get_opt('project_name'),
+            'build': get_opt('build_name'),
+            'os': get_opt(config_section, 'os'),
+            'os_version': get_opt(config_section, 'os_version'),
+            'browser': get_opt(config_section, 'browser'),
+            'browser_version': get_opt(config_section, 'browser_version'),
+            'resolution': get_opt(config_section, 'resolution'),
+            'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
+        }
 
     # TODO will need to implement some edge cases from there (mobile emulation etc..)
     # def get_browser_profile(self, browser_type):

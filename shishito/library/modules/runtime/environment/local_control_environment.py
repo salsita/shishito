@@ -6,10 +6,14 @@ from shishito.library.modules.runtime.environment.shishito_environment import Sh
 class ControlEnvironment(ShishitoEnvironment):
     """ Local control environment. """
 
-    CAPABILITIES = (
-        # (name, config_name, use_section, function),
-        ('acceptSslCerts', 'accept_ssl_cert', False, lambda v: v.lower() == 'false'),
-    )
+    def get_capabilities(self, config_section):
+        """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
+
+        get_opt = self.shishito_support.get_opt
+
+        return {
+            'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'false',
+        }
 
     def start_driver(self, browser_type, capabilities, remote_driver_url=None):
         """ Starts driver """

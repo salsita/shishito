@@ -9,8 +9,8 @@ class ControlExecution(ShishitoExecution):
     """ ControlExecution for web platform """
 
     def get_test_result_prefix(self, config_section):
-        browser = self.shishito_support.gid('browser', config_section)
-        browser_version = self.shishito_support.gid('browser_version', config_section)
-        resolution = self.shishito_support.gid('resolution', config_section)
+        browser = self.shishito_support.get_opt(config_section, 'browser')
+        browser_version = self.shishito_support.get_opt(config_section, 'browser_version')
+        resolution = self.shishito_support.get_opt(config_section, 'resolution')
 
         return '[%s, %s, %s]' % (browser, browser_version, resolution)

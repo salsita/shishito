@@ -8,53 +8,47 @@ from shishito.library.modules.runtime.environment.shishito_environment import Sh
 class ControlEnvironment(ShishitoEnvironment):
     """ Appium control environment. """
 
-    CAPABILITIES = (
-        ('platformName', 'platformName', True, None),
-        ('platformVersion', 'platformVersion', True, None),
-        ('deviceName', 'deviceName', True, None),
-        ('app', 'app', True, None),
-        ('appiumVersion', 'appiumVersion', True, None),
-    )
-
-    def call_browser(self, combination, capabilities=None):
+    def call_browser(self, config_section):
         """ Starts browser """
 
-        # get browser capabilities and profile
-        if capabilities:
-            capabilities.update(self.get_capabilities(combination))
-        else:
-            capabilities = self.get_capabilities(combination)
+        # get browser capabilities
+        capabilities = self.get_capabilities(config_section)
 
-        use_saucelabs = self.shishito_support.gid('use_saucelabs')
-        if use_saucelabs is not None and use_saucelabs.lower() == 'true':
-            saucelabs = self.shishito_support.gid('saucelabs')
+        saucelabs = self.shishito_support.get_opt('saucelabs')
+        if saucelabs:
             remote_url = 'http://%s@ondemand.saucelabs.com:80/wd/hub' % saucelabs
         else:
-            remote_url = self.shishito_support.gid('appium_url')
+            remote_url = self.shishito_support.get_opt('appium_url')
 
         # get driver
         return self.start_driver(capabilities, remote_url)
 
-    def get_capabilities(self, combination):
+    def get_capabilities(self, config_section):
         """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
 
-        capabilities = super(ControlEnvironment, self).get_capabilities(combination)
-        capabilities['name'] = self.get_test_name() + time.strftime('_%Y-%m-%d')
-        return capabilities
+        get_opt = self.shishito_support.get_opt
+
+        return {
+            'platformName': get_opt(config_section, 'platformName'),
+            'platformVersion': get_opt(config_section, 'platformVersion'),
+            'deviceName': get_opt(config_section, 'deviceName'),
+            'app': get_opt(config_section, 'app'),
+            'appiumVersion': get_opt(config_section, 'appiumVersion'),
+            'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
+        }
 
     def get_pytest_arguments(self, config_section):
         """ """
 
         pytest_args = {
-            '--platformName': '--platformName=%s' % self.shishito_support.gid('platformName', config_section),
-            '--platformVersion': '--platformVersion=%s' % self.shishito_support.gid('platformVersion', config_section),
-            '--deviceName': '--deviceName=%s' % self.shishito_support.gid('deviceName', config_section),
-            '--app': '--app=%s' % self.shishito_support.gid('app', config_section),
+            '--platformName': '--platformName=%s' % self.shishito_support.get_opt(config_section, 'platformName'),
+            '--platformVersion': '--platformVersion=%s' % self.shishito_support.get_opt(config_section, 'platformVersion'),
+            '--deviceName': '--deviceName=%s' % self.shishito_support.get_opt(config_section, 'deviceName'),
+            '--app': '--app=%s' % self.shishito_support.get_opt(config_section, 'app'),
         }
 
-        use_saucelabs = self.shishito_support.gid('use_saucelabs')
-        if use_saucelabs is not None and use_saucelabs.lower() == 'true':
-            saucelabs = self.shishito_support.gid('saucelabs')
+        saucelabs = self.shishito_support.get_opt('saucelabs')
+        if saucelabs:
             pytest_args['--saucelabs'] = '--saucelabs=%s' % saucelabs
 
         return pytest_args

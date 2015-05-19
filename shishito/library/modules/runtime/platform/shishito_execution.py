@@ -60,7 +60,7 @@ class ShishitoExecution(object):
         if extra_pytest_arguments:
             pytest_arguments_dict.update(extra_pytest_arguments)
 
-        test_directory = self.shishito_support.gid('test_directory')
+        test_directory = self.shishito_support.get_opt('test_directory')
         if not test_directory:
             test_directory = 'tests'
 
@@ -71,12 +71,12 @@ class ShishitoExecution(object):
         pytest_arguments.extend(pytest_arguments_dict.values())
 
         # set pytest parallel execution argument
-        parallel_tests = int(self.shishito_support.gid('parallel_tests'))
+        parallel_tests = int(self.shishito_support.get_opt('parallel_tests'))
         if parallel_tests > 1:
             pytest_arguments.extend(['-n', str(parallel_tests)])
 
         # set pytest smoke test argument
-        smoke = self.shishito_support.gid('smoke')
+        smoke = self.shishito_support.get_opt('smoke')
         if smoke:
             pytest_arguments.extend(['-m', 'smoke'])
 

@@ -1,14 +1,10 @@
 import inspect
-import ntpath
 import os
 import re
 from selenium import webdriver
 
 
 class ShishitoEnvironment(object):
-
-    # (name, config_name, use_section, function),
-    CAPABILITIES = ()
 
     def __init__(self, shishito_support):
         self.shishito_support = shishito_support
@@ -28,24 +24,21 @@ class ShishitoEnvironment(object):
 
         return browser_profile
 
-    def call_browser(self, combination, capabilities=None):
+    def call_browser(self, config_section):
         """ Starts browser """
 
-        # get browser capabilities and profile
-        if capabilities:
-            capabilities.update(self.get_capabilities(combination))
-        else:
-            capabilities = self.get_capabilities(combination)
+        # get browser capabilities
+        capabilities = self.get_capabilities(config_section)
 
         # get browser type
-        browser_type = self.shishito_support.gid('browser', section=combination)
+        browser_type = self.shishito_support.get_opt(config_section, 'browser')
         browser_type = browser_type.lower()
 
         # get driver
         driver = self.start_driver(browser_type, capabilities)
 
         # set browser size is defined
-        browser_size = self.shishito_support.gid('resolution', section=combination)
+        browser_size = self.shishito_support.get_opt(config_section, 'resolution')
         if browser_size:
             # default size --> leave it on webdriver
             width, height = browser_size.split('x')
@@ -53,21 +46,10 @@ class ShishitoEnvironment(object):
 
         return driver
 
-    def get_capabilities(self, combination):
+    def get_capabilities(self, config_section):
         """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
-        capabilities = {}
-        for name, config_name, use_section, func in self.CAPABILITIES:
-            if use_section:
-                value = self.shishito_support.gid(config_name, combination)
-            else:
-                value = self.shishito_support.gid(config_name)
 
-            if func:
-                value = func(value)
-
-            capabilities[name] = value
-
-        return capabilities
+        return {}
 
     def start_driver(self, browser_type, capabilities):
         """ Starts driver """
@@ -91,7 +73,7 @@ class ShishitoEnvironment(object):
             return None
 
         # add extensions to remote driver
-        if self.shishito_support.gid('with_extension'):
+        if self.shishito_support.get_opt('with_extension'):
             # TODO: add support for extensions again
             # profile = self.add_extension_to_browser(browser_type, profile)
             pass
@@ -114,7 +96,7 @@ class ShishitoEnvironment(object):
         tests ran when calling get_test_name, which is invalid use case. """
         frames = inspect.getouterframes(inspect.currentframe())
         for frame in frames:
-            if re.match('test_.*', ntpath.basename(frame[1])):
-                return ntpath.basename(frame[1])[:-3]
+            if re.match('test_.*', os.path.basename(frame[1])):
+                return os.path.basename(frame[1])[:-3]
 
-        return self.shishito_support.gid('project_name')
+        return self.shishito_support.get_opt('project_name')

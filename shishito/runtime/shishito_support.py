@@ -83,7 +83,7 @@ class ShishitoSupport(object):
         if len(args) == 2:
             section, key = args
         else:
-            key = args
+            key = args[0]
             section = None
 
         if section:

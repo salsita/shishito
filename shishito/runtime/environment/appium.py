@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from appium import webdriver
 #from selenium import webdriver
 import time

@@ -54,6 +54,8 @@ class ShishitoEnvironment(object):
     def start_driver(self, browser_type, capabilities):
         """ Starts driver """
 
+        raise NotImplementedError()
+
     def get_browser_profile(self, browser_type, capabilities):
         """ Returns updated browser profile ready to be passed to driver """
 

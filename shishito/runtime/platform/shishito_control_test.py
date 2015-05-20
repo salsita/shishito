@@ -10,7 +10,7 @@ class ShishitoControlTest(object):
         self.shishito_support = ShishitoSupport()
 
         # create control environment object
-        control_env_obj = self.shishito_support.get_modules(module='test_environment')
+        control_env_obj = self.shishito_support.get_modules('test_environment')
         self.test_environment = control_env_obj(self.shishito_support)
 
         self.driver = None

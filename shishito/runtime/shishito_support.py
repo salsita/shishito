@@ -120,16 +120,14 @@ class ShishitoSupport(object):
         config.read(config_path)
         return config
 
-    def get_modules(self, platform=None, environment=None, module=None):
-        if platform is None:
-            platform = self.test_platform
+    def get_modules(self, module):
+        """
+        :param module: module, which should be imported
+        """
 
-        if environment is None:
-            environment = self.test_environment
-
-        platform_execution = 'shishito.runtime.platform.' + platform + '.control_execution'
-        platform_test = 'shishito.runtime.platform.' + platform + '.control_test'
-        test_environment = 'shishito.runtime.environment.' + environment
+        platform_execution = 'shishito.runtime.platform.' + self.test_platform + '.control_execution'
+        platform_test = 'shishito.runtime.platform.' + self.test_platform + '.control_test'
+        test_environment = 'shishito.runtime.environment.' + self.test_environment
 
         if module == 'platform_execution':
             return getattr(import_module(platform_execution), 'ControlExecution')
@@ -146,4 +144,4 @@ class ShishitoSupport(object):
 
     def get_test_control(self):
         """ Used in tests for getting ControlTest object"""
-        return self.get_modules(module='platform_test')()
+        return self.get_modules('platform_test')()

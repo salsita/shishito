@@ -68,7 +68,7 @@ class ShishitoRunner(object):
         self.reporter.cleanup_results()
 
         # import execution class
-        executor_class = self.shishito_support.get_modules(module='platform_execution')
+        executor_class = self.shishito_support.get_modules('platform_execution')
         # executor_class = getattr(import_module(platform_path), 'ControlExecution')
         executor = executor_class(self.shishito_support, self.test_timestamp)
 

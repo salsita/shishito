@@ -8,4 +8,4 @@ from shishito.runtime.platform.shishito_control_test import ShishitoControlTest
 
 
 class ControlTest(ShishitoControlTest):
-    """ Mobile test platform """
+    """ ControlTest for mobile platform """

@@ -1,13 +1,13 @@
+import inspect
 import os
+import re
 from selenium import webdriver
-import sys
 
 
 class ShishitoEnvironment(object):
 
     def __init__(self, shishito_support):
         self.shishito_support = shishito_support
-        self.capabilities = None
 
     def add_extension_to_browser(self, browser_type, browser_profile):
         """ returns browser profile updated with one or more extensions """
@@ -24,24 +24,21 @@ class ShishitoEnvironment(object):
 
         return browser_profile
 
-    def call_browser(self, combination, capabilities=None):
+    def call_browser(self, config_section):
         """ Starts browser """
 
-        # get browser capabilities and profile
-        if capabilities:
-            capabilities.update(self.get_capabilities(combination))
-        else:
-            capabilities = self.get_capabilities(combination)
+        # get browser capabilities
+        capabilities = self.get_capabilities(config_section)
 
         # get browser type
-        browser_type = self.shishito_support.gid('browser', section=combination)
+        browser_type = self.shishito_support.get_opt(config_section, 'browser')
         browser_type = browser_type.lower()
 
         # get driver
         driver = self.start_driver(browser_type, capabilities)
 
         # set browser size is defined
-        browser_size = self.shishito_support.gid('resolution', section=combination)
+        browser_size = self.shishito_support.get_opt(config_section, 'resolution')
         if browser_size:
             # default size --> leave it on webdriver
             width, height = browser_size.split('x')
@@ -49,24 +46,15 @@ class ShishitoEnvironment(object):
 
         return driver
 
-    def get_capabilities(self, combination):
-        """ Returns dictionary of browser capabilities """
-        pass
+    def get_capabilities(self, config_section):
+        """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
 
-    def start_driver(self, browser_type, capabilities, remote_driver_url):
+        return {}
+
+    def start_driver(self, browser_type, capabilities):
         """ Starts driver """
 
-        browser_profile = self.get_browser_profile(browser_type, capabilities)
-
-        if not remote_driver_url:
-            sys.exit('Base start driver: missing remote_driver_url')
-
-        driver = webdriver.Remote(
-            command_executor=remote_driver_url,
-            desired_capabilities=capabilities,
-            browser_profile=browser_profile)
-
-        return driver
+        raise NotImplementedError()
 
     def get_browser_profile(self, browser_type, capabilities):
         """ Returns updated browser profile ready to be passed to driver """
@@ -87,7 +75,7 @@ class ShishitoEnvironment(object):
             return None
 
         # add extensions to remote driver
-        if self.shishito_support.gid('with_extension'):
+        if self.shishito_support.get_opt('with_extension'):
             # TODO: add support for extensions again
             # profile = self.add_extension_to_browser(browser_type, profile)
             pass
@@ -103,3 +91,14 @@ class ShishitoEnvironment(object):
     def get_pytest_arguments(self, config_section):
         """ Get environment specific arguments for pytest. """
         pass
+
+    def get_test_name(self):
+        """ Returns test name from the call stack, assuming there can be only
+         one 'test_' file in the stack. If there are more it means two PyTest
+        tests ran when calling get_test_name, which is invalid use case. """
+        frames = inspect.getouterframes(inspect.currentframe())
+        for frame in frames:
+            if re.match('test_.*', os.path.basename(frame[1])):
+                return os.path.basename(frame[1])[:-3]
+
+        return self.shishito_support.get_opt('project_name')

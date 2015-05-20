@@ -4,7 +4,7 @@ import time
 
 from jinja2 import Environment, FileSystemLoader
 
-from shishito.library.modules.runtime.shishito_support import ShishitoSupport
+from shishito.runtime.shishito_support import ShishitoSupport
 
 
 class Reporter(object):

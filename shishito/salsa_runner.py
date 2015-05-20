@@ -9,8 +9,8 @@ import argparse
 import sys
 import time
 
-from shishito.library.modules.reporting.reporter import Reporter
-from shishito.library.modules.runtime.shishito_support import ShishitoSupport
+from shishito.reporting.reporter import Reporter
+from shishito.runtime.shishito_support import ShishitoSupport
 
 
 class ShishitoRunner(object):
@@ -50,8 +50,9 @@ class ShishitoRunner(object):
                             help='Run only smoke tests',
                             action='store_true')
         parser.add_argument('--browserstack',
-                            help='BrowserStack credentials; format: "username:token"',
-                            default='none')
+                            help='BrowserStack credentials; format: "username:token"')
+        parser.add_argument('--saucelabs',
+                            help='Saucelabs credentials; format: "username:token"')
 
         args = parser.parse_args()
 
@@ -67,7 +68,7 @@ class ShishitoRunner(object):
         self.reporter.cleanup_results()
 
         # import execution class
-        executor_class = self.shishito_support.get_modules(module='platform_execution')
+        executor_class = self.shishito_support.get_module('platform_execution')
         # executor_class = getattr(import_module(platform_path), 'ControlExecution')
         executor = executor_class(self.shishito_support, self.test_timestamp)
 

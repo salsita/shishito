@@ -1,24 +1,32 @@
-# /usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 @author: Vojtech Burian
 @summary: Selenium Webdriver Python test runner
 """
-import os
 
+import os
 import pytest
 
-from shishito.library.modules.runtime.platform.shishito_execution import ShishitoExecution
 
+class ShishitoExecution(object):
+    """ """
 
-class ControlExecution(ShishitoExecution):
-    """ ControlExecution for web platform. """
+    def __init__(self, shishito_support, test_timestamp):
+        self.shishito_support = shishito_support
+
+        environment_class = self.shishito_support.get_module('test_environment')
+        self.environment = environment_class(shishito_support)
+
+        self.result_folder = os.path.join(self.shishito_support.project_root, 'results', test_timestamp)
+
+    def get_test_result_prefix(self, config_section):
+        """ """
+        return ''
 
     def run_tests(self):
         """ Triggers PyTest runner.
-        It runs PyTest for each BS combination, taken from versioned .properties file """
+        It runs PyTest for each browser/device combination, taken from .properties file for proper
+        platform and environment """
 
-        # check that runner is not run directly
         test_status = 0
 
         for config_section in self.shishito_support.env_config.sections():
@@ -30,14 +38,10 @@ class ControlExecution(ShishitoExecution):
     def trigger_pytest(self, config_section):
         """ Runs PyTest runner on specific configuration """
 
-        browser = self.shishito_support.gid('browser', config_section)
-        browser_version = self.shishito_support.gid('browser_version', config_section)
-        resolution = self.shishito_support.gid('resolution', config_section)
+        test_result_prefix = self.get_test_result_prefix(config_section)
 
         junit_xml_path = os.path.join(self.result_folder, config_section + '.xml')
         html_path = os.path.join(self.result_folder, config_section + '.html')
-
-        test_result_prefix = '[%s, %s, %s]' % (browser, browser_version, resolution)
 
         # prepare pytest arguments into execution list
         pytest_arguments_dict = {
@@ -56,19 +60,23 @@ class ControlExecution(ShishitoExecution):
         if extra_pytest_arguments:
             pytest_arguments_dict.update(extra_pytest_arguments)
 
+        test_directory = self.shishito_support.get_opt('test_directory')
+        if not test_directory:
+            test_directory = 'tests'
+
         pytest_arguments = [
-            os.path.join(self.shishito_support.project_root, 'tests'),
+            os.path.join(self.shishito_support.project_root, test_directory),
         ]
 
         pytest_arguments.extend(pytest_arguments_dict.values())
 
         # set pytest parallel execution argument
-        parallel_tests = int(self.shishito_support.gid('parallel_tests'))
+        parallel_tests = int(self.shishito_support.get_opt('parallel_tests'))
         if parallel_tests > 1:
             pytest_arguments.extend(['-n', str(parallel_tests)])
 
         # set pytest smoke test argument
-        smoke = self.shishito_support.gid('smoke')
+        smoke = self.shishito_support.get_opt('smoke')
         if smoke:
             pytest_arguments.extend(['-m', 'smoke'])
 

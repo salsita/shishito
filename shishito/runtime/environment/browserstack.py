@@ -1,11 +1,11 @@
-import inspect
-import ntpath
-import re
+from __future__ import absolute_import
+
+from selenium import webdriver
 import sys
 import time
 
-from shishito.library.modules.runtime.environment.shishito_environment import ShishitoEnvironment
-from shishito.library.modules.services.browserstack import BrowserStackAPI
+from shishito.runtime.environment.shishito import ShishitoEnvironment
+from shishito.services.browserstack import BrowserStackAPI
 
 
 class ControlEnvironment(ShishitoEnvironment):
@@ -16,31 +16,31 @@ class ControlEnvironment(ShishitoEnvironment):
 
         self.bs_api = BrowserStackAPI()
 
-    def call_browser(self, combination, capabilities=None):
+    def call_browser(self, config_section):
         """ Starts browser """
 
         # get browser stack credentials
         try:
-            bs_user, bs_password = self.shishito_support.gid('browserstack').split(':', 1)
+            bs_user, bs_password = self.shishito_support.get_opt('browserstack').split(':', 1)
         except (AttributeError, ValueError):
             raise ValueError('Browserstack credentials were not specified! Unable to start browser.')
 
         # wait until free browserstack session is available
         if not self.bs_api.wait_for_free_sessions(
             (bs_user, bs_password),
-            int(self.shishito_support.gid('session_waiting_time')),
-            int(self.shishito_support.gid('session_waiting_delay'))
+            int(self.shishito_support.get_opt('session_waiting_time')),
+            int(self.shishito_support.get_opt('session_waiting_delay'))
         ):
             sys.exit('No free browserstack session - exit.')
 
-        # get browser capabilities and profile
-        capabilities = self.get_capabilities(combination)
+        # get browser capabilities
+        capabilities = self.get_capabilities(config_section)
 
         # prepare remote driver url
         hub_url = 'http://{0}:{1}@hub.browserstack.com:80/wd/hub'.format(bs_user, bs_password)
 
         # get browser type
-        browser_type = self.shishito_support.gid('browser', section=combination)
+        browser_type = self.shishito_support.get_opt(config_section, 'browser')
         browser_type = browser_type.lower()
 
         # call remote driver
@@ -55,18 +55,18 @@ class ControlEnvironment(ShishitoEnvironment):
     def get_pytest_arguments(self, config_section):
         """ Get environment specific arguments for pytest. """
 
-        browser = self.shishito_support.gid('browser', section=config_section)
-        browser_version = self.shishito_support.gid('browser_version', section=config_section)
-        os_type = self.shishito_support.gid('os', section=config_section)
-        os_version = self.shishito_support.gid('os_version', section=config_section)
-        resolution = self.shishito_support.gid('resolution', section=config_section)
+        browser = self.shishito_support.get_opt(config_section, 'browser')
+        browser_version = self.shishito_support.get_opt(config_section, 'browser_version')
+        os_type = self.shishito_support.get_opt(config_section, 'os')
+        os_version = self.shishito_support.get_opt(config_section, 'os_version')
+        resolution = self.shishito_support.get_opt(config_section, 'resolution')
 
         test_result_prefix = '[%s, %s, %s, %s, %s]' % (
             browser, browser_version, os_type, os_version, resolution
         )
 
         # Add browserstack credentials
-        bs_auth = self.shishito_support.gid('browserstack')
+        bs_auth = self.shishito_support.get_opt('browserstack')
 
         # prepare pytest arguments into execution list
         return {
@@ -80,23 +80,23 @@ class ControlEnvironment(ShishitoEnvironment):
             '--browserstack=': '--browserstack=' + bs_auth,
         }
 
-    def get_capabilities(self, combination):
+    def get_capabilities(self, config_section):
         """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
 
-        capabilities = {
-            'acceptSslCerts': self.shishito_support.gid('accept_ssl_cert').lower() == 'false',
-            'browserstack.debug': self.shishito_support.gid('browserstack_debug').lower(),
-            'project': self.shishito_support.gid('project_name'),
-            'build': self.shishito_support.gid('build_name'),
-            'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
-            'os': self.shishito_support.gid('os', section=combination),
-            'os_version': self.shishito_support.gid('os_version', section=combination),
-            'browser': self.shishito_support.gid('browser', section=combination),
-            'browser_version': self.shishito_support.gid('browser_version', section=combination),
-            'resolution': self.shishito_support.gid('resolution', section=combination),
-        }
+        get_opt = self.shishito_support.get_opt
 
-        return capabilities
+        return {
+            'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'false',
+            'browserstack.debug': get_opt('browserstack_debug').lower(),
+            'project': get_opt('project_name'),
+            'build': get_opt('build_name'),
+            'os': get_opt(config_section, 'os'),
+            'os_version': get_opt(config_section, 'os_version'),
+            'browser': get_opt(config_section, 'browser'),
+            'browser_version': get_opt(config_section, 'browser_version'),
+            'resolution': get_opt(config_section, 'resolution'),
+            'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
+        }
 
     # TODO will need to implement some edge cases from there (mobile emulation etc..)
     # def get_browser_profile(self, browser_type):
@@ -133,13 +133,14 @@ class ControlEnvironment(ShishitoEnvironment):
     #             browser_profile = None
     #     return browser_profile
 
-    def get_test_name(self):
-        """ Returns test name from the call stack, assuming there can be only
-         one 'test_' file in the stack. If there are more it means two PyTest
-        tests ran when calling get_test_name, which is invalid use case. """
-        frames = inspect.getouterframes(inspect.currentframe())
-        for frame in frames:
-            if re.match('test_.*', ntpath.basename(frame[1])):
-                return ntpath.basename(frame[1])[:-3]
+    def start_driver(self, browser_type, capabilities, remote_driver_url):
+        """ Starts driver """
 
-        return self.shishito_support.gid('project_name')
+        browser_profile = self.get_browser_profile(browser_type, capabilities)
+
+        driver = webdriver.Remote(
+            command_executor=remote_driver_url,
+            desired_capabilities=capabilities,
+            browser_profile=browser_profile)
+
+        return driver

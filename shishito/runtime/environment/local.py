@@ -1,10 +1,21 @@
+from __future__ import absolute_import
+
 from selenium import webdriver
 
-from shishito.library.modules.runtime.environment.shishito_environment import ShishitoEnvironment
+from shishito.runtime.environment.shishito import ShishitoEnvironment
 
 
 class ControlEnvironment(ShishitoEnvironment):
     """ Local control environment. """
+
+    def get_capabilities(self, config_section):
+        """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
+
+        get_opt = self.shishito_support.get_opt
+
+        return {
+            'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'false',
+        }
 
     def start_driver(self, browser_type, capabilities, remote_driver_url=None):
         """ Starts driver """
@@ -32,12 +43,3 @@ class ControlEnvironment(ShishitoEnvironment):
             raise ValueError('Unknown type of browser.')
 
         return driver
-
-    def get_capabilities(self, combination):
-        """Returns dictionary of capabilities for specific Browserstack browser/os combination """
-
-        capabilities = {
-            'acceptSslCerts': self.shishito_support.gid('accept_ssl_cert').lower() == 'false',
-        }
-
-        return capabilities

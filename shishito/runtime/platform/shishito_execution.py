@@ -13,7 +13,7 @@ class ShishitoExecution(object):
     def __init__(self, shishito_support, test_timestamp):
         self.shishito_support = shishito_support
 
-        environment_class = self.shishito_support.get_modules('test_environment')
+        environment_class = self.shishito_support.get_module('test_environment')
         self.environment = environment_class(shishito_support)
 
         self.result_folder = os.path.join(self.shishito_support.project_root, 'results', test_timestamp)

@@ -120,7 +120,7 @@ class ShishitoSupport(object):
         config.read(config_path)
         return config
 
-    def get_modules(self, module):
+    def get_module(self, module):
         """
         :param module: module, which should be imported
         """
@@ -136,12 +136,8 @@ class ShishitoSupport(object):
         elif module == 'test_environment':
             return getattr(import_module(test_environment), 'ControlEnvironment')
 
-        return {
-            'platform_execution': getattr(import_module(platform_execution), 'ControlExecution'),
-            'platform_test': getattr(import_module(platform_test), 'ControlTest'),
-            'test_environment': getattr(import_module(test_environment), 'ControlEnvironment')
-        }
+        raise ValueError('Unknown module.')
 
     def get_test_control(self):
         """ Used in tests for getting ControlTest object"""
-        return self.get_modules('platform_test')()
+        return self.get_module('platform_test')()

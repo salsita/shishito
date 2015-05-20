@@ -11,7 +11,12 @@ class ControlEnvironment(ShishitoEnvironment):
     """ Appium control environment. """
 
     def call_browser(self, config_section):
-        """ Starts browser """
+        """ Start webdriver for given config section. Prepare capabilities for the webdriver. If saucelabs setting has value,
+        webdriver will be connected to saucelabs. Otherwise appium_url setting will be used.
+
+        :param str config_section: section in platform/environment.properties config
+        :return: created webdriver
+        """
 
         # get browser capabilities
         capabilities = self.get_capabilities(config_section)
@@ -26,7 +31,11 @@ class ControlEnvironment(ShishitoEnvironment):
         return self.start_driver(capabilities, remote_url)
 
     def get_capabilities(self, config_section):
-        """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
+        """ Return dictionary of capabilities for specific config combination.
+
+        :param str config_section: section in platform/environment.properties config
+        :return: dict with capabilities
+        """
 
         get_opt = self.shishito_support.get_opt
 
@@ -40,7 +49,11 @@ class ControlEnvironment(ShishitoEnvironment):
         }
 
     def get_pytest_arguments(self, config_section):
-        """ """
+        """ Get environment specific arguments for pytest.
+
+        :param config_section: section in platform/environment.properties config
+        :return: dict with arguments for pytest or None
+        """
 
         pytest_args = {
             '--platformName': '--platformName=%s' % self.shishito_support.get_opt(config_section, 'platformName'),
@@ -56,7 +69,11 @@ class ControlEnvironment(ShishitoEnvironment):
         return pytest_args
 
     def start_driver(self, capabilities, remote_driver_url):
-        """ """
+        """ Prepare selenium webdriver.
+
+        :param capabilities: capabilities used for webdrivre initialization
+        :param remote_driver_url: url to which the driver will be connected
+        """
 
         driver = webdriver.Remote(
             command_executor=remote_driver_url,

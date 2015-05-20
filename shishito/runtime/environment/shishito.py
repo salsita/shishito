@@ -5,12 +5,13 @@ from selenium import webdriver
 
 
 class ShishitoEnvironment(object):
+    """ Base class for test environment. """
 
     def __init__(self, shishito_support):
         self.shishito_support = shishito_support
 
     def add_extension_to_browser(self, browser_type, browser_profile):
-        """ returns browser profile updated with one or more extensions """
+        """ Return browser profile updated with one or more extensions """
 
         if browser_type == 'chrome':
             all_extensions = self.get_extension_file_names('crx')
@@ -25,7 +26,11 @@ class ShishitoEnvironment(object):
         return browser_profile
 
     def call_browser(self, config_section):
-        """ Starts browser """
+        """ Start webdriver for given config section. Prepare capabilities for the browser, set browser resulotion.
+
+        :param str config_section: section in platform/environment.properties config
+        :return: created webdriver
+        """
 
         # get browser capabilities
         capabilities = self.get_capabilities(config_section)
@@ -47,17 +52,30 @@ class ShishitoEnvironment(object):
         return driver
 
     def get_capabilities(self, config_section):
-        """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
+        """ Return dictionary of capabilities for specific config combination/
+
+        :param str config_section: section in platform/environment.properties config
+        :return: dict with capabilities
+        """
 
         return {}
 
     def start_driver(self, browser_type, capabilities):
-        """ Starts driver """
+        """ Prepare selenium webdriver.
+
+        :param str browser_type: type of browser for which prepare driver
+        :param dict capabilities: capabilities used for webdrivre initialization
+        """
 
         raise NotImplementedError()
 
     def get_browser_profile(self, browser_type, capabilities):
-        """ Returns updated browser profile ready to be passed to driver """
+        """ Return updated browser profile ready to be passed to driver.
+
+        :param str browser_type: browser type (chrome, firefox, ..)
+        :param dict capabilities: capabilities dict - can be updated
+        :return: browser profile or None
+        """
 
         # lowercase browser_type
         browser_type = browser_type.lower()
@@ -89,13 +107,21 @@ class ShishitoEnvironment(object):
         return profile
 
     def get_pytest_arguments(self, config_section):
-        """ Get environment specific arguments for pytest. """
+        """ Get environment specific arguments for pytest.
+
+        :param config_section: section in platform/environment.properties config
+        :return: dict with arguments for pytest or None
+        """
         pass
 
     def get_test_name(self):
-        """ Returns test name from the call stack, assuming there can be only
-         one 'test_' file in the stack. If there are more it means two PyTest
-        tests ran when calling get_test_name, which is invalid use case. """
+        """ Return test name from the call stack, assuming there can be only
+        one "test\_" file in the stack. If there are more it means two PyTest
+        tests ran when calling get_test_name, which is invalid use case.
+
+        :return: test name or project_name setting
+        """
+
         frames = inspect.getouterframes(inspect.currentframe())
         for frame in frames:
             if re.match('test_.*', os.path.basename(frame[1])):

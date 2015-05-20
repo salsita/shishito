@@ -1,5 +1,3 @@
-# /usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 @author: Vojtech Burian
 @summary: Selenium Webdriver Python test runner
@@ -14,9 +12,9 @@ from shishito.runtime.shishito_support import ShishitoSupport
 
 
 class ShishitoRunner(object):
-    """ Selenium Webdriver Python test runner.
-    - runs python selenium tests on customizable configurations, locally or on BrowserStack using PyTest
-    - checks for available BrowserStack sessions and wait if necessary
+    """ Base shishito test runner.
+
+    - runs python selenium tests on customizable configurations (using PyTest)
     - archive the test results in .zip file """
 
     def __init__(self, project_root):
@@ -36,7 +34,10 @@ class ShishitoRunner(object):
         )
 
     def handle_cmd_args(self):
-        """ Retrieves the command line arguments passed to the script """
+        """ Retrieve command line arguments passed to the script.
+
+        :return: dict with parsed command line arguments
+        """
 
         parser = argparse.ArgumentParser(description='Selenium Python test runner execution arguments.')
 
@@ -60,6 +61,10 @@ class ShishitoRunner(object):
         return vars(args)
 
     def run_tests(self):
+        """ Execute tests for given platform and environment. Platform and Environmet can be passed as command lines
+        argument or settings in config file.
+        """
+
         if __name__ == "__main__":
             sys.exit('The runner cannot be executed directly.'
                      ' You need to import it within project specific runner. Session terminated.')

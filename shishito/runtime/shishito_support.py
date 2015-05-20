@@ -7,12 +7,16 @@ import sys
 
 
 class ShishitoSupport(object):
+    """ Support class for getting config values and importing modules according to
+    test platform and environment.
+
+    :param cmd_args: dictionary with command lines arguments
+    :type cmd_args: dict or None
+    :param project_root: test project root (where to find config files, tests, ..)
+    :type project_root: str or None
+    """
 
     def __init__(self, cmd_args=None, project_root=None):
-        """ cmd_args added only if called from runner.
-        when called from tests cmd_args have to be added to pytest and taken from pytest.config
-        """
-
         # parsed arguments from commad_line
         self.args_config = cmd_args or {}
 
@@ -33,7 +37,10 @@ class ShishitoSupport(object):
         self.env_config = self.get_environment_config()
 
     def find_project_root(self):
-        """ Try to find config directory on sys.path """
+        """ Try to find config directory on sys.path
+
+        :raises ValueError: if config directory is not found on sys.path
+        """
 
         for path in sys.path:
             config_dir = os.path.join(path, 'config')
@@ -43,7 +50,7 @@ class ShishitoSupport(object):
         raise ValueError('Can not find config dir on sys.path')
 
     def load_configs(self):
-        """ Loads variables from .properties configuration files """
+        """ Load variables from .properties configuration files """
 
         config_path = os.path.join(self.project_root, 'config')
         if not os.path.exists(config_path):
@@ -75,6 +82,8 @@ class ShishitoSupport(object):
         If local execution parameter is "True", function will try to search for parameter in local configuration file.
         If such parameter is not found or there is an error while reading the file, server (default) configuration
         file will be used instead.
+
+        :param args: key or config_section, key
         """
 
         if len(args) > 2 or not args:
@@ -109,7 +118,7 @@ class ShishitoSupport(object):
                 return value
 
     def get_environment_config(self):
-        """ Get config file for current platform and environment """
+        """ Load environment specific configuration file according to current test platform and environment """
 
         config = ConfigParser.ConfigParser()
         config_path = os.path.join(self.project_root, 'config', self.test_platform, self.test_environment + '.properties')
@@ -121,8 +130,11 @@ class ShishitoSupport(object):
         return config
 
     def get_module(self, module):
-        """
-        :param module: module, which should be imported
+        """ Import object from given module according to current test platform and environment.
+
+        :param str module: module used for import
+        :return: imported object
+        :raises ValueError: in case of unknown module
         """
 
         platform_execution = 'shishito.runtime.platform.' + self.test_platform + '.control_execution'
@@ -139,5 +151,9 @@ class ShishitoSupport(object):
         raise ValueError('Unknown module.')
 
     def get_test_control(self):
-        """ Used in tests for getting ControlTest object"""
+        """ Return TestControl object for current test platform. Used in tests.
+
+        :return: TestControl object
+        """
+
         return self.get_module('platform_test')()

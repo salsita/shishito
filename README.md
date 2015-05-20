@@ -121,7 +121,7 @@ environment_configuration=Chrome
 * in case variables are not found, it will fall back to values in default *server_config.properties*
 * changes to this file should **not** be maintained in VCS (they serve only for local test execution)
 
-*** <platform>/<environment>.properties ****
+*** \<platform\>/\<environment\>.properties ****
 
 * contains combinations, for which the tests should be executed
 * e.g. browser and resolution for local web browser

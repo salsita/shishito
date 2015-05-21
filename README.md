@@ -72,8 +72,9 @@ python google_test_runner.py
 ## Command line options
 
 ```python
---platform web      # define platform on which run tests (currently supported: web, mobile)
---environmnet local # define environment in which run tests (currently supported: local, browserstack, appium)
+--platform web         # define platform on which run tests (currently supported: web, mobile)
+--environmnet local    # define environment in which run tests (currently supported: local, browserstack, appium)
+--test_directory tests # define directory where to lookup for tests (project_root + test_directory)
 
 # supported platform/environment combinations:
 #   web/local

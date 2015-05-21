@@ -47,6 +47,8 @@ class ShishitoRunner(object):
         parser.add_argument('--environment',
                             help='Environment for which run tests.',
                             dest='test_environment')
+        parser.add_argument('--test_directory',
+                            help='Directory where to lookup for tests')
         parser.add_argument('--smoke',
                             help='Run only smoke tests',
                             action='store_true')

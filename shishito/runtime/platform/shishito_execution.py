@@ -74,7 +74,7 @@ class ShishitoExecution(object):
 
         test_directory = self.shishito_support.get_opt('test_directory')
         if not test_directory:
-            sys.exit('Not test directory was specified.')
+            raise ValueError('Not test directory was specified.')
 
         pytest_arguments = [
             os.path.join(self.shishito_support.project_root, test_directory),

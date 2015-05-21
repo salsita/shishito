@@ -50,7 +50,12 @@ class ShishitoSupport(object):
         raise ValueError('Can not find config dir on sys.path')
 
     def load_configs(self):
-        """ Load variables from .properties configuration files """
+        """ Load variables from .properties configuration files. If local_execution is true in local_config file, function
+        return both local config dict and server confgi dict. Otherwise function returns only server config dict.
+
+        :return: list with config dictionaries
+        :raises ValueError: if config path does not exist
+        """
 
         config_path = os.path.join(self.project_root, 'config')
         if not os.path.exists(config_path):
@@ -77,13 +82,15 @@ class ShishitoSupport(object):
         return configs
 
     def get_opt(self, *args):
-        """ Get value from config variables based on provided key.
+        """ Get value from config variables based on provided key and optionaly section.
 
-        If local execution parameter is "True", function will try to search for parameter in local configuration file.
-        If such parameter is not found or there is an error while reading the file, server (default) configuration
-        file will be used instead.
+        If key is given, function searches in pytest.config, command lines arguments, local config (if enabled) and server config.
+        If section and key are given, function searches in environment config file.
+
 
         :param args: key or config_section, key
+        :return: value for given key or None
+        :raises TypeError: if called with wrong number of arguments
         """
 
         if len(args) > 2 or not args:
@@ -118,7 +125,11 @@ class ShishitoSupport(object):
                 return value
 
     def get_environment_config(self):
-        """ Load environment specific configuration file according to current test platform and environment """
+        """ Load environment specific configuration file according to current test platform and environment
+
+        :return: environment configuration file
+        :raises ValueError: if config path does not exist
+        """
 
         config = ConfigParser.ConfigParser()
         config_path = os.path.join(self.project_root, 'config', self.test_platform, self.test_environment + '.properties')

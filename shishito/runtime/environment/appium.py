@@ -70,7 +70,7 @@ class ControlEnvironment(ShishitoEnvironment):
     def start_driver(self, capabilities, remote_driver_url):
         """ Prepare selenium webdriver.
 
-        :param capabilities: capabilities used for webdrivre initialization
+        :param capabilities: capabilities used for webdriver initialization
         :param remote_driver_url: url to which the driver will be connected
         """
 

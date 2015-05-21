@@ -28,7 +28,7 @@ Webdriver drivers need to be setup (ChromeDriver, InternetExplorerDriver etc.)
 ```git clone git@github.com:salsita/shishito-sample-project.git```
 1. if you want to use BrowserStack for running your tests, replace "bs_username", "bs_password" values with your credentials in ***shishito-sample-project/config/server_config.properties***
  or pass it to runner python file as command line argument using flag --browserstack username:token
-1. if you want to use Saucelabs for running your tests, add your credentials to saucelebas variable in ***shishito-sample-project/config/server_config.properties***
+1. if you want to use Saucelabs for running your tests, add your credentials to saucelabs variable in ***shishito-sample-project/config/server_config.properties***
  or pass it to runner python file as command line argument using flag --saucelabs username:token
 1. set your preferred browser settings in ***shishito-sample-project/config/web/(browserstack|local).properties*** or for mobile apps in ***shishito-sample-project/config/mobile/appium.properties***
 1. run *google_test_runner.py* in sample project folder!
@@ -73,13 +73,15 @@ python google_test_runner.py
 
 ```python
 --platform web         # define platform on which run tests (currently supported: web, mobile, generic)
---environmnet local    # define environment in which run tests (currently supported: local, browserstack, appium)
+--environmnet local    # define environment in which run tests (currently supported: local, browserstack, appium, remote)
 --test_directory tests # define directory where to lookup for tests (project_root + test_directory)
 
 # supported platform/environment combinations:
 #   generic/local
+#   generic/remote
 #   web/local
 #   web/browserstack
+#   web/remote
 #   mobile/appium (can run on local/remote appium server or on saucelabs)
 
 --smoke # runs only tests with fixture "@pytest.mark.smoke"
@@ -91,7 +93,7 @@ python google_test_runner.py
 
 If no arguments are specified, Shishito, by default, searches for settings combinations in (server|local).properties files and runs tests according to them.
 
-## Configuration
+## Configuration files
 
 ***server_config.properties***
 
@@ -116,6 +118,7 @@ environment_configuration=Chrome
 * *test_directory* - in which directory lookup for tests
 * *base_url* - url that will be loaded by default upon start of each test
 * *environment_configuration* - which configuration use from <environment>.properties file (used when tests are run without runner)
+* *remote_driver_url* - remote driver hub. Selenium server needs to be running on this url.
 
 ***local_config.properties***
 
@@ -131,3 +134,12 @@ environment_configuration=Chrome
 ***conftest.py***
 
 * helper file that defines command line arguments, provides fixtures and other information for Shishito runner
+
+## Configuration
+
+Shishito can be configured with command lines arguments and config files. Some configuration values are also added as arguments to PyTest (depends on test environment).
+Configuration values are looked up according to these priorities:
+1. pytest.config
+1. command line arguments
+1. local configuration file (if enabled: loacl_execution=True)
+1. server cofiguration file

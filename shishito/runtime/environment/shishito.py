@@ -26,7 +26,7 @@ class ShishitoEnvironment(object):
         return browser_profile
 
     def call_browser(self, config_section):
-        """ Start webdriver for given config section. Prepare capabilities for the browser, set browser resulotion.
+        """ Start webdriver for given config section. Prepare capabilities for the browser, set browser resolution.
 
         :param str config_section: section in platform/environment.properties config
         :return: created webdriver
@@ -64,7 +64,7 @@ class ShishitoEnvironment(object):
         """ Prepare selenium webdriver.
 
         :param str browser_type: type of browser for which prepare driver
-        :param dict capabilities: capabilities used for webdrivre initialization
+        :param dict capabilities: capabilities used for webdriver initialization
         """
 
         raise NotImplementedError()

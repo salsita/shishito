@@ -25,7 +25,7 @@ class ControlEnvironment(ShishitoEnvironment):
         """ Prepare selenium webdriver.
 
         :param browser_type: type of browser for which prepare driver
-        :param capabilities: capabilities used for webdrivre initialization
+        :param capabilities: capabilities used for webdriver initialization
         """
 
         # get browser profile

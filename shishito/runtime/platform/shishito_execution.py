@@ -5,6 +5,7 @@
 
 import os
 import pytest
+import sys
 
 
 class ShishitoExecution(object):
@@ -62,7 +63,7 @@ class ShishitoExecution(object):
 
         test_directory = self.shishito_support.get_opt('test_directory')
         if not test_directory:
-            test_directory = 'tests'
+            sys.exit('Not test directory was specified.')
 
         pytest_arguments = [
             os.path.join(self.shishito_support.project_root, test_directory),

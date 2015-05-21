@@ -17,10 +17,8 @@ class ControlEnvironment(ShishitoEnvironment):
             'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'false',
         }
 
-    def start_driver(self, browser_type, capabilities, remote_driver_url=None):
+    def start_driver(self, browser_type, capabilities):
         """ Starts driver """
-
-        driver = None
 
         # get browser profile
         browser_profile = self.get_browser_profile(browser_type, capabilities)

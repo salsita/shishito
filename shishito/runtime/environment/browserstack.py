@@ -133,7 +133,7 @@ class ControlEnvironment(ShishitoEnvironment):
     #             browser_profile = None
     #     return browser_profile
 
-    def start_driver(self, browser_type, capabilities, remote_driver_url):
+    def start_driver(self, browser_type, capabilities, remote_driver_url=None):
         """ Starts driver """
 
         browser_profile = self.get_browser_profile(browser_type, capabilities)

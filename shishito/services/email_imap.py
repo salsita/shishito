@@ -3,16 +3,16 @@ import email
 import time
 import re
 
-from salsa_webqa.library.control_test import ControlTest
+from shishito.runtime.shishito_support import ShishitoSupport
 
 
 class EmailIMAP(object):
     def __init__(self):
-        self.test_control = ControlTest()
-        self.email_address = self.test_control.gid('email_address')
-        self.email_imap = self.test_control.gid('email_imap')
-        self.email_password = self.test_control.gid('email_password')
-        self.email_mailbox = self.test_control.gid('email_mailbox')
+        self.shishito_support = ShishitoSupport()
+        self.email_address = self.shishito_support.get_opt('email_address')
+        self.email_imap = self.shishito_support.get_opt('email_imap')
+        self.email_password = self.shishito_support.get_opt('email_password')
+        self.email_mailbox = self.shishito_support.get_opt('email_mailbox')
 
         self.mail = imaplib.IMAP4_SSL(self.email_imap)
         self.mail.login(self.email_address, self.email_password)

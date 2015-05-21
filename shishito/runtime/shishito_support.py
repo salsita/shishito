@@ -13,7 +13,7 @@ class ShishitoSupport(object):
         when called from tests cmd_args have to be added to pytest and taken from pytest.config
         """
 
-        # parsed arguments from commad_line
+        # parsed arguments from command_line
         self.args_config = cmd_args or {}
 
         # called without cmd_args

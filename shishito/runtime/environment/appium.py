@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 from appium import webdriver
-#from selenium import webdriver
 import time
 
 from shishito.runtime.environment.shishito import ShishitoEnvironment

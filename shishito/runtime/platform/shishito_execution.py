@@ -9,7 +9,7 @@ import sys
 
 
 class ShishitoExecution(object):
-    """ """
+    """ Base class for platform ControlExecution objects. """
 
     def __init__(self, shishito_support, test_timestamp):
         self.shishito_support = shishito_support
@@ -20,13 +20,19 @@ class ShishitoExecution(object):
         self.result_folder = os.path.join(self.shishito_support.project_root, 'results', test_timestamp)
 
     def get_test_result_prefix(self, config_section):
-        """ """
+        """ Create string prefix for test results.
+
+        :param str config_section: section in platform/environment.properties config
+        :return: str with test result prefix
+        """
+
         return ''
 
     def run_tests(self):
-        """ Triggers PyTest runner.
-        It runs PyTest for each browser/device combination, taken from .properties file for proper
-        platform and environment """
+        """ Trigger PyTest runner.
+        Run PyTest for each browser/device combination, taken from .properties file for proper
+        platform and environment.
+        """
 
         test_status = 0
 
@@ -37,7 +43,12 @@ class ShishitoExecution(object):
         return test_status
 
     def trigger_pytest(self, config_section):
-        """ Runs PyTest runner on specific configuration """
+        """ Run PyTest runner on specific browser/device configuration. Function creates arguments for pytest.
+        Function executes pytest.main() with created arguments.
+
+        :param str config_section: section in platform/environment.properties config
+        :return: result of pytest.main() function
+        """
 
         test_result_prefix = self.get_test_result_prefix(config_section)
 

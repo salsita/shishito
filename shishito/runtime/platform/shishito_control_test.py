@@ -5,6 +5,7 @@ from shishito.runtime.shishito_support import ShishitoSupport
 
 
 class ShishitoControlTest(object):
+    """ Base class for ControlTest objects. """
 
     def __init__(self):
         self.shishito_support = ShishitoSupport()
@@ -16,8 +17,10 @@ class ShishitoControlTest(object):
         self.driver = None
 
     def start_browser(self):
-        """ Browser startup function.
-         Initialize session over Browserstack or local browser. """
+        """ Webdriver startup function.
+
+        :return: initialized webdriver
+        """
 
         base_url = self.shishito_support.get_opt('base_url')
         config_section = self.shishito_support.get_opt('environment_configuration')
@@ -32,15 +35,23 @@ class ShishitoControlTest(object):
         return self.driver
 
     def start_test(self, reload_page=None):
-        """ To be executed before every test-case (test function) """
+        """ To be executed before every test-case (test function).
+
+        :param reload_page:
+        """
 
     def stop_browser(self):
-        """ Browser termination function """
+        """ Webdriver termination function. """
 
         self.driver.quit()
 
     def stop_test(self, test_info):
-        """ To be executed after every test-case (test function) """
+        """ To be executed after every test-case (test function). If test failed, function saves
+        screenshots created during test.
+
+        :param test_info: information about test
+        """
+
         if test_info.test_status not in ('passed', None):
             # save screenshot in case test fails
             screenshot_folder = os.path.join(self.shishito_support.project_root, 'screenshots')
@@ -52,4 +63,7 @@ class ShishitoControlTest(object):
 
     def test_init(self, url):
         """ Executed only once after browser starts.
-         Suitable for general pre-test logic that do not need to run before every individual test-case. """
+         Suitable for general pre-test logic that do not need to run before every individual test-case.
+
+        :param str url:
+        """

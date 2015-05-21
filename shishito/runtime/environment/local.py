@@ -9,7 +9,11 @@ class ControlEnvironment(ShishitoEnvironment):
     """ Local control environment. """
 
     def get_capabilities(self, config_section):
-        """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
+        """ Return dictionary of capabilities for specific config combination.
+
+        :param str config_section: section in platform/environment.properties config
+        :return: dict with capabilities
+        """
 
         get_opt = self.shishito_support.get_opt
 
@@ -18,7 +22,11 @@ class ControlEnvironment(ShishitoEnvironment):
         }
 
     def start_driver(self, browser_type, capabilities):
-        """ Starts driver """
+        """ Prepare selenium webdriver.
+
+        :param browser_type: type of browser for which prepare driver
+        :param capabilities: capabilities used for webdrivre initialization
+        """
 
         # get browser profile
         browser_profile = self.get_browser_profile(browser_type, capabilities)

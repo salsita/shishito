@@ -141,5 +141,5 @@ Shishito can be configured with command lines arguments and config files. Some c
 Configuration values are looked up according to these priorities:
 1. pytest.config
 1. command line arguments
-1. local configuration file (if enabled: loacl_execution=True)
+1. local configuration file (if enabled: local_execution=True)
 1. server cofiguration file

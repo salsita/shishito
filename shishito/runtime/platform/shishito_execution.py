@@ -5,7 +5,6 @@
 
 import os
 import pytest
-import sys
 
 
 class ShishitoExecution(object):

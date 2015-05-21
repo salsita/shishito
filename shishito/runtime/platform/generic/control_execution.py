@@ -11,7 +11,9 @@ class ControlExecution(ShishitoExecution):
         :return: str with test result prefix
         """
 
-        platform = self.shishito_support.get_opt(config_section, 'platformName')
-        platform_version = self.shishito_support.get_opt(config_section, 'platformVersion')
+        return 'generic'
 
-        return '[%s, %s, %s]' % (config_section, platform, platform_version)
+    def run_tests(self):
+        """ Trigger PyTest runner. Run PyTest for for generic tests. """
+
+        return self.trigger_pytest('generic')

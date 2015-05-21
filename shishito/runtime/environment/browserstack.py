@@ -17,7 +17,12 @@ class ControlEnvironment(ShishitoEnvironment):
         self.bs_api = BrowserStackAPI()
 
     def call_browser(self, config_section):
-        """ Starts browser """
+        """ Start webdriver for given config section. Wait for free browserstack session.
+        Prepare capabilities for the browser. Created webdriver will be connected to browserstack.
+
+        :param str config_section: section in platform/environment.properties config
+        :return: created webdriver
+        """
 
         # get browser stack credentials
         try:
@@ -53,7 +58,11 @@ class ControlEnvironment(ShishitoEnvironment):
         return driver
 
     def get_pytest_arguments(self, config_section):
-        """ Get environment specific arguments for pytest. """
+        """ Get environment specific arguments for pytest.
+
+        :param config_section: section in platform/environment.properties config
+        :return: dict with arguments for pytest or None
+        """
 
         browser = self.shishito_support.get_opt(config_section, 'browser')
         browser_version = self.shishito_support.get_opt(config_section, 'browser_version')
@@ -81,7 +90,11 @@ class ControlEnvironment(ShishitoEnvironment):
         }
 
     def get_capabilities(self, config_section):
-        """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
+        """ Return dictionary of capabilities for specific config combination.
+
+        :param str config_section: section in platform/environment.properties config
+        :return: dict with capabilities
+        """
 
         get_opt = self.shishito_support.get_opt
 
@@ -133,8 +146,13 @@ class ControlEnvironment(ShishitoEnvironment):
     #             browser_profile = None
     #     return browser_profile
 
-    def start_driver(self, browser_type, capabilities, remote_driver_url=None):
-        """ Starts driver """
+    def start_driver(self, browser_type, capabilities, remote_driver_url):
+        """ Prepare selenium webdriver.
+
+        :param browser_type: type of browser for which prepare driver
+        :param capabilities: capabilities used for webdriver initialization
+        :param remote_driver_url: browserstack url, to which the driver will be connected
+        """
 
         browser_profile = self.get_browser_profile(browser_type, capabilities)
 

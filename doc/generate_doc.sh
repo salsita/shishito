@@ -1,2 +1,2 @@
 #!/bin/sh
-sphinx-apidoc -f -o source ../shishito 
+sphinx-apidoc -M -f -o source ../shishito

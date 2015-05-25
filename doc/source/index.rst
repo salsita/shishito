@@ -6,7 +6,7 @@
 Shishito
 ========
 
-Shishito is module for web application and browser extension integration testing with Selenium Webdriver & Python.
+Shishito is module for web and mobile application functional testing using Selenium Webdriver & Python.
 It runs tests using included libraries and generates nice test results output.
 
 Features
@@ -50,15 +50,15 @@ Package overview
 
       * Module offers support for following environments: **appium**, **browserstack**, **local** and **remote**.
 
-        * **apium** is used for running tests for mobile applications
-        * **broserstack** is used for running tests on specific OS and browser combination (offered by browserstack)
+        * **appium** is used for running tests for mobile applications (locally or on SauceLabs)
+        * **browserstack** is used for running tests on specific OS and browser combination (offered by browserstack)
         * **local** is used for running tests on local browsers
-        * **remote** is used for running tests on remote browsers
+        * **remote** is used for running tests on remote browsers (Selenium server required)
 
     * :doc:`platform <shishito.runtime.platform>`
 
       * Module contains base classes for platform specific functionality and submodules for supported platforms.
-      * Module contains followig base classes:
+      * Module contains following base classes:
 
         * *ShishitoExecution* - execute PyTest with correct arguments for specific platform. Class offers following functionality:
 
@@ -70,12 +70,12 @@ Package overview
           * (*start_browser*) Prepare webdriver used in tests. Should be used in *setup_class* method.
           * (*start_test*) Initialize webdriver before every test function execution (e.g. load initial page). Should be used in *setup_method* method.
           * (*stop_browser*) Terminate webdriver. Should be used in *teardown_class* method.
-          * (*stop_test*) Handle one test function results (e.g. save screenshots in case of test fail). Should be used in *teardown_method* method.
+          * (*stop_test*) Handle one test function results (e.g. save screenshot in case of test fail). Should be used in *teardown_method* method.
 
       * Shishito supports following platforms: **generic**, **mobile** and **web**.
 
-        * **generic** platform is used for running tests, that do not require selenium webdriver
-        * **mobile** platform is used for running tests, that test mobile applications using appium or saucelabs (using appium webdriver)
+        * **generic** platform is used for running tests that do not require selenium webdriver
+        * **mobile** platform is used for running tests that test mobile applications using appium or saucelabs (using appium webdriver)
         * **web** platform is used for running tests, that use local/remote browsers or browserstack (using selenium webdriver)
         * Each platform implements two classes: *ControlExecution* (bases *ShishitoExecution*) and *ControlTest* (bases *ShishitoControlTest*)
 

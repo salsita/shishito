@@ -1,6 +1,6 @@
 # Shishito
 
-Shishito is module for web application and browser extension integration testing with Selenium Webdriver & Python.
+Shishito is module for web and mobile application functional testing using Selenium Webdriver & Python.
 It runs tests using included libraries and generates nice test results output.
 
 ## Features

@@ -10,7 +10,7 @@ Documentation uses Sphinx (for doc see http://sphinx-doc.org). You can install s
 
 If you want to generate documentation from shishito source codes, you have tu run following command (from doc directory):
 
-``` sphinx-apidoc -f -o source ../shishito  ```
+``` sphinx-apidoc -M -f -o source ../shishito  ```
 
 or run generate_doc.sh in doc folder.
 

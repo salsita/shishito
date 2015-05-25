@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Shishito by salsita</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Shishito</h1>
+      <h2 class="project-tagline">Python module for selenium webdriver test execution</h2>
+      <a href="https://github.com/salsita/shishito" class="btn">View on GitHub</a>
+      <a href="https://github.com/salsita/shishito/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/salsita/shishito/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="shishito" class="anchor" href="#shishito" aria-hidden="true"><span class="octicon octicon-link"></span></a>Shishito</h1>
+
+<p>Shishito is module for web application and browser extension integration testing with Selenium Webdriver &amp; Python.
+It runs tests using included libraries and generates nice test results output.</p>
+
+<h2>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Features</h2>
+
+<ul>
+<li>runs python Selenium Webdriver tests via PyTest</li>
+<li>easy configuration for local and remote (BrowserStack, Remote Driver) test execution</li>
+<li>support browser extensions testing through Selenium</li>
+<li>contains useful test libraries</li>
+<li>generates HTML test results report (with screenshots for failed tests)</li>
+<li>designed to be used as a module (by multiple projects if needed)</li>
+</ul>
+
+<h2>
+<a id="pre-requisities" class="anchor" href="#pre-requisities" aria-hidden="true"><span class="octicon octicon-link"></span></a>Pre-requisities</h2>
+
+<p>Install Python moodules from requirements.txt</p>
+
+<p><code>pip install -r requirements.txt</code></p>
+
+<p>To build Chrome extension from sources automatically</p>
+
+<ul>
+<li>crxmake</li>
+</ul>
+
+<pre><code>sudo apt-get install swig
+sudo pip install crxmake
+</code></pre>
+
+<p>Webdriver drivers need to be setup (ChromeDriver, InternetExplorerDriver etc.)</p>
+
+<h2>
+<a id="quick-start" class="anchor" href="#quick-start" aria-hidden="true"><span class="octicon octicon-link"></span></a>Quick Start</h2>
+
+<ol>
+<li>clone Shishito repository.
+<code>git clone git@github.com:salsita/shishito.git</code>
+</li>
+<li>add <em>salsa_webqa</em> directory into PYTHONPATH environment variable</li>
+<li>clone sample test project repository <a href="https://github.com/salsita/shishito-sample-project">https://github.com/salsita/shishito-sample-project</a>
+<code>git clone git@github.com:salsita/shishito-sample-project.git</code>
+</li>
+<li>if you want to use BrowserStack for running your tests, replace "bs_username", "bs_password" values with your credentials in <strong><em>shishito-sample-project/config/server_config.properties</em></strong>
+or pass it to runner python file as command line argument using flag --browserstack username:token</li>
+<li>install Firefox or change "driver" value to some other installed driver in <strong><em>shishito-sample-project/config/local_config.properties</em></strong>
+Available values  "BrowserStack", "Firefox", "Chrome", "IE", "PhantomJS", "Opera".</li>
+<li>run <em>google_test_runner.py</em> in sample project folder!</li>
+</ol>
+
+<p>If you use local driver, you should now observe browser being started and tests running.
+There are information about progress shown in console output.
+Once testing is finished, HTML report can be found in:</p>
+
+<pre><code>shishito-sample-project/results folder # HTML report
+shishito-sample-project/results_archive folder # zipped HTML report
+</code></pre>
+
+<h2>
+<a id="continuous-integration" class="anchor" href="#continuous-integration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Continuous Integration</h2>
+
+<p>Using Shishito with Continuous Integration solution, such as Jenkins, is easy!
+All you need to do is clone Shishito repo and add it into the PYTHONPATH.</p>
+
+<p>Example script below (Jenkins "execute shell" build step):</p>
+
+<div class="highlight highlight-bash"><pre><span class="pl-c">#!/bin/bash</span>
+<span class="pl-c">######################</span>
+<span class="pl-c"># clone Shishito  #</span>
+<span class="pl-c">######################</span>
+
+<span class="pl-c1">cd</span> <span class="pl-smi">$WORKSPACE</span>
+git clone git@github.com:salsita/shishito.git
+
+<span class="pl-c">######################</span>
+<span class="pl-c"># VARIABLES          #</span>
+<span class="pl-c">######################</span>
+
+<span class="pl-k">export</span> PYTHONPATH=<span class="pl-smi">${PYTHONPATH}</span>:/<span class="pl-smi">$WORKSPACE</span>/shishito
+
+<span class="pl-c">######################</span>
+<span class="pl-c"># SCRIPT             #</span>
+<span class="pl-c">######################</span>
+
+python google_test_runner.py</pre></div>
+
+<h2>
+<a id="command-line-options" class="anchor" href="#command-line-options" aria-hidden="true"><span class="octicon octicon-link"></span></a>Command line options</h2>
+
+<div class="highlight highlight-python"><pre>python custom_runner.py <span class="pl-k">--</span>env [browserstack_environments] <span class="pl-k">--</span>tests [tests_to_run] <span class="pl-k">--</span>browserstack [username:token]
+
+<span class="pl-k">--</span>env direct <span class="pl-c"># runs tests on browserstack combinations</span>
+             <span class="pl-c"># passed to script through BROWSERSTACK environment variable (json)</span>
+
+os.environ[<span class="pl-s"><span class="pl-pds">'</span>BROWSERSTACK<span class="pl-pds">'</span></span>] <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>{"test_suite": [{"browser": "Firefox", "browser_version": "27.0",<span class="pl-ii"></span></span>
+                             <span class="pl-s"><span class="pl-pds">'</span> "os": "Windows", "os_version": "7", "resolution": "1024x768"},<span class="pl-pds">'</span></span> \
+                             <span class="pl-s"><span class="pl-pds">'</span> {"browser": "IE", "browser_version": "10.0", "os": "Windows",<span class="pl-pds">'</span></span> \
+                             <span class="pl-s"><span class="pl-pds">'</span> "os_version": "7", "resolution": "1024x768"}]}<span class="pl-pds">'</span></span>
+
+<span class="pl-k">--</span>env versioned  <span class="pl-c"># runs on browserstack combinations that are stored in "browserstack.properties"</span>
+                 <span class="pl-c"># or "browserstack_smoke.properties" files</span>
+
+<span class="pl-k">--</span>tests smoke <span class="pl-c"># runs only tests with fixture "@pytest.mark.smoke", only for desctop</span>
+<span class="pl-k">--</span>mobile yes <span class="pl-c"># run tests on mobile browserstack combinations that are stored in "browserstack_mobile.properties" - can't be at the same time with smoke, default value is none</span>
+
+<span class="pl-k">--</span>browserstack testuser1:p84asd21d15asd454 <span class="pl-c"># authenticate on BrowserStack using user "testuser1" and token "p84asd21d15asd454"</span>
+<span class="pl-k">--</span>reporting <span class="pl-c1">all</span> <span class="pl-c"># generate reports for selenium and non selenium tests, if you want to run only selenium use value "selenium", for non selenium use "simple"</span>
+</pre></div>
+
+<p>Combinations yet unsupported by Shishito:</p>
+
+<ul>
+<li>
+<code>--mobile yes</code> together with <code>--tests smoke</code>
+</li>
+<li>
+<code>--env direct</code> together with <code>--tests smoke</code>
+</li>
+</ul>
+
+<p>If no arguments are specified, Shishito, by default, searches for BROWSERSTACK combinations in .properties files and runs all tests</p>
+
+<h2>
+<a id="run-different-tests-types-selenium-and-non-selenium" class="anchor" href="#run-different-tests-types-selenium-and-non-selenium" aria-hidden="true"><span class="octicon octicon-link"></span></a>Run different tests types (selenium and non selenium)</h2>
+
+<ul>
+<li>to do this use command line parameter: --reporting, default option is "all", other options are "selenium" and "simple"</li>
+<li>to run non selenium tests with runner: create folder "non_selenium_tests" and put there tests and conftest.py files, if project contain only non selenium tests, then in command line parameter provide --reporting simple</li>
+</ul>
+
+<h2>
+<a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configuration</h2>
+
+<p><strong><em>server_config.properties</em></strong></p>
+
+<ul>
+<li>default configuration file with test variables</li>
+<li>changes to variables should be maintained in VCS; so that configuration can be reused for automated test execution</li>
+</ul>
+
+<pre><code># General
+base_url=http://www.google.com
+driver=Firefox
+
+# Remote driver
+remote_hub=http://localhost:4444/wd/hub
+browser_version=34.0
+platform=WINDOWS
+</code></pre>
+
+<ul>
+<li>
+<em>base_url</em> - url that will be loaded by default upon start of each test</li>
+<li>
+<em>driver</em> - name of driver used. For Browserstack use "BrowserStack"</li>
+<li>
+<em>remote_hub</em> - remote driver hub. If specified &amp; BrowserStack is not used, tests will be run on remote driver (not on local browsers)</li>
+<li>
+<em>browser_version</em> - version of browser. Used for remote driver (Selenium Grid, not Browserstack)</li>
+<li>
+<em>platform</em> - OS platform. Used for remote driver (Selenium Grid, not Browserstack)</li>
+</ul>
+
+<p><strong><em>local_config.properties</em></strong></p>
+
+<ul>
+<li>if variable <em>local_execution=True</em>, script will look first search local config for test variables</li>
+<li>in case variables are not found, it will fall back to values in default <em>server_config.properties</em>
+</li>
+<li><p>changes to this file should <strong>not</strong> be maintained in VCS (they serve only for local test execution)</p></li>
+<li><p><em>conftest.py</em> - helper file that defines command line arguments, provides fixtures and other information for Shishito runner</p></li>
+</ul>
+
+<p><strong><em>browserstack.properties &amp; browserstack_smoke.properties</em></strong></p>
+
+<ul>
+<li>contains BrowserStack combinations tests should run on</li>
+<li>only used if <em>driver=BrowserStack</em> in <em>local_config.properties</em> or <em>server_config.properties</em>
+</li>
+<li>default file is <em>browserstack.properties</em>; <em>browserstack_smoke.properties</em> is used when argument <em>--tests smoke</em> is passed to Shishito runner</li>
+</ul>
+
+<h2>
+<a id="browser-extensions" class="anchor" href="#browser-extensions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Browser Extensions</h2>
+
+<p>Browser Extensions can be automatically installed before testing using Chrome or Firefox.
+This works on BrowserStack cloud as well.</p>
+
+<p>In order to automatically install browser extensions into browsers, "with_extension" property (from <em>local_config.properties</em> and/or <em>server_config.properties</em>) needs to be set to <em>true</em>.
+When folder 'extension' is available in project root, Shishito will then install any extension in this folder before testing (for appropriate browser).</p>
+
+<p>"path_to_extension_code" is optional, but once it is filled with path to extension source code folder (relative to test project root folder), Shishito will automatically build .crx file from source code, using crxmake <a href="https://github.com/bellbind/crxmake-python">https://github.com/bellbind/crxmake-python</a>, and install this extension. Building extension from source option is available only for Chrome browser now.</p>
+
+<pre><code># Extension settings
+with_extension=true
+path_to_extension_code=../test-extension/source/main
+</code></pre>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/salsita/shishito">Shishito</a> is maintained by <a href="https://github.com/salsita">salsita</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
+

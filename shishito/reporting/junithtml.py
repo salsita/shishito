@@ -28,7 +28,8 @@ class LogHTML(object):
     def __init__(self, logfile, prefix):
         logfile = os.path.expanduser(os.path.expandvars(logfile))
         self.logfile = os.path.normpath(os.path.abspath(logfile))
-        self.project_root = os.environ['SALSA_WEBQA_PROJECT']
+        # TODO will not work if shishito runner is not used
+        self.project_root = os.getcwd()
         self.screenshot_path = os.path.join(os.path.dirname(self.logfile), 'screenshots')
         self.used_screens = []
         self.prefix = prefix

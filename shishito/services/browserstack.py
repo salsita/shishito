@@ -9,7 +9,6 @@ import time
 
 
 class BrowserStackAPI(object):
-
     def get_projects(self, auth):
         url = "https://www.browserstack.com/automate/projects.json"
         r = requests.get(url, auth=auth)
@@ -22,7 +21,6 @@ class BrowserStackAPI(object):
                 url = "https://browserstack.com/automate/projects/%s.json" % project_id
                 r = requests.get(url, auth=auth)
                 return r.json()
-
 
     def get_builds(self, auth):
         url = "https://www.browserstack.com/automate/builds.json"

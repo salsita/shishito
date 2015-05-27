@@ -5,7 +5,7 @@
 """
 import requests
 import json
-from salsa_webqa.library.control_test import ControlTest
+from shishito.runtime.shishito_support import ShishitoSupport
 import os
 
 
@@ -13,11 +13,11 @@ class CircleAPI(object):
     """Handles communication with Circle CI via REST API"""
 
     def __init__(self):
-        self.test_control = ControlTest()
-        self.api_token = self.test_control.gid('circleci_api_token')
-        self.circle_username = self.test_control.gid('circleci_username')
-        self.circle_project = self.test_control.gid('circleci_project')
-        self.circle_branch = self.test_control.gid('circleci_branch')
+        self.shishito_support = ShishitoSupport()
+        self.api_token = self.shishito_support.get_opt('circleci_api_token')
+        self.circle_username = self.shishito_support.get_opt('circleci_username')
+        self.circle_project = self.shishito_support.get_opt('circleci_project')
+        self.circle_branch = self.shishito_support.get_opt('circleci_branch')
 
     def collect_artifacts(self, destination_folder):
         """downloads build artifacts from CircleCI for latest build from specific branch"""

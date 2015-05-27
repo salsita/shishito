@@ -19,16 +19,16 @@ from unittestzero import Assert
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 
-from salsa_webqa.library.control_test import ControlTest
+from shishito.runtime.shishito_support import ShishitoSupport
 
 
 class SeleniumTest(object):
     def __init__(self, driver):
         self.driver = driver
-        self.tc = ControlTest()
-        self.base_url = self.tc.gid('base_url')
-        self.default_implicit_wait = int(self.tc.gid('default_implicit_wait'))
-        self.timeout = int(self.tc.gid('timeout'))
+        self.shishito_support = ShishitoSupport()
+        self.base_url = self.shishito_support.get_opt('base_url')
+        self.default_implicit_wait = int(self.shishito_support.get_opt('default_implicit_wait'))
+        self.timeout = int(self.shishito_support.get_opt('timeout'))
 
     def save_screenshot(self, name, project_root):
         """ Saves application screenshot """
@@ -254,7 +254,7 @@ class SeleniumTest(object):
             @input_field_locator: locator of input element with type="file"
             @delay: seconds to wait for file to upload
         """
-        file_path = os.path.join(self.tc.project_root, file_path)
+        file_path = os.path.join(self.shishito_support.project_root, file_path)
         self.driver.find_element(*input_field_locator).send_keys(file_path)
         time.sleep(delay)
 

@@ -4,3 +4,5 @@ pytest-xdist
 pytest-instafail
 UnittestZero
 Jinja2
+requests
+Appium-Python-Client

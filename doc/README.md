@@ -12,13 +12,14 @@ Documentation uses Sphinx (for doc see http://sphinx-doc.org). You can install s
 
 If you want to generate documentation from shishito source codes, you have to run following command (from doc directory):
 
-``` sphinx-apidoc -M -f -o source ../shishito  ```
+``` sphinx-apidoc -M -f -o ./ ../shishito  ```
 
 or run generate_doc.sh in doc folder.
 
 ## Build doc
 
-To build documentations (create html pages) run make in doc folder:
+Once markup files are pushed (.rst files), documentation will be automatically built by Read the Docs.
+In order to generate documentations (create html pages) manually, run make in doc folder:
 
 ``` make html ```
 

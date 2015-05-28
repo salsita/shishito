@@ -1,5 +1,7 @@
 # Shishito documentation
 
+Published version hosted on Read the Docs - http://shishito.readthedocs.org/en/latest/index.html
+
 ## Requirements
 
 Documentation uses Sphinx (for doc see http://sphinx-doc.org). You can install sphinx using pip:

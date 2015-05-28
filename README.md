@@ -3,6 +3,8 @@
 Shishito is module for web and mobile application functional testing using Selenium Webdriver & Python.
 It runs tests using included libraries and generates nice test results output.
 
+Documentation - http://shishito.readthedocs.org/en/latest/index.html (hosted on Read the Docs)
+
 ## Features
 
 * runs python Selenium Webdriver tests via PyTest

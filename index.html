@@ -22,16 +22,17 @@
       <h1>
 <a id="shishito" class="anchor" href="#shishito" aria-hidden="true"><span class="octicon octicon-link"></span></a>Shishito</h1>
 
-<p>Shishito is module for web application and browser extension integration testing with Selenium Webdriver &amp; Python.
+<p>Shishito is module for web and mobile application functional testing using Selenium Webdriver &amp; Python.
 It runs tests using included libraries and generates nice test results output.</p>
+
+<p>Documentation - <a href="http://shishito.readthedocs.org/en/latest/index.html">http://shishito.readthedocs.org/en/latest/index.html</a> (hosted on Read the Docs)</p>
 
 <h2>
 <a id="features" class="anchor" href="#features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Features</h2>
 
 <ul>
 <li>runs python Selenium Webdriver tests via PyTest</li>
-<li>easy configuration for local and remote (BrowserStack, Remote Driver) test execution</li>
-<li>support browser extensions testing through Selenium</li>
+<li>easy configuration for local and remote (BrowserStack, Appium, ..) test execution</li>
 <li>contains useful test libraries</li>
 <li>generates HTML test results report (with screenshots for failed tests)</li>
 <li>designed to be used as a module (by multiple projects if needed)</li>
@@ -44,16 +45,6 @@ It runs tests using included libraries and generates nice test results output.</
 
 <p><code>pip install -r requirements.txt</code></p>
 
-<p>To build Chrome extension from sources automatically</p>
-
-<ul>
-<li>crxmake</li>
-</ul>
-
-<pre><code>sudo apt-get install swig
-sudo pip install crxmake
-</code></pre>
-
 <p>Webdriver drivers need to be setup (ChromeDriver, InternetExplorerDriver etc.)</p>
 
 <h2>
@@ -63,14 +54,16 @@ sudo pip install crxmake
 <li>clone Shishito repository.
 <code>git clone git@github.com:salsita/shishito.git</code>
 </li>
-<li>add <em>salsa_webqa</em> directory into PYTHONPATH environment variable</li>
+<li>add <em>shishito</em> directory into PYTHONPATH environment variable</li>
 <li>clone sample test project repository <a href="https://github.com/salsita/shishito-sample-project">https://github.com/salsita/shishito-sample-project</a>
 <code>git clone git@github.com:salsita/shishito-sample-project.git</code>
 </li>
 <li>if you want to use BrowserStack for running your tests, replace "bs_username", "bs_password" values with your credentials in <strong><em>shishito-sample-project/config/server_config.properties</em></strong>
 or pass it to runner python file as command line argument using flag --browserstack username:token</li>
-<li>install Firefox or change "driver" value to some other installed driver in <strong><em>shishito-sample-project/config/local_config.properties</em></strong>
-Available values  "BrowserStack", "Firefox", "Chrome", "IE", "PhantomJS", "Opera".</li>
+<li>if you want to use Saucelabs for running your tests, add your credentials to saucelabs variable in <strong><em>shishito-sample-project/config/server_config.properties</em></strong>
+or pass it to runner python file as command line argument using flag --saucelabs username:token</li>
+<li>set your preferred browser settings in <strong><em>shishito-sample-project/config/web/(browserstack|local).properties</em></strong> or for mobile apps in <strong><em>shishito-sample-project/config/mobile/appium.properties</em></strong>
+</li>
 <li>run <em>google_test_runner.py</em> in sample project folder!</li>
 </ol>
 
@@ -113,49 +106,28 @@ python google_test_runner.py</pre></div>
 <h2>
 <a id="command-line-options" class="anchor" href="#command-line-options" aria-hidden="true"><span class="octicon octicon-link"></span></a>Command line options</h2>
 
-<div class="highlight highlight-python"><pre>python custom_runner.py <span class="pl-k">--</span>env [browserstack_environments] <span class="pl-k">--</span>tests [tests_to_run] <span class="pl-k">--</span>browserstack [username:token]
+<div class="highlight highlight-python"><pre><span class="pl-k">--</span>platform web         <span class="pl-c"># define platform on which run tests (currently supported: web, mobile, generic)</span>
+<span class="pl-k">--</span>environmnet local    <span class="pl-c"># define environment in which run tests (currently supported: local, browserstack, appium, remote)</span>
+<span class="pl-k">--</span>test_directory tests <span class="pl-c"># define directory where to lookup for tests (project_root + test_directory)</span>
 
-<span class="pl-k">--</span>env direct <span class="pl-c"># runs tests on browserstack combinations</span>
-             <span class="pl-c"># passed to script through BROWSERSTACK environment variable (json)</span>
+<span class="pl-c"># supported platform/environment combinations:</span>
+<span class="pl-c">#   generic/local</span>
+<span class="pl-c">#   generic/remote</span>
+<span class="pl-c">#   web/local</span>
+<span class="pl-c">#   web/browserstack</span>
+<span class="pl-c">#   web/remote</span>
+<span class="pl-c">#   mobile/appium (can run on local/remote appium server or on saucelabs)</span>
 
-os.environ[<span class="pl-s"><span class="pl-pds">'</span>BROWSERSTACK<span class="pl-pds">'</span></span>] <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>{"test_suite": [{"browser": "Firefox", "browser_version": "27.0",<span class="pl-ii"></span></span>
-                             <span class="pl-s"><span class="pl-pds">'</span> "os": "Windows", "os_version": "7", "resolution": "1024x768"},<span class="pl-pds">'</span></span> \
-                             <span class="pl-s"><span class="pl-pds">'</span> {"browser": "IE", "browser_version": "10.0", "os": "Windows",<span class="pl-pds">'</span></span> \
-                             <span class="pl-s"><span class="pl-pds">'</span> "os_version": "7", "resolution": "1024x768"}]}<span class="pl-pds">'</span></span>
-
-<span class="pl-k">--</span>env versioned  <span class="pl-c"># runs on browserstack combinations that are stored in "browserstack.properties"</span>
-                 <span class="pl-c"># or "browserstack_smoke.properties" files</span>
-
-<span class="pl-k">--</span>tests smoke <span class="pl-c"># runs only tests with fixture "@pytest.mark.smoke", only for desctop</span>
-<span class="pl-k">--</span>mobile yes <span class="pl-c"># run tests on mobile browserstack combinations that are stored in "browserstack_mobile.properties" - can't be at the same time with smoke, default value is none</span>
+<span class="pl-k">--</span>smoke <span class="pl-c"># runs only tests with fixture "@pytest.mark.smoke"</span>
 
 <span class="pl-k">--</span>browserstack testuser1:p84asd21d15asd454 <span class="pl-c"># authenticate on BrowserStack using user "testuser1" and token "p84asd21d15asd454"</span>
-<span class="pl-k">--</span>reporting <span class="pl-c1">all</span> <span class="pl-c"># generate reports for selenium and non selenium tests, if you want to run only selenium use value "selenium", for non selenium use "simple"</span>
+<span class="pl-k">--</span>saucelabs testuser1:p84asd21d15asd454 <span class="pl-c"># authenticate on Saucelabs using user "testuser1" and token "p84asd21d15asd454"</span>
 </pre></div>
 
-<p>Combinations yet unsupported by Shishito:</p>
-
-<ul>
-<li>
-<code>--mobile yes</code> together with <code>--tests smoke</code>
-</li>
-<li>
-<code>--env direct</code> together with <code>--tests smoke</code>
-</li>
-</ul>
-
-<p>If no arguments are specified, Shishito, by default, searches for BROWSERSTACK combinations in .properties files and runs all tests</p>
+<p>If no arguments are specified, Shishito, by default, searches for settings combinations in (server|local).properties files and runs tests according to them.</p>
 
 <h2>
-<a id="run-different-tests-types-selenium-and-non-selenium" class="anchor" href="#run-different-tests-types-selenium-and-non-selenium" aria-hidden="true"><span class="octicon octicon-link"></span></a>Run different tests types (selenium and non selenium)</h2>
-
-<ul>
-<li>to do this use command line parameter: --reporting, default option is "all", other options are "selenium" and "simple"</li>
-<li>to run non selenium tests with runner: create folder "non_selenium_tests" and put there tests and conftest.py files, if project contain only non selenium tests, then in command line parameter provide --reporting simple</li>
-</ul>
-
-<h2>
-<a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configuration</h2>
+<a id="configuration-files" class="anchor" href="#configuration-files" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configuration files</h2>
 
 <p><strong><em>server_config.properties</em></strong></p>
 
@@ -164,27 +136,31 @@ os.environ[<span class="pl-s"><span class="pl-pds">'</span>BROWSERSTACK<span cla
 <li>changes to variables should be maintained in VCS; so that configuration can be reused for automated test execution</li>
 </ul>
 
-<pre><code># General
-base_url=http://www.google.com
-driver=Firefox
+<pre><code># modules
+test_platform=web
+test_environment=local
 
-# Remote driver
-remote_hub=http://localhost:4444/wd/hub
-browser_version=34.0
-platform=WINDOWS
+# test dir
+test_directory=tests
+
+# General
+base_url=http://www.google.com
+environment_configuration=Chrome
 </code></pre>
 
 <ul>
 <li>
+<em>test_platform</em> - on which platform run tests (web, mobile)</li>
+<li>
+<em>test_environment</em> - in which environment run tests (local, browserstack, appium)</li>
+<li>
+<em>test_directory</em> - in which directory lookup for tests</li>
+<li>
 <em>base_url</em> - url that will be loaded by default upon start of each test</li>
 <li>
-<em>driver</em> - name of driver used. For Browserstack use "BrowserStack"</li>
+<em>environment_configuration</em> - which configuration use from .properties file (used when tests are run without runner)</li>
 <li>
-<em>remote_hub</em> - remote driver hub. If specified &amp; BrowserStack is not used, tests will be run on remote driver (not on local browsers)</li>
-<li>
-<em>browser_version</em> - version of browser. Used for remote driver (Selenium Grid, not Browserstack)</li>
-<li>
-<em>platform</em> - OS platform. Used for remote driver (Selenium Grid, not Browserstack)</li>
+<em>remote_driver_url</em> - remote driver hub. Selenium server needs to be running on this url.</li>
 </ul>
 
 <p><strong><em>local_config.properties</em></strong></p>
@@ -193,34 +169,31 @@ platform=WINDOWS
 <li>if variable <em>local_execution=True</em>, script will look first search local config for test variables</li>
 <li>in case variables are not found, it will fall back to values in default <em>server_config.properties</em>
 </li>
-<li><p>changes to this file should <strong>not</strong> be maintained in VCS (they serve only for local test execution)</p></li>
-<li><p><em>conftest.py</em> - helper file that defines command line arguments, provides fixtures and other information for Shishito runner</p></li>
+<li>changes to this file should <strong>not</strong> be maintained in VCS (they serve only for local test execution)</li>
 </ul>
 
-<p><strong><em>browserstack.properties &amp; browserstack_smoke.properties</em></strong></p>
+<p><strong><em>&lt;platform&gt;/&lt;environment&gt;.properties</em></strong></p>
 
 <ul>
-<li>contains BrowserStack combinations tests should run on</li>
-<li>only used if <em>driver=BrowserStack</em> in <em>local_config.properties</em> or <em>server_config.properties</em>
-</li>
-<li>default file is <em>browserstack.properties</em>; <em>browserstack_smoke.properties</em> is used when argument <em>--tests smoke</em> is passed to Shishito runner</li>
+<li>contains combinations, for which the tests should be executed</li>
+<li>e.g. browser and resolution for local web browser</li>
+</ul>
+
+<p><strong><em>conftest.py</em></strong></p>
+
+<ul>
+<li>helper file that defines command line arguments, provides fixtures and other information for Shishito runner</li>
 </ul>
 
 <h2>
-<a id="browser-extensions" class="anchor" href="#browser-extensions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Browser Extensions</h2>
+<a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configuration</h2>
 
-<p>Browser Extensions can be automatically installed before testing using Chrome or Firefox.
-This works on BrowserStack cloud as well.</p>
-
-<p>In order to automatically install browser extensions into browsers, "with_extension" property (from <em>local_config.properties</em> and/or <em>server_config.properties</em>) needs to be set to <em>true</em>.
-When folder 'extension' is available in project root, Shishito will then install any extension in this folder before testing (for appropriate browser).</p>
-
-<p>"path_to_extension_code" is optional, but once it is filled with path to extension source code folder (relative to test project root folder), Shishito will automatically build .crx file from source code, using crxmake <a href="https://github.com/bellbind/crxmake-python">https://github.com/bellbind/crxmake-python</a>, and install this extension. Building extension from source option is available only for Chrome browser now.</p>
-
-<pre><code># Extension settings
-with_extension=true
-path_to_extension_code=../test-extension/source/main
-</code></pre>
+<p>Shishito can be configured with command lines arguments and config files. Some configuration values are also added as arguments to PyTest (depends on test environment).
+Configuration values are looked up according to these priorities:
+1. pytest.config
+1. command line arguments
+1. local configuration file (if enabled: local_execution=True)
+1. server cofiguration file</p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/salsita/shishito">Shishito</a> is maintained by <a href="https://github.com/salsita">salsita</a>.</span>

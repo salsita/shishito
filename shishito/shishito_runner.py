@@ -9,6 +9,7 @@ import time
 
 from shishito.reporting.reporter import Reporter
 from shishito.runtime.shishito_support import ShishitoSupport
+from shishito.services.testrail_api import TestRail
 
 
 class ShishitoRunner(object):
@@ -56,6 +57,8 @@ class ShishitoRunner(object):
                             help='BrowserStack credentials; format: "username:token"')
         parser.add_argument('--saucelabs',
                             help='Saucelabs credentials; format: "username:token"')
+        parser.add_argument('--testrail',
+                            help='TestRail Test Management tool credentials; format: "username:password"')
 
         args = parser.parse_args()
 
@@ -63,7 +66,7 @@ class ShishitoRunner(object):
         return vars(args)
 
     def run_tests(self):
-        """ Execute tests for given platform and environment. Platform and Environmet can be passed as command lines
+        """ Execute tests for given platform and environment. Platform and Environment can be passed as command lines
         argument or settings in config file.
         """
 
@@ -85,3 +88,19 @@ class ShishitoRunner(object):
         # archive results + generate combined report
         self.reporter.archive_results()
         self.reporter.generate_combined_report()
+
+        # upload results to TestRail test management app
+        test_rail_credentials = self.shishito_support.get_opt('test_rail')
+        if test_rail_credentials:
+            try:
+                tr_user, tr_password = test_rail_credentials.split(':', 1)
+            except (AttributeError, ValueError):
+                raise ValueError('TestRail credentials were not specified! Unable to connect to TestRail.')
+
+            test_rail = TestRail(tr_user, tr_password, self.test_timestamp)
+            test_rail.create_missing_test_cases(project_id=test_rail.project_id,
+                                                section_id=test_rail.section_id)
+            test_run = test_rail.add_test_run(project_id=test_rail.project_id,
+                                              test_plan_id=test_rail.test_plan_id,
+                                              suite_id=test_rail.suite_id)
+            test_rail.add_test_results(test_run)

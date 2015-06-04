@@ -99,6 +99,10 @@ def pytest_addoption(parser):
                     dest="prefix", metavar="str", default=None,
                     help="prepend prefix to classnames in html output")
 
+    # TESTRAIL
+    parser.addoption("--test_rail", action="store", default=None,
+                     help="TestRail Test Management tool credentials")
+
 
 def pytest_configure(config):
     htmlpath = config.option.htmlpath

@@ -1,6 +1,8 @@
+import glob
 import os
 import shutil
 import time
+import xml.etree.ElementTree as ET
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -8,7 +10,6 @@ from shishito.runtime.shishito_support import ShishitoSupport
 
 
 class Reporter(object):
-
     def __init__(self, project_root=None, test_timestamp=None):
         self.project_root = project_root or ShishitoSupport().project_root
         self.current_folder = os.path.dirname(os.path.abspath(__file__))
@@ -52,3 +53,22 @@ class Reporter(object):
             os.path.join(self.current_folder, 'resources', 'combined_report.js'),
             os.path.join(self.project_root, 'results', self.timestamp)
         )
+
+    def get_xunit_test_cases(self, timestamp):
+        """ Parses test names and results from xUnit result file
+        :return: Dictionary of test-case (name, result) for each report file """
+        result_folder = os.path.join(self.project_root, 'results', timestamp)
+        files = glob.glob(os.path.join(result_folder, '*.xml'))
+        test_cases = []
+        for result_file in files:
+            case = {'name': os.path.basename(result_file), 'cases': []}
+            tree = ET.parse(result_file)
+            root = tree.getroot()
+            for child in root:
+                if child.tag == 'testcase':
+                    case['cases'].append({
+                        'name': child.get('name'),
+                        'result': 'failure' if child.findall('failure') else 'success',
+                    })
+            test_cases.append(case)
+        return test_cases

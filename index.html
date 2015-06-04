@@ -122,6 +122,7 @@ python google_test_runner.py</pre></div>
 
 <span class="pl-k">--</span>browserstack testuser1:p84asd21d15asd454 <span class="pl-c"># authenticate on BrowserStack using user "testuser1" and token "p84asd21d15asd454"</span>
 <span class="pl-k">--</span>saucelabs testuser1:p84asd21d15asd454 <span class="pl-c"># authenticate on Saucelabs using user "testuser1" and token "p84asd21d15asd454"</span>
+<span class="pl-k">--</span>test_rail user@email.com:<span class="pl-c1">1</span>AVFS51AS <span class="pl-c"># authenticate on TestRail using user email "user@email.com" and password "1AVFS51AS"</span>
 </pre></div>
 
 <p>If no arguments are specified, Shishito, by default, searches for settings combinations in (server|local).properties files and runs tests according to them.</p>
@@ -194,6 +195,29 @@ Configuration values are looked up according to these priorities:
 1. command line arguments
 1. local configuration file (if enabled: local_execution=True)
 1. server cofiguration file</p>
+
+<h2>
+<a id="test-management-support" class="anchor" href="#test-management-support" aria-hidden="true"><span class="octicon octicon-link"></span></a>Test Management Support</h2>
+
+<p>Shishito support upload of test results to TestRail test management app.
+Following properties in server/local config have to be filled:</p>
+
+<ul>
+<li>
+<em>test_rail</em> - credentials for test rail. Can be also left empty and passed via cmd argument (see above)</li>
+<li>
+<em>test_rail_url</em> - URL of test rail instance. (example: <a href="https://mycompany.testrail.net">https://mycompany.testrail.net</a>)</li>
+<li>
+<em>test_rail_project_id</em> - ID of TestRail project (example: 1)</li>
+<li>
+<em>test_rail_section_id</em> - ID of TestRail test section (example: 2)</li>
+<li>
+<em>test_rail_test_plan_id</em> - ID of TestRail test plan (example: 5)</li>
+<li>
+<em>test_rail_suite_id</em> - ID of TestRail test suite (example: 1)</li>
+</ul>
+
+<p>For further information, see TestRail API documentation <a href="http://docs.gurock.com/testrail-api2/start">http://docs.gurock.com/testrail-api2/start</a>.</p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/salsita/shishito">Shishito</a> is maintained by <a href="https://github.com/salsita">salsita</a>.</span>

@@ -56,6 +56,7 @@ class Reporter(object):
 
     def get_xunit_test_cases(self, timestamp):
         """ Parses test names and results from xUnit result file
+
         :return: Dictionary of test-case (name, result) for each report file """
         result_folder = os.path.join(self.project_root, 'results', timestamp)
         files = glob.glob(os.path.join(result_folder, '*.xml'))

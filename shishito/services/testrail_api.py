@@ -1,5 +1,9 @@
 # /usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+@author: Vojtech Burian
+@summary: TestRail API functions
+"""
 import json
 
 import requests
@@ -39,6 +43,7 @@ class TestRail(object):
 
     def tr_get(self, url):
         """ GET request for TestRail API
+
         :param url: url endpoint snippet
         :return: response JSON
         """
@@ -46,6 +51,7 @@ class TestRail(object):
 
     def tr_post(self, url, payload):
         """ GET request for TestRail API
+
         :param url: url endpoint snippet
         :param payload: payload for the POST api call
         :return: response object
@@ -55,6 +61,7 @@ class TestRail(object):
 
     def get_all_test_cases(self):
         """ Gets list of all test-cases from certain project
+
         :return: list of test-cases (names = strings)
         """
         test_case_list = self.tr_get('get_cases/{}'.format(self.project_id))
@@ -62,6 +69,7 @@ class TestRail(object):
 
     def create_test_case(self, title):
         """ Creates a new test case in TestRail
+
         :param title: Title of the test-case
         :return: response object
         """
@@ -70,6 +78,7 @@ class TestRail(object):
     def create_missing_test_cases(self):
         """ Creates new test-cases on TestRail for those in test project (those run by pytest).
          Does not create test-cases if already existed on TestRail.
+
         :return: list of test-cases that could not be created on TestRail (post failure)
         """
         post_errors = []
@@ -88,6 +97,7 @@ class TestRail(object):
 
     def add_test_run(self):
         """ Adds new test run under certain test plan into TestRail
+
         :return: dictionary of TestRail run names & IDs
         """
         runs_created = []
@@ -105,6 +115,7 @@ class TestRail(object):
 
     def add_test_results(self, test_runs):
         """ Add test results for specific test run based on parsed xUnit results
+
         :return: list of test run IDs for which results could not be added (post failure)
         """
         post_errors = []

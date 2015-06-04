@@ -41,4 +41,12 @@ shishito.services.jira_zephyr_api module
     :undoc-members:
     :show-inheritance:
 
+shishito.services.testrail_api module
+-------------------------------------
+
+.. automodule:: shishito.services.testrail_api
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 

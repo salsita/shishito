@@ -3,7 +3,7 @@
 """
 @author: Vojtech Burian
 @summary: Common selenium webdriver related functions.
- Helper functions that abstract often basic webdriver operations into more usable functional blocks.
+Helper functions that abstract often basic webdriver operations into more usable functional blocks.
 """
 
 import time

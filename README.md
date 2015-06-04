@@ -90,6 +90,7 @@ python google_test_runner.py
 
 --browserstack testuser1:p84asd21d15asd454 # authenticate on BrowserStack using user "testuser1" and token "p84asd21d15asd454"
 --saucelabs testuser1:p84asd21d15asd454 # authenticate on Saucelabs using user "testuser1" and token "p84asd21d15asd454"
+--test_rail user@email.com:1AVFS51AS # authenticate on TestRail using user email "user@email.com" and password "1AVFS51AS"
 
 ```
 
@@ -145,3 +146,17 @@ Configuration values are looked up according to these priorities:
 1. command line arguments
 1. local configuration file (if enabled: local_execution=True)
 1. server cofiguration file
+
+## Test Management Support
+
+Shishito support upload of test results to TestRail test management app.
+Following properties in server/local config have to be filled:
+
+* *test_rail* - credentials for test rail. Can be also left empty and passed via cmd argument (see above)
+* *test_rail_url* - URL of test rail instance. (example: https://mycompany.testrail.net)
+* *test_rail_project_id* - ID of TestRail project (example: 1)
+* *test_rail_section_id* - ID of TestRail test section (example: 2)
+* *test_rail_test_plan_id* - ID of TestRail test plan (example: 5)
+* *test_rail_suite_id* - ID of TestRail test suite (example: 1)
+
+For further information, see TestRail API documentation http://docs.gurock.com/testrail-api2/start.

@@ -1,11 +1,11 @@
-from shishito.reporting.reporter import Reporter
-from shishito.runtime.shishito_support import ShishitoSupport
-
-__author__ = 'vojta'
-
+# /usr/bin/env python
+# -*- coding: utf-8 -*-
 import json
 
 import requests
+
+from shishito.reporting.reporter import Reporter
+from shishito.runtime.shishito_support import ShishitoSupport
 
 
 class TestRail(object):
@@ -31,7 +31,12 @@ class TestRail(object):
         self.default_headers = {'Content-Type': 'application/json'}
         self.uri_base = self.test_rail_instance + '/index.php?/api/v2/'
 
-    # GET request for TestRail API
+    def post_results(self):
+        """ Create test-cases on TestRail, adds a new test run and update results for the run """
+        self.create_missing_test_cases()
+        test_run = self.add_test_run()
+        self.add_test_results(test_run)
+
     def tr_get(self, url):
         """ GET request for TestRail API
         :param url: url endpoint snippet
@@ -39,7 +44,6 @@ class TestRail(object):
         """
         return requests.get(self.uri_base + url, auth=(self.user, self.password), headers=self.default_headers).json()
 
-    # POST request for TestRail API
     def tr_post(self, url, payload):
         """ GET request for TestRail API
         :param url: url endpoint snippet
@@ -49,55 +53,50 @@ class TestRail(object):
         return requests.post(self.uri_base + url, auth=(self.user, self.password), data=json.dumps(payload),
                              headers=self.default_headers)
 
-    def get_all_test_cases(self, project_id):
+    def get_all_test_cases(self):
         """ Gets list of all test-cases from certain project
-        :param project_id: TestRail project ID
         :return: list of test-cases (names = strings)
         """
-        test_case_list = self.tr_get('get_cases/{}'.format(project_id))
+        test_case_list = self.tr_get('get_cases/{}'.format(self.project_id))
         return [{'title': test_case['title'], 'id': test_case['id']} for test_case in test_case_list]
 
-    def create_test_case(self, title, section_id):
+    def create_test_case(self, title):
         """ Creates a new test case in TestRail
         :param title: Title of the test-case
-        :param section_id: Section ID in which test-case should belong
         :return: response object
         """
-        return self.tr_post('add_case/{}'.format(section_id), {"title": title})
+        return self.tr_post('add_case/{}'.format(self.section_id), {"title": title})
 
-    def create_missing_test_cases(self, project_id, section_id):
+    def create_missing_test_cases(self):
         """ Creates new test-cases on TestRail for those in test project (those run by pytest).
          Does not create test-cases if already existed on TestRail.
-        :param project_id: TestRail project ID
-        :param section_id: TestRail test-case section ID (~ category, e.g. "Smoke tests")
         :return: list of test-cases that could not be created on TestRail (post failure)
         """
         post_errors = []
-        test_case_names = [item['title'] for item in self.get_all_test_cases(project_id)]
+        test_case_names = [item['title'] for item in self.get_all_test_cases()]
+        # Iterate over results for each environment combination
         for result_combination in self.shishito_results:
+            # Create TestRail entry for every test-case in combination (if missing)
             for item in result_combination['cases']:
                 if item['name'] not in test_case_names:
-                    response = self.create_test_case(item['name'], section_id)
+                    response = self.create_test_case(item['name'])
                     if response.status_code != requests.codes.ok:
                         post_errors.append(item['name'])
                     else:
                         test_case_names.append(item['name'])
         return post_errors
 
-    def add_test_run(self, project_id, test_plan_id, suite_id):
+    def add_test_run(self):
         """ Adds new test run under certain test plan into TestRail
-        :param test_plan_id: TestRail test plan ID
-        :param suite_id: TestRail test suite ID
-        :param test_run_name: Name of the test run
-        :param test_case_ids: List of IDs of test-cases to be added into test run
         :return: dictionary of TestRail run names & IDs
         """
         runs_created = []
+        # Iterate over results for each environment combination
         for result_combination in self.shishito_results:
             run_name = '{} ({})'.format(result_combination['name'][:-4], self.timestamp)
-            test_run = {"case_ids": [case['id'] for case in self.get_all_test_cases(project_id)]}
-            result = self.tr_post('add_plan_entry/{}'.format(test_plan_id),
-                                  {"suite_id": suite_id, "name": run_name, "runs": [test_run]}).json()
+            test_run = {"case_ids": [case['id'] for case in self.get_all_test_cases()]}
+            result = self.tr_post('add_plan_entry/{}'.format(self.test_plan_id),
+                                  {"suite_id": self.suite_id, "name": run_name, "runs": [test_run]}).json()
             # lookup test run id
             for run in result['runs']:
                 if run['name'] == run_name:
@@ -106,26 +105,26 @@ class TestRail(object):
 
     def add_test_results(self, test_runs):
         """ Add test results for specific test run based on parsed xUnit results
-        :param test_run_id: TestRail test run ID
         :return: list of test run IDs for which results could not be added (post failure)
         """
         post_errors = []
-        for run in test_runs:
+        run_ids = {r['combination']: r['id'] for r in test_runs}
+        # Iterate over results for each environment combination
+        for result in self.shishito_results:
+            run_id = run_ids.get(result['name'])
+            if not run_id:
+                continue
+
             test_results = []
-            tr_tests = self.tr_get('get_tests/{}'.format(run['id']))
-            for result_combination in self.shishito_results:
-                if result_combination['name'] == run['combination']:
-                    for xunit_test in result_combination['cases']:
-                        for test_rail_test in tr_tests:
-                            if xunit_test['name'] == test_rail_test['title']:
-                                result_id = None
-                                if xunit_test['result'] == 'success':
-                                    result_id = 1
-                                elif xunit_test['result'] == 'failure':
-                                    result_id = 5
-                                if result_id:
-                                    test_results.append({'test_id': test_rail_test['id'], 'status_id': result_id})
-                    response = self.tr_post('add_results/{}'.format(run['id']), {'results': test_results})
-                    if response.status_code != requests.codes.ok:
-                        post_errors.append(run['id'])
+            tr_tests = {t['title']: t['id'] for t in self.tr_get('get_tests/{}'.format(run_id))}
+            # Create TestRail entry for every test-case in combination (if missing)
+            for xunit_test in result['cases']:
+                tr_test_id = tr_tests.get(xunit_test['name'])
+                result_id = {'success': 1, 'failure': 5}.get(xunit_test['result'])
+                if tr_test_id and result_id:
+                    test_results.append({'test_id': tr_test_id, 'status_id': result_id})
+
+            response = self.tr_post('add_results/{}'.format(run_id), {'results': test_results})
+            if response.status_code != requests.codes.ok:
+                post_errors.append(run_id)
         return post_errors

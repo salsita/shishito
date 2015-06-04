@@ -66,9 +66,9 @@ class Reporter(object):
             root = tree.getroot()
             for child in root:
                 if child.tag == 'testcase':
-                    if child.findall('failure'):
-                        case['cases'].append({'name': child.get('name'), 'result': 'failure'})
-                    else:
-                        case['cases'].append({'name': child.get('name'), 'result': 'success'})
+                    case['cases'].append({
+                        'name': child.get('name'),
+                        'result': 'failure' if child.findall('failure') else 'success',
+                    })
             test_cases.append(case)
         return test_cases

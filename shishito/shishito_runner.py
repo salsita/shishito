@@ -57,7 +57,7 @@ class ShishitoRunner(object):
                             help='BrowserStack credentials; format: "username:token"')
         parser.add_argument('--saucelabs',
                             help='Saucelabs credentials; format: "username:token"')
-        parser.add_argument('--testrail',
+        parser.add_argument('--test_rail',
                             help='TestRail Test Management tool credentials; format: "username:password"')
 
         args = parser.parse_args()
@@ -98,9 +98,4 @@ class ShishitoRunner(object):
                 raise ValueError('TestRail credentials were not specified! Unable to connect to TestRail.')
 
             test_rail = TestRail(tr_user, tr_password, self.test_timestamp)
-            test_rail.create_missing_test_cases(project_id=test_rail.project_id,
-                                                section_id=test_rail.section_id)
-            test_run = test_rail.add_test_run(project_id=test_rail.project_id,
-                                              test_plan_id=test_rail.test_plan_id,
-                                              suite_id=test_rail.suite_id)
-            test_rail.add_test_results(test_run)
+            test_rail.post_results()

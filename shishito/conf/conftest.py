@@ -100,7 +100,7 @@ def pytest_addoption(parser):
                     help="prepend prefix to classnames in html output")
 
     # TESTRAIL
-    parser.addoption("--testrail", action="store", default=None,
+    parser.addoption("--test_rail", action="store", default=None,
                      help="TestRail Test Management tool credentials")
 
 

@@ -83,6 +83,7 @@ python google_test_runner.py
 #   web/browserstack
 #   web/remote
 #   mobile/appium (can run on local/remote appium server or on saucelabs)
+#   node_webkit/node_webkit
 
 --smoke # runs only tests with fixture "@pytest.mark.smoke"
 
@@ -139,7 +140,34 @@ environment_configuration=Chrome
 
 Shishito can be configured with command lines arguments and config files. Some configuration values are also added as arguments to PyTest (depends on test environment).
 Configuration values are looked up according to these priorities:
+
 1. pytest.config
 1. command line arguments
 1. local configuration file (if enabled: local_execution=True)
 1. server cofiguration file
+
+### Node-webkit configuration
+Shishito is able to run tests against node-webkit applications. Current implementation does not allow tester to specify based URL, just to run application from URL directly specified within application.
+Creating of webdriver driver object is done by specific [chromedriver|https://github.com/nwjs/nw.js/wiki/Chromedriver] which has to be placed in same directory as node-webkit application. 
+Chromedriver will search for node-webkit binaries and start the application. Binaries have to have specific names otherwise chromedriver won't find them.  
+Node-webkit binary must have name:
+
+* For Linux: `nw`
+* For Windows: `nw.exe`
+* For OS X: `node-webkit.app`
+
+#### Troubleshooting for Node-webkit platform
+If you see exception similar to one below
+
+```
+   raise WebDriverException(
+       \"\'\" + os.path.basename(self.path) + \"\' executable needs to be \
+           available in the path. Please look at \
+           http://docs.seleniumhq.org/download/#thirdPartyDrivers \
+           and read up at \
+\>                   http://code.google.com/p/selenium/wiki/ChromeDriver")
+E    WebDriverException: Message: 'chromedriver' executable needs to be available in the path. Please look at http://docs.seleniumhq.org/download/#thirdPartyDrivers and read up at http://code.google.com/p/selenium/wiki/ChromeDriver
+
+/usr/local/lib/python2.7/dist-packages/selenium/webdriver/chrome/service.py:70: WebDriverException
+```
+You need to check Chromedriver file access rights mainly in Linux or OS X, Windows should be ok. 

@@ -56,6 +56,8 @@ class ShishitoRunner(object):
                             help='BrowserStack credentials; format: "username:token"')
         parser.add_argument('--saucelabs',
                             help='Saucelabs credentials; format: "username:token"')
+        parser.add_argument('--node_webkit_path',
+                            help='Path to chromedriver located in same dirctory as node-webkit application')
 
         args = parser.parse_args()
 

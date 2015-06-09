@@ -148,7 +148,7 @@ Configuration values are looked up according to these priorities:
 
 ### Node-webkit configuration
 Shishito is able to run tests against node-webkit applications. Current implementation does not allow tester to specify based URL, just to run application from URL directly specified within application.
-Creating of webdriver driver object is done by specific [chromedriver|https://github.com/nwjs/nw.js/wiki/Chromedriver] which has to be placed in same directory as node-webkit application. 
+Creating of webdriver driver object is done by specific [chromedriver](https://github.com/nwjs/nw.js/wiki/Chromedriver) which has to be placed in same directory as node-webkit application. 
 Chromedriver will search for node-webkit binaries and start the application. Binaries have to have specific names otherwise chromedriver won't find them.  
 Node-webkit binary must have name:
 

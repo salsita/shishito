@@ -64,7 +64,7 @@ class TestRail(object):
 
         :return: list of test-cases (names = strings)
         """
-        test_case_list = self.tr_get('get_cases/{}'.format(self.project_id))
+        test_case_list = self.tr_get('get_cases/{}&section_id={}'.format(self.project_id, self.section_id))
         return [{'title': test_case['title'], 'id': test_case['id']} for test_case in test_case_list]
 
     def create_test_case(self, title):

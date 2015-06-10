@@ -33,13 +33,14 @@ class ControlEnvironment(ShishitoEnvironment):
         """
         last_slash = node_webkit_path.rfind(os.path.sep)
         node_webkit_dir = node_webkit_path[:last_slash]
-        aut_os = sys.platform
+        aut_os = sys.platform.lower()
 
+        # check whether node-webkit apps are correct based on OS on which test are executed
         if "linux" in aut_os:
             return os.path.exists(node_webkit_dir + os.path.sep + "nw")
-        elif "os x" in aut_os:
+        elif "darwin" in aut_os:
             return os.path.exists(node_webkit_dir + os.path.sep + "node-webkit.app")
-        elif "windows" in aut_os:
+        elif "win" in aut_os:
             return os.path.exists(node_webkit_dir + os.path.sep + "nw.exe")
         else:
             return False

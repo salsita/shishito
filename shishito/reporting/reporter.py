@@ -67,9 +67,15 @@ class Reporter(object):
             root = tree.getroot()
             for child in root:
                 if child.tag == 'testcase':
-                    case['cases'].append({
-                        'name': child.get('name'),
-                        'result': 'failure' if child.findall('failure') else 'success',
-                    })
+                    failure = child.find('failure')
+                    entry = {'name': child.get('name')}
+                    # ET Element object returns bool False, so condition needs to check against None value
+                    if failure is not None:
+                        entry['result'] = 'failure'
+                        entry['failure_message'] = failure.text
+                    else:
+                        entry['result'] = 'success'
+                        entry['failure_message'] = None
+                    case['cases'].append(entry)
             test_cases.append(case)
         return test_cases

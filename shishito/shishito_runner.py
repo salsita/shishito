@@ -59,7 +59,8 @@ class ShishitoRunner(object):
                             help='Saucelabs credentials; format: "username:token"')
         parser.add_argument('--test_rail',
                             help='TestRail Test Management tool credentials; format: "username:password"')
-
+        parser.add_argument('--app',
+                            help='Path to appium application')
         args = parser.parse_args()
 
         # return args dict --> for use in other classes

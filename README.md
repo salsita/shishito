@@ -156,6 +156,15 @@ Node-webkit binary must have name:
 * For Windows: `nw.exe`
 * For OS X: `node-webkit.app`
 
+#### TEMPORARY SCREENSHOT ON FAILURE FUNCTIONALITY
+Due to [issue in Node-webkit chromedriver](https://code.google.com/p/chromedriver/issues/detail?id=816); there is added 
+temporary screenshot on failure functionality using [pyscreenshot module](https://pypi.python.org/pypi/pyscreenshot). This functionality takes screenshot of whole desktop not only node-webkit 
+application window. This issue should be fixed in chromedriver 2.15. There is alpha version of node-webkit chromedriver v2.15.
+This functionality is going to be removed once issue is fixed.
+
+**Note**: Ubuntu: It is necessary to install also python-imaging
+ `sudo apt-get install python-imaging`
+
 #### Troubleshooting for Node-webkit platform
 If you see exception similar to one below
 

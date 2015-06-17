@@ -14,7 +14,7 @@ class ControlTest(ShishitoControlTest):
 
     def start_browser(self):
         # call browser from proper environment
-        self.driver = self.test_environment.call_browser('')
+        self.driver = self.test_environment.call_browser()
 
         return self.driver
 

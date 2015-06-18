@@ -11,7 +11,6 @@ from shishito.reporting.reporter import Reporter
 from shishito.runtime.shishito_support import ShishitoSupport
 from shishito.services.testrail_api import TestRail
 
-
 class ShishitoRunner(object):
     """ Base shishito test runner.
 
@@ -59,6 +58,8 @@ class ShishitoRunner(object):
                             help='Saucelabs credentials; format: "username:token"')
         parser.add_argument('--test_rail',
                             help='TestRail Test Management tool credentials; format: "username:password"')
+        parser.add_argument('--node_webkit_chromedriver_path',
+                            help='Path to chromedriver located in same directory as node-webkit application')
 
         args = parser.parse_args()
 

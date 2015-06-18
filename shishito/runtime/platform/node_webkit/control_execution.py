@@ -2,7 +2,7 @@ from shishito.runtime.platform.shishito_execution import ShishitoExecution
 
 
 class ControlExecution(ShishitoExecution):
-    """ ControlExecution for generic platform"""
+    """ ControlExecution for node-webkit platform"""
 
     def get_test_result_prefix(self, config_section):
         """ Create string prefix for test results.
@@ -11,9 +11,9 @@ class ControlExecution(ShishitoExecution):
         :return: str with test result prefix
         """
 
-        return 'generic'
+        return 'node_webkit'
 
     def run_tests(self):
-        """ Trigger PyTest runner. Run PyTest for for generic tests. """
+        """ Trigger PyTest runner. Run PyTest for for node-webkit tests. """
 
-        return self.trigger_pytest('generic')
+        return self.trigger_pytest('node_webkit')

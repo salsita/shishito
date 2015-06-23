@@ -58,7 +58,7 @@ class ControlEnvironment(ShishitoEnvironment):
             '--platformName': '--platformName=%s' % self.shishito_support.get_opt(config_section, 'platformName'),
             '--platformVersion': '--platformVersion=%s' % self.shishito_support.get_opt(config_section, 'platformVersion'),
             '--deviceName': '--deviceName=%s' % self.shishito_support.get_opt(config_section, 'deviceName'),
-            '--app': '--app=%s' % (self.shishito_support.get_opt('app') or self.shishito_support.get_opt(config_section, 'app')),
+            '--app': '--app=%s' % (self.shishito_support.get_opt('app') or self.shishito_support.get_opt(config_section, 'app'))
         }
 
         saucelabs = self.shishito_support.get_opt('saucelabs')

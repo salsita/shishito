@@ -60,7 +60,8 @@ class ShishitoRunner(object):
                             help='TestRail Test Management tool credentials; format: "username:password"')
         parser.add_argument('--node_webkit_chromedriver_path',
                             help='Path to chromedriver located in same directory as node-webkit application')
-
+        parser.add_argument('--app',
+                            help='Path to appium application')
         args = parser.parse_args()
 
         # return args dict --> for use in other classes

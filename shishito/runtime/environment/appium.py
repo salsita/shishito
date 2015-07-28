@@ -37,13 +37,13 @@ class ControlEnvironment(ShishitoEnvironment):
         """
 
         get_opt = self.shishito_support.get_opt
-
         return {
             'platformName': get_opt(config_section, 'platformName'),
             'platformVersion': get_opt(config_section, 'platformVersion'),
             'deviceName': get_opt(config_section, 'deviceName'),
             'app': get_opt('app') or get_opt(config_section, 'app'),
             'appiumVersion': get_opt(config_section, 'appiumVersion'),
+            'autoAcceptAlerts': True if get_opt(config_section, 'autoAcceptAlerts').lower() == 'true' else False,
             'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
         }
 
@@ -58,6 +58,7 @@ class ControlEnvironment(ShishitoEnvironment):
             '--platformName': '--platformName=%s' % self.shishito_support.get_opt(config_section, 'platformName'),
             '--platformVersion': '--platformVersion=%s' % self.shishito_support.get_opt(config_section, 'platformVersion'),
             '--deviceName': '--deviceName=%s' % self.shishito_support.get_opt(config_section, 'deviceName'),
+            '--autoAcceptAlerts': '--autoAcceptAlerts=%s' % self.shishito_support.get_opt(config_section, 'autoAcceptAlerts'),
             '--app': '--app=%s' % (self.shishito_support.get_opt('app') or self.shishito_support.get_opt(config_section, 'app'))
         }
 

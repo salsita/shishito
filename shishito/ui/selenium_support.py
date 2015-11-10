@@ -40,7 +40,7 @@ class SeleniumTest(object):
     def save_file_from_url(self, file_path, url):
         """ Saves file from url """
         if os.path.isfile(file_path):
-            print 'File %s already exists.' % file_path
+            print('File %s already exists.' % file_path)
             return
 
         response = requests.get(url, stream=True)

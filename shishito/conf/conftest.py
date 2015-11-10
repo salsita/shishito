@@ -141,12 +141,12 @@ def test_status(request):
         # request.node is an "item" because we use the default
         # "function" scope
         if request.node.rep_setup.failed:
-            print "setting up a test failed!", request.node.nodeid
+            print("setting up a test failed!", request.node.nodeid)
             test_info.set_test_info('failed_setup', test_name)
         elif request.node.rep_setup.passed:
             if request.node.rep_call.failed:
                 test_info.set_test_info('failed_execution', test_name)
-                print "executing test failed", request.node.nodeid
+                print("executing test failed", request.node.nodeid)
 
     request.addfinalizer(fin)
     test_info.set_test_info('passed', test_name)

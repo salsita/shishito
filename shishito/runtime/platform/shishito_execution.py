@@ -4,6 +4,7 @@
 """
 
 import os
+import sys
 import pytest
 
 
@@ -36,10 +37,9 @@ class ShishitoExecution(object):
         test_status = 0
 
         for config_section in self.shishito_support.env_config.sections():
-            print 'Running combination: ' + config_section
-            tmp_test_status = self.trigger_pytest(config_section)
-            if tmp_test_status != 0:
-                test_status = tmp_test_status
+            print('Running combination: ' + config_section)
+            test_status = self.trigger_pytest(config_section)
+
         return test_status
 
     def trigger_pytest(self, config_section):
@@ -81,6 +81,8 @@ class ShishitoExecution(object):
         ]
 
         pytest_arguments.extend(pytest_arguments_dict.values())
+        if sys.version_info.major > 2:
+            pytest_arguments.extend(['-p', 'pytest_imports'])   # import parser addoption to support extra options
 
         # set pytest parallel execution argument
         parallel_tests = int(self.shishito_support.get_opt('parallel_tests'))

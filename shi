@@ -1,0 +1,53 @@
+#!/bin/bash
+# - Create virtenv for python3 if needed
+# - install dependencies
+# - find root dir (with config/) or install project template
+# - run tests
+set -e
+
+	# find project root dir, print it or ''
+find_root()
+{
+	while true; do
+		if [ -d 'config' -a -f 'config/local_config.properties' ]; then
+			pwd -P
+			break
+		fi
+		[ '/' != "`pwd`" ] || break
+		cd ..
+	done
+}
+
+SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd -P)
+export VIRTUAL_ENV="$SCRIPT_DIR/venv"
+PROJECT_TAR="$SCRIPT_DIR/project_tmpl.tgz"
+
+
+	# create venv if needed
+if ! [ -d "$VIRTUAL_ENV" ]; then
+	python3 -m venv "$VIRTUAL_ENV"
+	"$VIRTUAL_ENV/bin/pip" install -r "$SCRIPT_DIR/requirements.txt"
+fi
+
+
+	# find project root dir or create a new project
+root_dir=`find_root`
+if [ -z "$root_dir" ]; then
+	printf "%s\n%s " "PyTest Project not found in '`pwd -P`'" "Would you like to create it? [y/n]"
+	read answer
+	if [ "$answer" = 'y' -o "$answer" = 'Y' ]; then
+		tar xzvf "$PROJECT_TAR"
+	else
+		echo "Project config not found, exiting..."
+	fi
+	exit 1
+else
+	cd "$root_dir"
+fi
+
+	# run shishito pytest
+export PATH="$VIRTUAL_ENV/bin:$PATH"
+export PYTHONPATH="$SCRIPT_DIR"
+
+"$VIRTUAL_ENV/bin/python3" -c "from shishito.shishito_runner import ShishitoRunner
+ShishitoRunner('$(pwd -P)').run_tests()" "$@"

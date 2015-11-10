@@ -47,7 +47,7 @@ class Reporter(object):
         output = template.render(template_vars)
         formatted_output = output.encode('utf8').strip()
         final_report = open(os.path.join(self.project_root, 'results', self.timestamp, 'CombinedReport.html'), 'w')
-        final_report.write(formatted_output)
+        final_report.write(formatted_output.decode('utf8'))
         final_report.close()
         shutil.copy(
             os.path.join(self.current_folder, 'resources', 'combined_report.js'),

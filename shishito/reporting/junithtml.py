@@ -185,7 +185,6 @@ class LogHTML(object):
             if report.longrepr:
                 log = html.div(class_='log')
                 for line in str(report.longrepr).splitlines():
-                    line = line.decode('utf8')
                     separator = line.startswith('_ ' * 10)
                     if separator:
                         log.append(line[:80])

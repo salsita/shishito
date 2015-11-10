@@ -71,7 +71,7 @@ class BrowserStackAPI(object):
         counter = 0
         session_available = self.is_session_available(auth)
         while not session_available:
-            print 'No BrowserStack session available. Waiting for %s minutes...' % wait_delay
+            print('No BrowserStack session available. Waiting for %s minutes...' % wait_delay)
             if counter >= wait_steps:
                 sys.exit('No BrowserStack session got available'
                          ' after %s minutes. No test will be executed.' % wait_total)

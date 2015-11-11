@@ -13,7 +13,3 @@ class ControlExecution(ShishitoExecution):
 
         return 'node_webkit'
 
-    def run_tests(self):
-        """ Trigger PyTest runner. Run PyTest for for node-webkit tests. """
-
-        return self.trigger_pytest('node_webkit')

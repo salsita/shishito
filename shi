@@ -2,6 +2,7 @@
 # - Create virtenv for python3 if needed
 # - install dependencies
 # - find root dir (with config/) or install project template
+# - source shi.source if it exists
 # - run tests
 set -e
 
@@ -43,6 +44,11 @@ if [ -z "$root_dir" ]; then
 	exit 1
 else
 	cd "$root_dir"
+fi
+
+	# source 'shi.source' if it exists
+if [ -f "$root_dir/shi.source" ]; then
+	. "$root_dir/shi.source"
 fi
 
 	# run shishito pytest

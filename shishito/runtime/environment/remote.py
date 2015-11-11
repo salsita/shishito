@@ -27,17 +27,20 @@ class ControlEnvironment(ShishitoEnvironment):
 
         return {
             'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'false',
-            'browserName': get_opt(config_section, 'browser'),
-            'browser_version': get_opt(config_section, 'browser_version'),
+            'browserName': get_opt(config_section, 'browser').lower(),
+            'version': get_opt(config_section, 'browser_version'),
             'resolution': get_opt(config_section, 'resolution'),
             'javascriptEnabled': True
         }
 
     def start_driver(self, capabilities, remote_driver_url):
         """ Call remote browser (driver) """
+        print("Starting remote driver", capabilities)
 
-        driver = webdriver.Remote(
-            command_executor=remote_driver_url,
-            desired_capabilities=capabilities)
+        driver = webdriver.Remote(command_executor=remote_driver_url, desired_capabilities=capabilities)
+        if 'resolution' in capabilities:
+            (width, height) = capabilities['resolution'].split('x')
+            driver.set_window_size(width, height)
+
 
         return driver

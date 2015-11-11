@@ -94,4 +94,7 @@ class ShishitoExecution(object):
         if smoke:
             pytest_arguments.extend(['-m', 'smoke'])
 
+        # verbose diffs   
+        pytest_arguments.extend(['-v'])
+
         return pytest.main(pytest_arguments)

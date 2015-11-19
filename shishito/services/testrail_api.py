@@ -47,7 +47,9 @@ class TestRail(object):
         :param url: url endpoint snippet
         :return: response JSON
         """
-        return requests.get(self.uri_base + url, auth=(self.user, self.password), headers=self.default_headers).json()
+        response = requests.get(self.uri_base + url, auth=(self.user, self.password), headers=self.default_headers)
+        #print(self.uri_base + url, response, response.text)
+        return response.json()
 
     def tr_post(self, url, payload):
         """ GET request for TestRail API

@@ -1,0 +1,121 @@
+#!/usr/bin/env node
+var https = require('https');
+
+
+
+function getData(path, callback) {
+    var options = {
+        host: 'salsitasoft.testrail.net',
+        port: 443,
+        path: path,
+        method: 'GET',
+        headers: {'Content-Type': 'application/json'},
+        auth: process.env.TESTRAIL_CREDENTIALS
+    };
+    var req = https.request(options, function(response) {
+        var data = ''
+        response.on('data', function (chunk) { data += chunk; });
+        response.on('end', function () { callback(null, JSON.parse(data)); });
+    });
+    req.on('error', function(err) { callback(err, null); });
+    req.end();
+}
+
+function getFunc(key, func) {
+    return function(err, data) {
+        return func(err, data, key);
+    }
+}
+
+function asyncLoop(o) {
+    var i=-1;
+
+    var loop = function() {
+        i++;
+        if(i==o.length) {
+            o.callback();
+            return;
+        }
+        o.functionToLoop(loop, i);
+    } 
+    loop();
+}
+
+
+getData('/index.php?/api/v2/get_projects', function(err, projects) {
+    result = {}
+    if (err) {
+        console.log('ERR', err);
+    } else {
+            // Get Suites for each project
+        asyncLoop({
+            length : projects.length,
+            functionToLoop : function(loop, i) {
+                result[projects[i].id] = { name: projects[i].name, suites:{} };
+                getData('/index.php?/api/v2/get_suites/' + projects[i].id, function(err, suites) {
+                    for (sui in suites) {
+                        result[projects[i].id].suites[suites[sui].id] = {name: suites[sui].name, sections:{}};
+                    }
+                    loop();
+                });
+            },
+            callback : function(){
+
+                    // Get Plans for each project
+                asyncLoop({
+                    length : projects.length,
+                    functionToLoop : function(loop, i) {
+                        result[projects[i].id].plans = {};
+                        getData('/index.php?/api/v2/get_plans/' + projects[i].id, function(err, plans) {
+                            for (pla in plans) {
+                                result[projects[i].id].plans[plans[pla].id] = {name: plans[pla].name};
+                            }
+                            loop();
+                        });
+                    },
+                    callback : function(){
+                            // Get Sections for each suite
+                        var sections = [];
+                        for (p in result) {
+                            for (sui in result[p].suites) {
+                                sections.push({proj_id: p, suite_id: sui});
+                            }
+                        }
+                        asyncLoop({
+                            length : sections.length,
+                            functionToLoop : function(loop, i) {
+                                result[sections[i].proj_id].suites[sections[i].suite_id].sections = {};
+                                getData('/index.php?/api/v2/get_sections/'+sections[i].proj_id+'&suite_id='+sections[i].suite_id, function(err, section_data) {
+                                    for (sec in section_data) {
+                                        result[sections[i].proj_id].suites[sections[i].suite_id].sections[section_data[sec].id] = {name: section_data[sec].name};
+                                    }
+                                    loop();
+                                });
+                            },
+                            callback : function(){
+                                for (p in result) {
+                                    console.log(p, result[p].name);
+                                    console.log('   suites:');
+                                    for (sui in result[p].suites) {
+                                        console.log('       ', sui, result[p].suites[sui].name);
+                                        console.log('           sections:');
+                                        for (sec in result[p].suites[sui].sections) {
+                                            console.log('               ', sec, result[p].suites[sui].sections[sec].name);
+                                        }
+                                    }
+                                    console.log('   plans:');
+                                    for (pla in result[p].plans) {
+                                        console.log('       ', pla, result[p].plans[pla].name);
+                                    }
+                                }
+                            }    
+                        });
+
+
+                    }    
+                });
+
+            }    
+        });
+    }
+})

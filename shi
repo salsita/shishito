@@ -57,3 +57,10 @@ export PYTHONPATH="$SCRIPT_DIR"
 
 "$VIRTUAL_ENV/bin/python3" -c "from shishito.shishito_runner import ShishitoRunner
 ShishitoRunner('$(pwd -P)').run_tests()" "$@"
+
+	# check results
+result_code=0;
+for i in results/[0-9]*/*.xml; do
+	grep 'testsuite errors="0" failures="0"' "$i" > /dev/null || result_code=1
+done
+exit "$result_code"

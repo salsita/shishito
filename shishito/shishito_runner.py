@@ -85,7 +85,8 @@ class ShishitoRunner(object):
         executor = executor_class(self.shishito_support, self.test_timestamp)
 
         # run test
-        executor.run_tests()
+        #executor.run_tests()
+        exit_code = executor.run_tests()
 
         # archive results + generate combined report
         self.reporter.archive_results()
@@ -101,3 +102,5 @@ class ShishitoRunner(object):
 
             test_rail = TestRail(tr_user, tr_password, self.test_timestamp)
             test_rail.post_results()
+
+        return exit_code

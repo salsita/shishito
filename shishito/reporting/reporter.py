@@ -22,6 +22,7 @@ class Reporter(object):
         if os.path.exists(os.path.join(self.project_root, 'results')):
             shutil.rmtree(os.path.join(self.project_root, 'results'))
         os.makedirs(self.result_folder)
+        os.symlink(self.timestamp, os.path.join(self.project_root, 'results', 'current'))
 
     def archive_results(self):
         """ Archives test results in zip package """

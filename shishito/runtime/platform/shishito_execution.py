@@ -37,8 +37,9 @@ class ShishitoExecution(object):
 
         for config_section in self.shishito_support.env_config.sections():
             print 'Running combination: ' + config_section
-            test_status = self.trigger_pytest(config_section)
-
+            tmp_test_status = self.trigger_pytest(config_section)
+            if tmp_test_status != 0:
+                test_status = tmp_test_status
         return test_status
 
     def trigger_pytest(self, config_section):

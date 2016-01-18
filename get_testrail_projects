@@ -5,7 +5,7 @@ var https = require('https');
 
 function getData(path, callback) {
     var options = {
-        host: 'salsitasoft.testrail.net',
+        host: 'salsita.testrail.net',
         port: 443,
         path: path,
         method: 'GET',

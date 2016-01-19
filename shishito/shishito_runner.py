@@ -62,6 +62,8 @@ class ShishitoRunner(object):
                             help='Path to chromedriver located in same directory as node-webkit application')
         parser.add_argument('--app',
                             help='Path to appium application')
+        parser.add_argument('--test',
+                            help='Run specified test (PyTest string expression)')
         args = parser.parse_args()
 
         # return args dict --> for use in other classes

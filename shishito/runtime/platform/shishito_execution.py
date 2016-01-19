@@ -94,7 +94,13 @@ class ShishitoExecution(object):
         if smoke:
             pytest_arguments.extend(['-m', 'smoke'])
 
+        # run only specific tests
+        test_stringexpr = self.shishito_support.get_opt('test')
+        if test_stringexpr:
+            pytest_arguments.extend(['-k', test_stringexpr])
+
+
         # verbose diffs   
-        pytest_arguments.extend(['-v'])
+        pytest_arguments.extend(['-vv'])
 
         return pytest.main(pytest_arguments)

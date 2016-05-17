@@ -196,6 +196,11 @@ class LogHTML(object):
                         else:
                             log.append(raw(cgi.escape(line)))
                     log.append(html.br())
+
+                if len(report.sections) > 2:
+                    for stdline in report.sections[2]:
+                        log.append(stdline)
+
                 if not os.path.exists(self.screenshot_path):
                     os.makedirs(self.screenshot_path)
                 self.append_screenshot(testmethod, log)

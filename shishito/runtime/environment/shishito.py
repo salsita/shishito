@@ -85,10 +85,14 @@ class ShishitoEnvironment(object):
         if browser_type == 'chrome':
             chrome_options = webdriver.ChromeOptions()
             chrome_options.add_experimental_option("excludeSwitches", ["ignore-certificate-errors"])
+            chrome_options.add_extension('/Users/pavelp/extensions/0.14.9_0.crx')
             capabilities.update(chrome_options.to_capabilities())
         elif browser_type == 'firefox':
             profile = webdriver.FirefoxProfile()
-
+            profile.add_extension("/Users/pavelp/extensions/Firefox/quickjava-2.0.8-fx.xpi")
+            profile.set_preference("thatoneguydotnet.QuickJava.curVersion", "2.0.8.1")  ## Prevents loading the 'thank you for installing screen'
+            profile.set_preference("thatoneguydotnet.QuickJava.startupStatus.Images", 2)  ## Turns images off
+            profile.set_preference("thatoneguydotnet.QuickJava.startupStatus.AnimatedImage", 2)  ## Turns animated images off
         if profile is None:
             return None
 

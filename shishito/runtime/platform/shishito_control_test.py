@@ -1,3 +1,4 @@
+import json
 import os
 import re
 
@@ -45,7 +46,7 @@ class ShishitoControlTest(object):
 
         self.driver.quit()
 
-    def stop_test(self, test_info):
+    def stop_test(self, test_info, debug_events=None):
         """ To be executed after every test-case (test function). If test failed, function saves
         screenshots created during test.
 
@@ -54,12 +55,25 @@ class ShishitoControlTest(object):
 
         if test_info.test_status not in ('passed', None):
             # save screenshot in case test fails
+            file_name = re.sub('[^A-Za-z0-9_. ]+', '', test_info.test_name)
+
             screenshot_folder = os.path.join(self.shishito_support.project_root, 'screenshots')
+
             if not os.path.exists(screenshot_folder):
                 os.makedirs(screenshot_folder)
 
-            file_name = re.sub('[^A-Za-z0-9_. ]+', '', test_info.test_name)
             self.driver.save_screenshot(os.path.join(screenshot_folder, file_name + '.png'))
+
+            #Save debug info to file
+            if debug_events is not None:
+                debugevent_folder = os.path.join(self.shishito_support.project_root, 'debug_events')
+
+                if not os.path.exists(debugevent_folder):
+                    os.makedirs(debugevent_folder)
+
+                with open(os.path.join(debugevent_folder, file_name + '.json'), 'w') as logfile:
+                    for event in debug_events:
+                        json.dump(event, logfile)
 
     def test_init(self, url):
         """ Executed only once after browser starts.

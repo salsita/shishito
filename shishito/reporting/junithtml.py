@@ -31,7 +31,9 @@ class LogHTML(object):
         # TODO will not work if shishito runner is not used
         self.project_root = os.getcwd()
         self.screenshot_path = os.path.join(os.path.dirname(self.logfile), 'screenshots')
+        self.debug_event_path = os.path.join(os.path.dirname(self.logfile), 'debug_events')
         self.used_screens = []
+        self.used_debug_events = []
         self.prefix = prefix
         self.tests = []
         self.passed = self.skipped = 0
@@ -71,6 +73,15 @@ class LogHTML(object):
         self.used_screens.append(source)
         log.append(html.img(src='screenshots/' + name + '.png'))
 
+    def append_link_to_debug_event(self, name, log):
+        name = re.sub('[^A-Za-z0-9_. ]+', '', name)
+        if not os.path.exists(self.debug_event_path):
+            os.makedirs(self.debug_event_path)
+        source = os.path.join(self.project_root, 'debug_events', name + '.json')
+        self.used_debug_events.append(source)
+        log.append(html.h3('DebugEvent log'))
+        log.append(html.a(name + '.json', href='debug_events/' + name + '.json'))
+
     def process_screenshot_files(self):
         for screen in self.used_screens:
             if os.path.exists(screen):
@@ -78,6 +89,14 @@ class LogHTML(object):
         screenshot_folder = os.path.join(self.project_root, 'screenshots')
         if os.path.exists(screenshot_folder):
             shutil.rmtree(screenshot_folder)
+
+    def process_debug_event_files(self):
+        for event in self.used_debug_events:
+            if os.path.exists(event):
+                shutil.copy(event, self.debug_event_path)
+        debug_event_folder = os.path.join(self.project_root, 'debug_events')
+        if os.path.exists(debug_event_folder):
+            shutil.rmtree(debug_event_folder)
 
     def append_pass(self, report):
         self.passed += 1
@@ -169,6 +188,7 @@ class LogHTML(object):
                 indent=2))
         logfile.close()
         self.process_screenshot_files()
+        self.process_debug_event_files()
 
     def _appendrow(self, result, report):
         names = mangle_testnames(report.nodeid.split("::"))
@@ -197,13 +217,12 @@ class LogHTML(object):
                             log.append(raw(cgi.escape(line)))
                     log.append(html.br())
 
-                if len(report.sections) > 2:
-                    for stdline in report.sections[2]:
-                        log.append(stdline)
-
                 if not os.path.exists(self.screenshot_path):
                     os.makedirs(self.screenshot_path)
                 self.append_screenshot(testmethod, log)
+
+                self.append_link_to_debug_event(testmethod, log)
+
                 additional_html.append(log)
         output = self._write_captured_output(report)
         info = output.split(" ")

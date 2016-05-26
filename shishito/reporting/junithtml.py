@@ -60,7 +60,7 @@ class LogHTML(object):
         sec = dict(report.sections)
         output = ""
         for name in ('out', 'err'):
-            content = sec.get("Captured std%s" % name)
+            content = sec.get("Captured std%s setup" % name)
             if content:
                 output = output + content
         return output
@@ -228,8 +228,9 @@ class LogHTML(object):
         info = output.split(" ")
         links_html = []
         for i in range(0, len(info)):
-            if ("http" in info[i] and "browserstack.com" in info[i]):
-                links_html.append(html.a("link", href=info[i], target='_blank'))
+            match_obj = re.search(r'(https?://www.browserstack.com/automate/builds/[\w]*/sessions/[\w]*)/', info[i])
+            if match_obj:
+                links_html.append(html.a("link", href=match_obj.group(1), target='_blank'))
                 links_html.append(' ')
 
         self.test_logs.append(html.tr([

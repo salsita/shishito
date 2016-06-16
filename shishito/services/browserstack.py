@@ -9,12 +9,15 @@ import time
 
 
 class BrowserStackAPI(object):
-    def get_projects(self, auth):
-        url = "https://www.browserstack.com/automate/projects.json"
-        r = self.request_get_verify(auth, url)
-        return r.json()
 
     def request_get_verify(self, auth, url):
+        '''
+        Returns the response from Browserstack API, if the status code is 200.
+        Retries 5 times before failing completely
+        :param auth: Browserstack authorization (tuple)
+        :param url: API url
+        :return: Response from Browserstack (or raise Connection Error)
+        '''
 
         response = None
 
@@ -30,6 +33,11 @@ class BrowserStackAPI(object):
 
         #attempts depleted
         raise ConnectionError('Cannot get valid response from Browserstack. Latest status code = {0}'.format(response.status_code))
+
+    def get_projects(self, auth):
+        url = "https://www.browserstack.com/automate/projects.json"
+        r = self.request_get_verify(auth, url)
+        return r.json()
 
 
     def get_project(self, auth, project_name):
@@ -64,7 +72,9 @@ class BrowserStackAPI(object):
 
     def get_session_link(self, session):
         if session:
-            return session['logs'][:-4]
+            session_link = session['logs'][:-4]
+            print(session_link) #Printing to stdout, so that it can be added to test report
+            return session_link
 
     def get_session_hashed_id(self, session):
         return session['hashed_id'] if session else None

@@ -1,0 +1,10 @@
+#!/bin/bash
+# create shishito tarball or use of circleorg test suite
+
+
+SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd -P)
+rm shishito-2.4.tgz 
+#tmp_file=$(mktemp)
+find . -name __pycache__ -print0 | xargs -0 rm -rf
+tar c -C "$SCRIPT_DIR" -zf shishito-2.4.tgz shishito shi shi.py pytest_imports 
+scp shishito-2.4.tgz 'docker.salsitasoft.com:/usr/share/nginx/html/qa/'

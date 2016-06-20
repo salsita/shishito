@@ -27,6 +27,9 @@ class ShishitoRunner(object):
         # parse cmd  args
         self.cmd_args = self.handle_cmd_args()
 
+        # Get SUT build for use in reporting
+        self.test_build = self.cmd_args['build']
+
         self.reporter = Reporter(project_root, self.test_timestamp)
         self.shishito_support = ShishitoSupport(
             cmd_args=self.cmd_args,
@@ -64,6 +67,8 @@ class ShishitoRunner(object):
                             help='Path to appium application')
         parser.add_argument('--test',
                             help='Run specified test (PyTest string expression)')
+        parser.add_argument('--build',
+                            help='Specify build number for reporting purposes')
         args = parser.parse_args()
 
         # return args dict --> for use in other classes
@@ -101,5 +106,5 @@ class ShishitoRunner(object):
             except (AttributeError, ValueError):
                 raise ValueError('TestRail credentials were not specified! Unable to connect to TestRail.')
 
-            test_rail = TestRail(tr_user, tr_password, self.test_timestamp)
+            test_rail = TestRail(tr_user, tr_password, self.test_timestamp, self.test_build)
             test_rail.post_results()

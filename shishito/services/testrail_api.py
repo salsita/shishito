@@ -15,7 +15,7 @@ from shishito.runtime.shishito_support import ShishitoSupport
 class TestRail(object):
     """ TestRail object """
 
-    def __init__(self, user, password, timestamp):
+    def __init__(self, user, password, timestamp, build):
         self.shishito_support = ShishitoSupport()
         self.test_rail_instance = self.shishito_support.get_opt('test_rail_url')
         self.user = user
@@ -26,7 +26,7 @@ class TestRail(object):
         self.project_id = self.shishito_support.get_opt('test_rail_project_id')
         self.section_id = self.shishito_support.get_opt('test_rail_section_id')
         self.test_plan_id = self.shishito_support.get_opt('test_rail_test_plan_id')
-        self.test_plan_name = self.shishito_support.get_opt('test_plan_name') or "All tests"
+        self.test_plan_name = self.shishito_support.get_opt('test_plan_name') or build
         self.suite_id = self.shishito_support.get_opt('test_rail_suite_id')
 
         # shishito results
@@ -39,7 +39,12 @@ class TestRail(object):
     def post_results(self):
         """ Create test-cases on TestRail, adds a new test run and update results for the run """
         self.create_missing_test_cases()
-        test_plan_id = self.add_test_plan()
+
+        if self.test_plan_name:
+            test_plan_id = self.add_test_plan()
+        else:
+            test_plan_id = self.test_plan_id
+
         test_run = self.add_test_run(test_plan_id)
         self.add_test_results(test_run)
 
@@ -115,7 +120,7 @@ class TestRail(object):
             if plan['name'] == self.test_plan_name:
                 return plan['id']
 
-        result = self.tr_post('add_plan/{}'.format(self.project_id),{"name": self.test_plan_name})
+        result = self.tr_post('add_plan/{}'.format(self.project_id), {"name": self.test_plan_name})
 
         return json.loads(result.text)['id']
 

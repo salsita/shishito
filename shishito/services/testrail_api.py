@@ -26,7 +26,7 @@ class TestRail(object):
         self.project_id = self.shishito_support.get_opt('test_rail_project_id')
         self.section_id = self.shishito_support.get_opt('test_rail_section_id')
         self.test_plan_id = self.shishito_support.get_opt('test_rail_test_plan_id')
-        self.test_plan_name = self.shishito_support.get_opt('test_plan_name') or build
+        self.test_plan_name = self.shishito_support.get_opt('test_rail_test_plan_name') or build
         self.suite_id = self.shishito_support.get_opt('test_rail_suite_id')
 
         # shishito results

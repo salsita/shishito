@@ -88,7 +88,6 @@ class ShishitoEnvironment(object):
             capabilities.update(chrome_options.to_capabilities())
         elif browser_type == 'firefox':
             profile = webdriver.FirefoxProfile()
-
         if profile is None:
             return None
 

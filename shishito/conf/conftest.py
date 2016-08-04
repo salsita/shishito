@@ -106,6 +106,10 @@ def pytest_addoption(parser):
     parser.addoption("--test_rail", action="store", default=None,
                      help="TestRail Test Management tool credentials")
 
+    # QAStats
+    parser.addoption("--qastats", action="store", default=None,
+                     help="QAStats Test Management tool credentials")
+
 
 def pytest_configure(config):
     htmlpath = config.option.htmlpath

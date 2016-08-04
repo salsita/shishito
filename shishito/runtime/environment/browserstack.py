@@ -109,6 +109,7 @@ class ControlEnvironment(ShishitoEnvironment):
             'browser_version': get_opt(config_section, 'browser_version'),
             'resolution': get_opt(config_section, 'resolution'),
             'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
+            'browserstack.local': get_opt('browserstack_local') or False,
         }
 
     # TODO will need to implement some edge cases from there (mobile emulation etc..)

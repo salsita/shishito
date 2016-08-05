@@ -50,7 +50,6 @@ class QAStats(object):
                ],
             }
         """
-        print(self.project_id, self.timestamp)
 
         for (i, run) in enumerate(self.shishito_results):
             environment = run['name'];
@@ -77,13 +76,22 @@ class QAStats(object):
             }
             results = [ {'test': t['name'], 'result': status_map[t['result']]} for t in run['cases'] ]
             payload['results'] = results
-            r = requests.post(self.result_url, auth=(self.user, self.password), data=json.dumps(payload),
+            json_payload = json.dumps(payload)
+            r = requests.post(self.result_url, auth=(self.user, self.password), data=json_payload,
                                  headers=self.default_headers)
 
-            if r.status_code != 200:
-                print("Error: uploading tests to QAStats")
-                print("\tStatus-code:\t" + str(r.status_code) + "\n")
-                for n, v in r.headers.items():
-                    print("\t" + n + "\t" + v)
-                print("")
-                print(r.text)
+            if r.status_code == requests.codes.ok:
+                try:
+                    resp = r.json()
+                    if 'result' in resp and resp['result'] == 'OK':
+                        print("Results uploaded to QAStats")
+                        return True
+                except (ValueError, AttributeError):
+                    pass
+
+            print("Error: uploading tests to QAStats\n\n", json_payload, "\n")
+            print("\tStatus-code:\t" + str(r.status_code) + "\n")
+            for n, v in r.headers.items():
+                print("\t" + n + "\t" + v)
+            print("")
+            print(r.text)

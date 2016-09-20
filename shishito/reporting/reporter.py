@@ -68,6 +68,7 @@ class Reporter(object):
             root = tree.getroot()
             for child in root:
                 if child.tag == 'testcase':
+                    testcase_name = child.get('classname')
                     entry = {'name': child.get('name')}
                     result = 'success'
                     failure_message = ''
@@ -80,12 +81,14 @@ class Reporter(object):
                             result = 'error'
                         elif subChild.tag == 'skipped' and result == 'success':
                             result = 'skipped'
-
                     entry['result'] = result
                     if result == 'success':
                         entry['failure_message'] = None
                     else:
                         entry['failure_message'] = failure_message
-                    case['cases'].append(entry)
+                    if not any(d['name'] == entry['name'] for d in case['cases']):
+                        case['cases'].append(entry)
+                    else:
+                        raise Exception('You should rename test method: %s in class:%s, because it already exists'%(entry['name'], testcase_name))
             test_cases.append(case)
         return test_cases

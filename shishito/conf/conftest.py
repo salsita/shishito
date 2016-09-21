@@ -127,6 +127,15 @@ def pytest_unconfigure(config):
         config.pluginmanager.unregister(html)
 
 
+def pytest_collection_finish(session):
+    test_names = {}
+    for i in session.items:
+        name, module = i.name, i.cls.__module__
+        if name in test_names:
+            raise Exception("You should rename duplicate test method: '%s'. It was found in modules: '%s' and '%s'"%(name, module, test_names[name]))
+        test_names[name] = module
+
+
 @pytest.mark.tryfirst
 def pytest_runtest_makereport(item, call, __multicall__):
     # execute all other hooks to obtain the report object

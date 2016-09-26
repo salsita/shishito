@@ -34,9 +34,10 @@ class QAStats(object):
 
         self.default_headers = {'Content-Type': 'application/json'}
         self.result_url = self.qastats_base_url + '/api/v1/results'
+        self.project_url = self.shishito_support.get_opt('base_url')
 
     def post_results(self):
-        """ Create test-cases on QAStats, adds a new test run and update results for the run 
+        """ Create test-cases on QAStats, adds a new test run and update results for the run
             {
                "project_id": 123,
                "timestamp": 1470133472,
@@ -64,10 +65,17 @@ class QAStats(object):
             if self.build:
                 payload['build'] = self.build
             if 'QA_BRANCH_TO_TEST' in os.environ:
-                payload['branch'] = os.environ["QA_BRANCH_TO_TEST"]
+                payload['branch'] = os.environ['QA_BRANCH_TO_TEST']
             if 'QA_GIT_COMMIT' in os.environ:
                 payload['git'] = os.environ["QA_GIT_COMMIT"]
-
+            elif 'CIRCLE_REPOSITORY_URL' in os.environ:
+                print('github url is known')
+                payload['git'] = os.environ['CIRCLE_REPOSITORY_URL']
+            if 'CIRCLE_TEST_REPORTS' in os.environ:
+                print('result url is known')
+                payload['reporturl'] = os.environ.get('CIRCLE_TEST_REPORTS')
+            if self.project_url is not None:
+                payload['testurl']=self.project_url
             status_map = {
                 'error': 'err',
                 'failure': 'fail',
@@ -76,6 +84,7 @@ class QAStats(object):
             }
             results = [ {'test': t['name'], 'result': status_map[t['result']]} for t in run['cases'] ]
             payload['results'] = results
+            print(payload)
             json_payload = json.dumps(payload)
             r = requests.post(self.result_url, auth=(self.user, self.password), data=json_payload,
                                  headers=self.default_headers)

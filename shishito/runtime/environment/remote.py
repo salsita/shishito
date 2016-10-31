@@ -26,7 +26,7 @@ class ControlEnvironment(ShishitoEnvironment):
         get_opt = self.shishito_support.get_opt
 
         return {
-            'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'false',
+            'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'true',
             'browserName': get_opt(config_section, 'browser').lower(),
             'version': get_opt(config_section, 'browser_version'),
             'resolution': get_opt(config_section, 'resolution'),

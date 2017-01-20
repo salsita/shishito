@@ -66,7 +66,6 @@ class ShishitoExecution(object):
             '--html-prefix=': '--html-prefix=' + test_result_prefix,
             '--instafail': '--instafail',
         }
-
         # extend pytest_arguments with environment specific args
         extra_pytest_arguments = self.environment.get_pytest_arguments(config_section)
         if extra_pytest_arguments:

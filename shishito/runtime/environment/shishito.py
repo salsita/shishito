@@ -84,7 +84,7 @@ class ShishitoEnvironment(object):
 
         if browser_type == 'chrome':
             chrome_options = webdriver.ChromeOptions()
-            chrome_options.add_experimental_option("excludeSwitches", ["ignore-certificate-errors"])
+            chrome_options.add_argument('--ignore-certificate-errors')
             capabilities.update(chrome_options.to_capabilities())
         elif browser_type == 'firefox':
             profile = webdriver.FirefoxProfile()

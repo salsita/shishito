@@ -80,6 +80,3 @@ class ShishitoControlTest(object):
 
         :param str url:
         """
-        self.driver.get(url)
-        self.driver.implicitly_wait(int(self.shishito_support.get_opt('default_implicit_wait')))
-

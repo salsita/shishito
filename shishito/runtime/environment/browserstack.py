@@ -64,6 +64,7 @@ class ControlEnvironment(ShishitoEnvironment):
         :return: dict with arguments for pytest or None
         """
         test_platform = self.shishito_support.test_platform
+        arguments = {}
         if(test_platform == 'web'):
             browser = self.shishito_support.get_opt(config_section, 'browser')
             browser_version = self.shishito_support.get_opt(config_section, 'browser_version')
@@ -120,35 +121,31 @@ class ControlEnvironment(ShishitoEnvironment):
         """
         test_platform = self.shishito_support.test_platform
         get_opt = self.shishito_support.get_opt
+        capabilities = {
+            'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'false',
+            'browserstack.debug': get_opt('browserstack_debug').lower(),
+            'project': get_opt('project_name'),
+            'build': get_opt('build_name'),
+            'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
+            'browserstack.local': get_opt('browserstack_local') or False
+             }
         if(test_platform == 'web'):
-            return {
-                'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'false',
-                'browserstack.debug': get_opt('browserstack_debug').lower(),
-                'project': get_opt('project_name'),
-                'build': get_opt('build_name'),
+            special_capabilities = {
                 'os': get_opt(config_section, 'os'),
                 'os_version': get_opt(config_section, 'os_version'),
                 'browser': get_opt(config_section, 'browser'),
                 'browser_version': get_opt(config_section, 'browser_version'),
-                'resolution': get_opt(config_section, 'resolution'),
-                'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
-                'browserstack.local': get_opt('browserstack_local') or False,
-        }
+                'resolution': get_opt(config_section, 'resolution')
+            }
         if(test_platform == 'mobile'):
-            return {
-                'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'false',
-                'browserstack.debug': get_opt('browserstack_debug').lower(),
-                'project': get_opt('project_name'),
-                'build': get_opt('build_name'),
+            special_capabilities = {
                 'browser': get_opt(config_section, 'browser'),
                 'platform': get_opt(config_section, 'platform'),
                 'device': get_opt(config_section, 'device'),
-                'deviceOrientation': get_opt(config_section, 'deviceOrientation') or 'portrait',
-
-                'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
-                'browserstack.local': get_opt('browserstack_local') or False,
+                'deviceOrientation': get_opt(config_section, 'deviceOrientation') or 'portrait'
             }
 
+        return {**capabilities, **special_capabilities}
     # TODO will need to implement some edge cases from there (mobile emulation etc..)
     # def get_browser_profile(self, browser_type):
     # """ returns ChromeOptions or FirefoxProfile with default settings, based on browser """

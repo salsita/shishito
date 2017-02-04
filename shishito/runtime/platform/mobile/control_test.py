@@ -7,5 +7,19 @@
 from shishito.runtime.platform.shishito_control_test import ShishitoControlTest
 
 
+
 class ControlTest(ShishitoControlTest):
     """ ControlTest for mobile platform """
+    def test_init(self, url):
+        """ Executed only once after browser starts.
+         Suitable for general pre-test logic that do not need to run before every individual test-case.
+
+        :param str url:
+        """
+        test_platform = self.shishito_support.test_platform
+        test_env = self.shishito_support.get_opt('test_environment')
+        if(test_env == 'browserstack' and test_platform == 'mobile'):
+            self.driver.get(url)
+            self.driver.implicitly_wait(int(self.shishito_support.get_opt('default_implicit_wait')))
+
+

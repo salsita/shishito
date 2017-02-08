@@ -63,31 +63,55 @@ class ControlEnvironment(ShishitoEnvironment):
         :param config_section: section in platform/environment.properties config
         :return: dict with arguments for pytest or None
         """
-
-        browser = self.shishito_support.get_opt(config_section, 'browser')
-        browser_version = self.shishito_support.get_opt(config_section, 'browser_version')
-        os_type = self.shishito_support.get_opt(config_section, 'os')
-        os_version = self.shishito_support.get_opt(config_section, 'os_version')
-        resolution = self.shishito_support.get_opt(config_section, 'resolution')
-
-        test_result_prefix = '[%s, %s, %s, %s, %s]' % (
+        test_platform = self.shishito_support.test_platform
+        arguments = {}
+        if(test_platform == 'web'):
+            browser = self.shishito_support.get_opt(config_section, 'browser')
+            browser_version = self.shishito_support.get_opt(config_section, 'browser_version')
+            os_type = self.shishito_support.get_opt(config_section, 'os')
+            os_version = self.shishito_support.get_opt(config_section, 'os_version')
+            resolution = self.shishito_support.get_opt(config_section, 'resolution')
+            test_result_prefix = '[%s, %s, %s, %s, %s]' % (
             browser, browser_version, os_type, os_version, resolution
-        )
+            )
 
-        # Add browserstack credentials
-        bs_auth = self.shishito_support.get_opt('browserstack')
+            # Add browserstack credentials
+            bs_auth = self.shishito_support.get_opt('browserstack')
 
-        # prepare pytest arguments into execution list
-        return {
-            '--junit-prefix=': '--junit-prefix=' + test_result_prefix,
-            '--html-prefix=': '--html-prefix=' + test_result_prefix,
-            '--browser=': '--browser=' + browser,
-            '--browser_version=': '--browser_version=' + browser_version,
-            '--os=': '--os=' + os_type,
-            '--os_version=': '--os_version=' + os_version,
-            '--resolution=': '--resolution=' + resolution,
-            '--browserstack=': '--browserstack=' + bs_auth,
-        }
+            # prepare pytest arguments into execution list
+            return {
+                '--junit-prefix=': '--junit-prefix=' + test_result_prefix,
+                '--html-prefix=': '--html-prefix=' + test_result_prefix,
+                '--browser=': '--browser=' + browser,
+                '--browser_version=': '--browser_version=' + browser_version,
+                '--os=': '--os=' + os_type,
+                '--os_version=': '--os_version=' + os_version,
+                '--resolution=': '--resolution=' + resolution,
+                '--browserstack=': '--browserstack=' + bs_auth
+                }
+        if(test_platform == 'mobile'):
+            browser = self.shishito_support.get_opt(config_section, 'browser')
+            platform = self.shishito_support.get_opt(config_section, 'platform')
+            device = self.shishito_support.get_opt(config_section, 'device')
+            deviceOrientation = self.shishito_support.get_opt(config_section, 'deviceOrientation') or 'portrait'
+
+            test_result_prefix = '[%s, %s, %s]' % (
+                browser, platform, device
+            )
+
+            # Add browserstack credentials
+            bs_auth = self.shishito_support.get_opt('browserstack')
+
+            # prepare pytest arguments into execution list
+            return {
+                '--junit-prefix=': '--junit-prefix=' + test_result_prefix,
+                '--html-prefix=': '--html-prefix=' + test_result_prefix,
+                '--browser=': '--browser=' + browser,
+                '--platform=': '--platform=' + platform,
+                '--device=': '--device=' + device,
+                '--deviceOrientation=': '--deviceOrientation=' + deviceOrientation,
+                '--browserstack=': '--browserstack=' + bs_auth
+            }
 
     def get_capabilities(self, config_section):
         """ Return dictionary of capabilities for specific config combination.
@@ -95,23 +119,33 @@ class ControlEnvironment(ShishitoEnvironment):
         :param str config_section: section in platform/environment.properties config
         :return: dict with capabilities
         """
-
+        test_platform = self.shishito_support.test_platform
         get_opt = self.shishito_support.get_opt
-
-        return {
+        capabilities = {
             'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'false',
             'browserstack.debug': get_opt('browserstack_debug').lower(),
             'project': get_opt('project_name'),
             'build': get_opt('build_name'),
-            'os': get_opt(config_section, 'os'),
-            'os_version': get_opt(config_section, 'os_version'),
-            'browser': get_opt(config_section, 'browser'),
-            'browser_version': get_opt(config_section, 'browser_version'),
-            'resolution': get_opt(config_section, 'resolution'),
             'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
-            'browserstack.local': get_opt('browserstack_local') or False,
-        }
+            'browserstack.local': get_opt('browserstack_local') or False
+             }
+        if(test_platform == 'web'):
+            special_capabilities = {
+                'os': get_opt(config_section, 'os'),
+                'os_version': get_opt(config_section, 'os_version'),
+                'browser': get_opt(config_section, 'browser'),
+                'browser_version': get_opt(config_section, 'browser_version'),
+                'resolution': get_opt(config_section, 'resolution')
+            }
+        if(test_platform == 'mobile'):
+            special_capabilities = {
+                'browser': get_opt(config_section, 'browser'),
+                'platform': get_opt(config_section, 'platform'),
+                'device': get_opt(config_section, 'device'),
+                'deviceOrientation': get_opt(config_section, 'deviceOrientation') or 'portrait'
+            }
 
+        return {**capabilities, **special_capabilities}
     # TODO will need to implement some edge cases from there (mobile emulation etc..)
     # def get_browser_profile(self, browser_type):
     # """ returns ChromeOptions or FirefoxProfile with default settings, based on browser """

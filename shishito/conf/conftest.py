@@ -61,7 +61,7 @@ def pytest_addoption(parser):
                      help="BrowserStack mobile platform: MAC, ANDROID")
     parser.addoption("--xdevice", action="store", default="iPad Air",
                      help="BrowserStack mobile device: iPad Air, Samsung Galaxy S5 and others")
-    parser.addoption("--xdeviceOrientation", action="store", default="portrait",
+    parser.addoption("--deviceOrientation", action="store", default="portrait",
                      help="BrowserStack mobile device screen orientation: portrait or landscape")
     parser.addoption("--jira_support", action="store", default=None,
                      help="Jira username and password")
@@ -72,7 +72,10 @@ def pytest_addoption(parser):
     parser.addoption('--test_mobile', action="store", default=None,
                      help="Execute tests on mobile devices")
 
+
+
     # APPIUM
+
     parser.addoption('--platformName', action="store", default=None,
                      help="Appium platform: ios, android")
     parser.addoption('--platformVersion', action="store", default=None,
@@ -91,6 +94,14 @@ def pytest_addoption(parser):
                      help="Auto accepts alerts on iOS devices")
     parser.addoption("--saucelabs", action="store", default=None,
                      help="Saucelabs username and password")
+
+    # BROWSERSTACK MOBILE
+
+    parser.addoption('--platform', action="store", default=None,
+                     help="Appium platform: ios, android")
+    parser.addoption('--device', action="store", default=None,
+                     help="Device name (simulator or real device)")
+
 
 
     # REPORTS

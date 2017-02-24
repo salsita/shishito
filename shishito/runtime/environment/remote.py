@@ -25,13 +25,16 @@ class ControlEnvironment(ShishitoEnvironment):
 
         get_opt = self.shishito_support.get_opt
 
-        return {
-            'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'true',
+        capabilities = {
             'browserName': get_opt(config_section, 'browser').lower(),
+            'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'true',
             'version': get_opt(config_section, 'browser_version'),
             'resolution': get_opt(config_section, 'resolution'),
             'javascriptEnabled': True
         }
+        self.add_cmdline_arguments_to_browser(capabilities, config_section)
+        return capabilities
+
 
     def start_driver(self, capabilities, remote_driver_url):
         """ Call remote browser (driver) """

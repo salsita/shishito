@@ -144,7 +144,7 @@ class ControlEnvironment(ShishitoEnvironment):
                 'device': get_opt(config_section, 'device'),
                 'deviceOrientation': get_opt(config_section, 'deviceOrientation') or 'portrait'
             }
-
+        self.add_cmdline_arguments_to_browser(capabilities, config_section)
         return {**capabilities, **special_capabilities}
     # TODO will need to implement some edge cases from there (mobile emulation etc..)
     # def get_browser_profile(self, browser_type):

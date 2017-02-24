@@ -1,14 +1,69 @@
 import inspect
 import os
 import re
+import configparser
 from selenium import webdriver
 
 
 class ShishitoEnvironment(object):
+
     """ Base class for test environment. """
+
+    BROWSER_OPTION_KEYWORDS = {     # map lowercase browser name to option keyword understood by chromedriver/geckodriver...
+            'chrome': 'chromeOptions',
+            'firefox': 'moz:firefoxOptions',
+    }
 
     def __init__(self, shishito_support):
         self.shishito_support = shishito_support
+
+
+    def get_browser_arguments(self, config_section):
+        """
+        return array of browser command line arguments from config_section
+            [Chrome]
+            browser_arguments=--enable-experimental-web-platform-features --unlimited-storage
+            ...
+        :param config_section: name of config section in web/*.properties (e.g. Chrome)
+        :return: array
+        """
+
+        if config_section is None:
+            return []
+
+        try:
+            arguments_string = self.shishito_support.get_opt(config_section, 'browser_arguments')
+        except configparser.NoOptionError:
+            return []
+        arguments = [i for i in re.split('\s+', arguments_string) if i != '']
+        return arguments
+
+
+    def add_cmdline_arguments_to_browser(self, browser_capabilities, config_section):
+        """
+        Add browser command line arguments to capabilities dict
+        :param browser_capabilities: dict (see https://w3c.github.io/webdriver/webdriver-spec.html)
+        :param config_section: name of the browser config section (e.g. 'Chrome')
+        """
+
+        get_opt = self.shishito_support.get_opt
+        browser_name = get_opt(config_section, 'browser').lower()
+
+        if browser_name not in self.BROWSER_OPTION_KEYWORDS:
+            return
+
+        arguments = self.get_browser_arguments(config_section)
+        if arguments:
+            args_keyword = 'args'
+            browser_keyword = self.BROWSER_OPTION_KEYWORDS[browser_name]
+
+            if browser_keyword not in browser_capabilities:
+                browser_capabilities[browser_keyword] = {}
+            if args_keyword not in browser_capabilities[browser_keyword]:
+                browser_capabilities[browser_keyword][args_keyword] = []
+
+            browser_capabilities[browser_keyword][args_keyword].extend(arguments)
+
 
     def add_extension_to_browser(self, browser_type, browser_profile):
         """ Return browser profile updated with one or more extensions """
@@ -40,7 +95,7 @@ class ShishitoEnvironment(object):
         browser_type = browser_type.lower()
 
         # get driver
-        driver = self.start_driver(browser_type, capabilities)
+        driver = self.start_driver(browser_type, capabilities, config_section=config_section)
 
         # set browser size is defined
         browser_size = self.shishito_support.get_opt(config_section, 'resolution')
@@ -56,11 +111,22 @@ class ShishitoEnvironment(object):
 
         :param str config_section: section in platform/environment.properties config
         :return: dict with capabilities
+        Example of browser capabilities object:
+             "desiredCapabilities" : {
+                "browserName" : "chrome",
+                "version" : "50.1",
+                "acceptSslCerts" : true,
+                "javascriptEnabled" : true,
+                "platform" : "ANY",
+                "chromeOptions" : {
+                   "args" : [ "--ignore-certificate-errors" ],
+                   "extensions" : [ "base64-xxxxx" ]
+                }
+             }
         """
-
         return {}
 
-    def start_driver(self, browser_type, capabilities):
+    def start_driver(self, browser_type, capabilities, config_section=None):
         """ Prepare selenium webdriver.
 
         :param str browser_type: type of browser for which prepare driver
@@ -69,7 +135,7 @@ class ShishitoEnvironment(object):
 
         raise NotImplementedError()
 
-    def get_browser_profile(self, browser_type, capabilities):
+    def get_browser_profile(self, browser_type, capabilities, config_section=None):
         """ Return updated browser profile ready to be passed to driver.
 
         :param str browser_type: browser type (chrome, firefox, ..)
@@ -84,9 +150,18 @@ class ShishitoEnvironment(object):
 
         if browser_type == 'chrome':
             chrome_options = webdriver.ChromeOptions()
-            chrome_options.add_argument('--enable-experimental-web-platform-features')
-            chrome_options.add_argument('--ignore-certificate-errors')
+
+            # chrome command line agruments (browser_arguments=--enable-experimental-web-platform-features --unlimited-storage)
+            browser_arguments = self.get_browser_arguments(config_section)
+            for argument in browser_arguments:
+                chrome_options.add_argument(argument)
+
+            # accept self-signed certificates
+            if self.shishito_support.get_opt('accept_ssl_cert').lower() == 'true':
+                chrome_options.add_argument('--ignore-certificate-errors')
+
             capabilities.update(chrome_options.to_capabilities())
+
         elif browser_type == 'firefox':
             profile = webdriver.FirefoxProfile()
         if profile is None:

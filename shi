@@ -21,7 +21,6 @@ find_root()
 
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd -P)
 export VIRTUAL_ENV="$SCRIPT_DIR/venv"
-PROJECT_TAR="$SCRIPT_DIR/project_tmpl.tgz"
 
 
 	# create venv if needed
@@ -37,7 +36,7 @@ if [ -z "$root_dir" ]; then
 	printf "%s\n%s " "PyTest Project not found in '`pwd -P`'" "Would you like to create it? [y/n]"
 	read answer
 	if [ "$answer" = 'y' -o "$answer" = 'Y' ]; then
-		tar xzvf "$PROJECT_TAR"
+		(cd "$SCRIPT_DIR/project_tmpl" && tar -cf - .) | tar xvf -
 	else
 		echo "Project config not found, exiting..."
 	fi

@@ -22,7 +22,7 @@ class ControlEnvironment(ShishitoEnvironment):
             'marionette': str(get_opt('firefox_marionette')).lower() == 'true',
         }
 
-    def start_driver(self, browser_type, capabilities):
+    def start_driver(self, browser_type, capabilities, config_section):
         """ Prepare selenium webdriver.
 
         :param browser_type: type of browser for which prepare driver
@@ -30,7 +30,7 @@ class ControlEnvironment(ShishitoEnvironment):
         """
 
         # get browser profile
-        browser_profile = self.get_browser_profile(browser_type, capabilities)
+        browser_profile = self.get_browser_profile(browser_type, capabilities, config_section)
 
         # starts local browser
         if browser_type == "firefox":

@@ -101,5 +101,6 @@ class ShishitoExecution(object):
 
         # verbose diffs   
         pytest_arguments.extend(['-vv'])
+        pytest_arguments.extend(['-s'])
 
         return pytest.main(pytest_arguments)

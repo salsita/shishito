@@ -5,7 +5,7 @@
 # - source shi.source if it exists
 # - run tests
 set -e
-
+PATH=/opt/firefox:$PATH
 	# find project root dir, print it or ''
 find_root()
 {

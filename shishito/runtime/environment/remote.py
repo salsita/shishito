@@ -3,6 +3,9 @@ from __future__ import absolute_import
 from selenium import webdriver
 
 from shishito.runtime.environment.shishito import ShishitoEnvironment
+from subprocess import call
+from  subprocess import Popen,PIPE
+import base64
 
 
 class ControlEnvironment(ShishitoEnvironment):
@@ -30,17 +33,28 @@ class ControlEnvironment(ShishitoEnvironment):
             'browserName': get_opt(config_section, 'browser').lower(),
             'version': get_opt(config_section, 'browser_version'),
             'resolution': get_opt(config_section, 'resolution'),
-            'javascriptEnabled': True
+            'javascriptEnabled': True,
+            'chromeOptions': {
+                "extensions": get_opt(config_section, 'with_extension')
+            }
         }
 
     def start_driver(self, capabilities, remote_driver_url):
         """ Call remote browser (driver) """
         print("Starting remote driver", capabilities)
+        if 'chromeOptions' in capabilities:
 
-        driver = webdriver.Remote(command_executor=remote_driver_url, desired_capabilities=capabilities)
+            ext_dir = capabilities['chromeOptions']["extensions"]
+
+            with open(ext_dir, 'rb') as b:
+                bytes = b.read()
+                extension_bin = base64.b64encode(bytes)
+
+            capabilities['chromeOptions']["extensions"] = [extension_bin.decode("utf-8")]
+            driver = webdriver.Remote(command_executor=remote_driver_url, desired_capabilities=capabilities)
+
         if 'resolution' in capabilities:
             (width, height) = capabilities['resolution'].split('x')
             driver.set_window_size(width, height)
-
 
         return driver

@@ -10,18 +10,11 @@ class ShishitoEnvironment(object):
     def __init__(self, shishito_support):
         self.shishito_support = shishito_support
 
-    def add_extension_to_browser(self, browser_type, browser_profile):
+    def add_extension_to_browser(self, browser_profile, crx_path):
         """ Return browser profile updated with one or more extensions """
-
-        if browser_type == 'chrome':
-            all_extensions = self.get_extension_file_names('crx')
-            for chr_extension in all_extensions:
-                browser_profile.add_extension(os.path.join(self.shishito_support.project_root, 'extension', chr_extension + '.crx'))
-
-        elif browser_type == 'firefox':
-            all_extensions = self.get_extension_file_names('xpi')
-            for ff_extension in all_extensions:
-                browser_profile.add_extension(os.path.join(self.shishito_support.project_root, 'extension', ff_extension + '.xpi'))
+        crx_paths = crx_path.split('|')
+        for chr_extension in crx_paths:
+            browser_profile.add_extension(os.path.join(self.shishito_support.project_root, 'extension', chr_extension))
 
         return browser_profile
 
@@ -33,7 +26,9 @@ class ShishitoEnvironment(object):
         """
 
         # get browser capabilities
+        print(config_section)
         capabilities = self.get_capabilities(config_section)
+        profile = self.get_browser_profile(config_section.lower(), capabilities)
 
         # get browser type
         browser_type = self.shishito_support.get_opt(config_section, 'browser')
@@ -79,29 +74,19 @@ class ShishitoEnvironment(object):
 
         # lowercase browser_type
         browser_type = browser_type.lower()
-
-        profile = None
+        crx_path = self.shishito_support.get_opt('with_extension')
 
         if browser_type == 'chrome':
-            chrome_options = webdriver.ChromeOptions()
-            chrome_options.add_argument('--ignore-certificate-errors')
-            capabilities.update(chrome_options.to_capabilities())
+            profile = webdriver.ChromeOptions()
+            profile.add_argument('--ignore-certificate-errors')
+            if crx_path:
+                self.add_extension_to_browser(profile, crx_path)
+
         elif browser_type == 'firefox':
             profile = webdriver.FirefoxProfile()
-        if profile is None:
-            return None
-
-        # add extensions to remote driver
-        if self.shishito_support.get_opt('with_extension'):
-            # TODO: add support for extensions again
-            # profile = self.add_extension_to_browser(browser_type, profile)
-            pass
-
-        # add Chrome options to desired capabilities
-        if browser_type == 'chrome':
-            chrome_capabilities = profile.to_capabilities()
-            capabilities.update(chrome_capabilities)
-            profile = None
+            if crx_path:
+                self.add_extension_to_browser(profile, crx_path)
+        capabilities.update(profile.to_capabilities())
 
         return profile
 

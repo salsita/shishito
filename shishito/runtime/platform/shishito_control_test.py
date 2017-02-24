@@ -1,7 +1,8 @@
 import json
 import os
 import re
-
+from selenium.webdriver.chrome.options import Options
+from selenium import webdriver
 from shishito.runtime.shishito_support import ShishitoSupport
 
 
@@ -22,7 +23,7 @@ class ShishitoControlTest(object):
 
         :return: initialized webdriver
         """
-
+       
         base_url = self.shishito_support.get_opt('base_url')
         config_section = self.shishito_support.get_opt('environment_configuration')
 

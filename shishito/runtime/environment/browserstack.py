@@ -119,10 +119,13 @@ class ControlEnvironment(ShishitoEnvironment):
         :param str config_section: section in platform/environment.properties config
         :return: dict with capabilities
         """
+
         test_platform = self.shishito_support.test_platform
         get_opt = self.shishito_support.get_opt
+
+        default_capabilities = super().get_capabilities(config_section)
+        special_capabilities = {}
         capabilities = {
-            'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'false',
             'browserstack.debug': get_opt('browserstack_debug').lower(),
             'project': get_opt('project_name'),
             'build': get_opt('build_name'),
@@ -145,7 +148,7 @@ class ControlEnvironment(ShishitoEnvironment):
                 'deviceOrientation': get_opt(config_section, 'deviceOrientation') or 'portrait'
             }
         self.add_cmdline_arguments_to_browser(capabilities, config_section)
-        return {**capabilities, **special_capabilities}
+        return {**default_capabilities, **capabilities, **special_capabilities}
     # TODO will need to implement some edge cases from there (mobile emulation etc..)
     # def get_browser_profile(self, browser_type):
     # """ returns ChromeOptions or FirefoxProfile with default settings, based on browser """

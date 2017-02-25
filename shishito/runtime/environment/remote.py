@@ -18,32 +18,23 @@ class ControlEnvironment(ShishitoEnvironment):
         remote_url = self.shishito_support.get_opt('remote_driver_url')
 
         # get driver
-        return self.start_driver(capabilities, remote_url)
-
-    def get_capabilities(self, config_section):
-        """ Returns dictionary of capabilities for specific Browserstack browser/os combination """
-
-        get_opt = self.shishito_support.get_opt
-
-        capabilities = {
-            'browserName': get_opt(config_section, 'browser').lower(),
-            'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'true',
-            'version': get_opt(config_section, 'browser_version'),
-            'resolution': get_opt(config_section, 'resolution'),
-            'javascriptEnabled': True
-        }
-        self.add_cmdline_arguments_to_browser(capabilities, config_section)
-        return capabilities
+        browser_type = self.shishito_support.get_opt(config_section, 'browser').lower()
+        return self.start_driver(browser_type, capabilities, remote_url, config_section)
 
 
-    def start_driver(self, capabilities, remote_driver_url):
+
+    def start_driver(self, browser_type, capabilities, remote_driver_url, config_section):
         """ Call remote browser (driver) """
         print("Starting remote driver", capabilities)
 
-        driver = webdriver.Remote(command_executor=remote_driver_url, desired_capabilities=capabilities)
+        browser_profile = self.get_browser_profile(browser_type, capabilities, config_section)
+        driver = webdriver.Remote(
+            command_executor=remote_driver_url,
+            desired_capabilities=capabilities,
+            browser_profile=browser_profile)
+
         if 'resolution' in capabilities:
             (width, height) = capabilities['resolution'].split('x')
             driver.set_window_size(width, height)
-
 
         return driver

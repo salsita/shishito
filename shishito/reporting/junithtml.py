@@ -66,7 +66,7 @@ class LogHTML(object):
         return output
 
     def append_screenshot(self, name, log):
-        name = re.sub('[^A-Za-z0-9_. ]+', '', name)
+        name = re.sub('[^A-Za-z0-9_.]+', '_', name)
         if not os.path.exists(self.screenshot_path):
             os.makedirs(self.screenshot_path)
         source = os.path.join(self.project_root, 'screenshots', name + '.png')

@@ -55,7 +55,7 @@ class ShishitoControlTest(object):
 
         if test_info.test_status not in ('passed', None):
             # save screenshot in case test fails
-            file_name = re.sub('[^A-Za-z0-9_. ]+', '', test_info.test_name)
+            file_name = re.sub('[^A-Za-z0-9_.]+', '_', test_info.test_name)
 
             screenshot_folder = os.path.join(self.shishito_support.project_root, 'screenshots')
 

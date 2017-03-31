@@ -55,7 +55,8 @@ class ShishitoEnvironment(object):
     def get_browser_extensions(self, config_section):
         """
         Check browser config for 'extensions' parameter, if not found fallback to common config.
-        Return array of browser extension files from config_section
+        Return array of browser extension files from config_section.
+        If the extension name is a variable ( $VAR_NAME ), get the value from the environment
             [Chrome]
             extensions=/tmp/extensions/my-extension.crx  another_extension.crx
             ...
@@ -64,6 +65,7 @@ class ShishitoEnvironment(object):
         """
 
         extension_string = None
+        extensions = []
         if config_section is not None:
             try:
                 extension_string = self.shishito_support.get_opt(config_section, 'browser_extensions')  # browser config
@@ -79,7 +81,17 @@ class ShishitoEnvironment(object):
         if extension_string is None:
             return []
 
-        extensions = [i for i in re.split('\s+', extension_string) if i != '']
+        for item in re.split('\s+', extension_string):
+            if item != '':
+                m = re.match('^\$([A-Z][A-Z_]+)$', item)
+                if m is not None:
+                    var_name = m.group(1)
+                    if var_name not in os.environ:
+                        raise Exception("Error getting browser_extensions: env variable '" + item + "' not defined")
+                    extensions.append(os.environ[var_name])  # take the extension path as configured
+                else:
+                    extensions.append(item)     # take the extension path as configured
+
         return extensions
 
 

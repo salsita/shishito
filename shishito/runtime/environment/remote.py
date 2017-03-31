@@ -25,7 +25,13 @@ class ControlEnvironment(ShishitoEnvironment):
 
     def start_driver(self, browser_type, capabilities, remote_driver_url, config_section):
         """ Call remote browser (driver) """
-        print("Starting remote driver", capabilities)
+        try:
+            extensions = capabilities['chromeOptions']['extensions']    # do not print the huge base64 extension content
+            capabilities['chromeOptions']['extensions'] = ['...']
+            print("Starting remote driver", capabilities)
+            capabilities['chromeOptions']['extensions'] = extensions
+        except:
+            print("Starting remote driver", capabilities)
 
         browser_profile = self.get_browser_profile(browser_type, capabilities, config_section)
         driver = webdriver.Remote(

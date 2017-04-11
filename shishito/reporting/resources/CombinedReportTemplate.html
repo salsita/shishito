@@ -18,14 +18,14 @@
 <div id="{{ session }}" class="result_div">
     <div class="result_frame_title">{{ session }}</div>
     <iframe class="result_frame" frameborder="0" src="{{ session }}.html"></iframe>
+    <div>
+            <img src="./output_hist.png" />
+    </div>
+    <div>
+            <img src="./output_avg.png" />
+    </div>
+    <div>
+        <a href="./performance.csv">performance.csv</a>
+    </div>
 </div>
 {% endfor %}
-<div>
-        <img src="./output_hist.png" />
-</div>
-<div>
-        <img src="./output_avg.png" />
-</div>
-<div>
-    <a href="./performance.csv">performance.csv</a>
-</div>

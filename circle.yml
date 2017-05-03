@@ -1,6 +1,6 @@
 machine:
-  override:
-    - echo "no settings needed"
+  python:
+    version: pypy-2.2.1
 
 dependencies:
   override:

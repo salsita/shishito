@@ -1,15 +1,7 @@
 #!/bin/bash
 
-PROJECT=
-case "$CIRLCE_BRANCH" in
-  "master")
-  PROJECT=""
-  ;;
-  *)
-  PROJECT="-$CIRLCE_BRANCH"
-  ;;
-esac
+set -x
 
-tar cvzf "shishito${PROJECT}.tgz" * .[^.]*
+tar cvzf "shishito-${CIRCLE_BRANCH}.tgz" * .[^.]*
 
-# scp "shishito${PROJECT}.tgz" root@qa.salsitasoft.com:/usr/share/nginx/html/qa/
+scp "shishito${CIRCLE_BRANCH}.tgz" root@qa.salsitasoft.com:/usr/share/nginx/html/qa/

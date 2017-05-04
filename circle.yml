@@ -12,6 +12,6 @@ test:
 
 deployment:
   all:
-    branch: /*/
+    branch: /.*/
     commands:
       - scripts/deploy-to-qa-server.sh

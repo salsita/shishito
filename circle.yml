@@ -1,0 +1,17 @@
+machine:
+  override:
+    - echo "no machine configuration needed"
+
+dependencies:
+  override:
+    - echo "no installs needed"
+
+test:
+  override:
+    - echo "no test needed"
+
+deployment:
+  all:
+    branch: /.*/
+    commands:
+      - scripts/deploy-to-qa-server.sh

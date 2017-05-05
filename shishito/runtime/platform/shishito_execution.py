@@ -4,6 +4,7 @@
 """
 
 import os
+import sys
 import pytest
 
 
@@ -36,10 +37,10 @@ class ShishitoExecution(object):
         test_status = 0
 
         for config_section in self.shishito_support.env_config.sections():
-            print 'Running combination: ' + config_section
-            tmp_test_status = self.trigger_pytest(config_section)
-            if tmp_test_status != 0:
-                test_status = tmp_test_status
+
+            print('Running combination: ' + config_section)
+            test_status = self.trigger_pytest(config_section)
+
         return test_status
 
     def trigger_pytest(self, config_section):
@@ -66,7 +67,6 @@ class ShishitoExecution(object):
             '--html-prefix=': '--html-prefix=' + test_result_prefix,
             '--instafail': '--instafail',
         }
-
         # extend pytest_arguments with environment specific args
         extra_pytest_arguments = self.environment.get_pytest_arguments(config_section)
         if extra_pytest_arguments:
@@ -81,6 +81,8 @@ class ShishitoExecution(object):
         ]
 
         pytest_arguments.extend(pytest_arguments_dict.values())
+        if sys.version_info.major > 2:
+            pytest_arguments.extend(['-p', 'pytest_imports'])   # import parser addoption to support extra options
 
         # set pytest parallel execution argument
         parallel_tests = int(self.shishito_support.get_opt('parallel_tests'))
@@ -91,5 +93,15 @@ class ShishitoExecution(object):
         smoke = self.shishito_support.get_opt('smoke')
         if smoke:
             pytest_arguments.extend(['-m', 'smoke'])
+
+        # run only specific tests
+        test_stringexpr = self.shishito_support.get_opt('test')
+        if test_stringexpr:
+            pytest_arguments.extend(['-k', test_stringexpr])
+
+
+        # verbose diffs   
+        pytest_arguments.extend(['-vv'])
+        pytest_arguments.extend(['-s'])
 
         return pytest.main(pytest_arguments)

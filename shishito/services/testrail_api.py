@@ -15,7 +15,7 @@ from shishito.runtime.shishito_support import ShishitoSupport
 class TestRail(object):
     """ TestRail object """
 
-    def __init__(self, user, password, timestamp):
+    def __init__(self, user, password, timestamp, build):
         self.shishito_support = ShishitoSupport()
         self.test_rail_instance = self.shishito_support.get_opt('test_rail_url')
         self.user = user
@@ -26,6 +26,7 @@ class TestRail(object):
         self.project_id = self.shishito_support.get_opt('test_rail_project_id')
         self.section_id = self.shishito_support.get_opt('test_rail_section_id')
         self.test_plan_id = self.shishito_support.get_opt('test_rail_test_plan_id')
+        self.test_plan_name = self.shishito_support.get_opt('test_rail_test_plan_name') or build
         self.suite_id = self.shishito_support.get_opt('test_rail_suite_id')
 
         # shishito results
@@ -38,7 +39,13 @@ class TestRail(object):
     def post_results(self):
         """ Create test-cases on TestRail, adds a new test run and update results for the run """
         self.create_missing_test_cases()
-        test_run = self.add_test_run()
+
+        if self.test_plan_name:
+            test_plan_id = self.add_test_plan()
+        else:
+            test_plan_id = self.test_plan_id
+
+        test_run = self.add_test_run(test_plan_id)
         self.add_test_results(test_run)
 
     def tr_get(self, url):
@@ -47,7 +54,9 @@ class TestRail(object):
         :param url: url endpoint snippet
         :return: response JSON
         """
-        return requests.get(self.uri_base + url, auth=(self.user, self.password), headers=self.default_headers).json()
+        response = requests.get(self.uri_base + url, auth=(self.user, self.password), headers=self.default_headers)
+        #print(self.uri_base + url, response, response.text)
+        return response.json()
 
     def tr_post(self, url, payload):
         """ GET request for TestRail API
@@ -59,12 +68,20 @@ class TestRail(object):
         return requests.post(self.uri_base + url, auth=(self.user, self.password), data=json.dumps(payload),
                              headers=self.default_headers)
 
+    def get_all_test_plans(self):
+        """ Gets list of all test-plans from certain project
+
+        :return: list of test-plans (names = strings)
+        """
+        test_plans_list = self.tr_get('get_plans/{}'.format(self.project_id))
+        return [{'name': test_plan['name'], 'id': test_plan['id']} for test_plan in test_plans_list]
+
     def get_all_test_cases(self):
         """ Gets list of all test-cases from certain project
 
         :return: list of test-cases (names = strings)
         """
-        test_case_list = self.tr_get('get_cases/{}&section_id={}'.format(self.project_id, self.section_id))
+        test_case_list = self.tr_get('get_cases/{}&section_id={}&suite_id={}'.format(self.project_id, self.section_id, self.suite_id))
         return [{'title': test_case['title'], 'id': test_case['id']} for test_case in test_case_list]
 
     def create_test_case(self, title):
@@ -95,17 +112,30 @@ class TestRail(object):
                         test_case_names.append(item['name'])
         return post_errors
 
-    def add_test_run(self):
+    def add_test_plan(self):
+        test_plan_id = 0
+
+        # Check if already exists
+        for plan in self.get_all_test_plans():
+            if plan['name'] == self.test_plan_name:
+                return plan['id']
+
+        result = self.tr_post('add_plan/{}'.format(self.project_id), {"name": self.test_plan_name})
+
+        return json.loads(result.text)['id']
+
+    def add_test_run(self, test_plan_id = None):
         """ Adds new test run under certain test plan into TestRail
 
         :return: dictionary of TestRail run names & IDs
         """
+        test_plan_id = test_plan_id or self.test_plan_id
         runs_created = []
         # Iterate over results for each environment combination
         for result_combination in self.shishito_results:
             run_name = '{} ({})'.format(result_combination['name'][:-4], self.timestamp)
             test_run = {"case_ids": [case['id'] for case in self.get_all_test_cases()]}
-            result = self.tr_post('add_plan_entry/{}'.format(self.test_plan_id),
+            result = self.tr_post('add_plan_entry/{}'.format(test_plan_id),
                                   {"suite_id": self.suite_id, "name": run_name, "runs": [test_run]}).json()
             # lookup test run id
             for run in result['runs']:

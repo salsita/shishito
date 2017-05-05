@@ -22,6 +22,7 @@ class Reporter(object):
         if os.path.exists(os.path.join(self.project_root, 'results')):
             shutil.rmtree(os.path.join(self.project_root, 'results'))
         os.makedirs(self.result_folder)
+        os.symlink(self.timestamp, os.path.join(self.project_root, 'results', 'current'))
 
     def archive_results(self):
         """ Archives test results in zip package """
@@ -47,7 +48,7 @@ class Reporter(object):
         output = template.render(template_vars)
         formatted_output = output.encode('utf8').strip()
         final_report = open(os.path.join(self.project_root, 'results', self.timestamp, 'CombinedReport.html'), 'w')
-        final_report.write(formatted_output)
+        final_report.write(formatted_output.decode('utf8'))
         final_report.close()
         shutil.copy(
             os.path.join(self.current_folder, 'resources', 'combined_report.js'),
@@ -67,15 +68,23 @@ class Reporter(object):
             root = tree.getroot()
             for child in root:
                 if child.tag == 'testcase':
-                    failure = child.find('failure')
                     entry = {'name': child.get('name')}
-                    # ET Element object returns bool False, so condition needs to check against None value
-                    if failure is not None:
-                        entry['result'] = 'failure'
-                        entry['failure_message'] = failure.text
-                    else:
-                        entry['result'] = 'success'
+                    result = 'success'
+                    failure_message = ''
+                    for subChild in child:
+                        if failure_message != '': failure_message += '\n'
+                        failure_message += subChild.text
+                        if subChild.tag == 'failure' and result == 'success':
+                            result = 'failure'
+                        elif subChild.tag == 'error' and result == 'success':
+                            result = 'error'
+                        elif subChild.tag == 'skipped' and result == 'success':
+                            result = 'skipped'
+                    entry['result'] = result
+                    if result == 'success':
                         entry['failure_message'] = None
+                    else:
+                        entry['failure_message'] = failure_message
                     case['cases'].append(entry)
             test_cases.append(case)
         return test_cases

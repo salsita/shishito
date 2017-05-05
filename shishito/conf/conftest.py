@@ -61,7 +61,7 @@ def pytest_addoption(parser):
                      help="BrowserStack mobile platform: MAC, ANDROID")
     parser.addoption("--xdevice", action="store", default="iPad Air",
                      help="BrowserStack mobile device: iPad Air, Samsung Galaxy S5 and others")
-    parser.addoption("--xdeviceOrientation", action="store", default="portrait",
+    parser.addoption("--deviceOrientation", action="store", default="portrait",
                      help="BrowserStack mobile device screen orientation: portrait or landscape")
     parser.addoption("--jira_support", action="store", default=None,
                      help="Jira username and password")
@@ -72,7 +72,10 @@ def pytest_addoption(parser):
     parser.addoption('--test_mobile', action="store", default=None,
                      help="Execute tests on mobile devices")
 
+
+
     # APPIUM
+
     parser.addoption('--platformName', action="store", default=None,
                      help="Appium platform: ios, android")
     parser.addoption('--platformVersion', action="store", default=None,
@@ -92,6 +95,14 @@ def pytest_addoption(parser):
     parser.addoption("--saucelabs", action="store", default=None,
                      help="Saucelabs username and password")
 
+    # BROWSERSTACK MOBILE
+
+    parser.addoption('--platform', action="store", default=None,
+                     help="Appium platform: ios, android")
+    parser.addoption('--device', action="store", default=None,
+                     help="Device name (simulator or real device)")
+
+
 
     # REPORTS
     group = parser.getgroup("terminal reporting")
@@ -105,6 +116,10 @@ def pytest_addoption(parser):
     # TESTRAIL
     parser.addoption("--test_rail", action="store", default=None,
                      help="TestRail Test Management tool credentials")
+
+    # QAStats
+    parser.addoption("--qastats", action="store", default=None,
+                     help="QAStats Test Management tool credentials")
 
 
 def pytest_configure(config):
@@ -121,6 +136,15 @@ def pytest_unconfigure(config):
     if html:
         del config._html
         config.pluginmanager.unregister(html)
+
+
+def pytest_collection_finish(session):
+    test_names = {}
+    for i in session.items:
+        name, module = i.name, i.cls.__module__
+        if name in test_names:
+            raise Exception("You should rename duplicate test method: '%s'. It was found in modules: '%s' and '%s'"%(name, module, test_names[name]))
+        test_names[name] = module
 
 
 @pytest.mark.tryfirst
@@ -141,12 +165,12 @@ def test_status(request):
         # request.node is an "item" because we use the default
         # "function" scope
         if request.node.rep_setup.failed:
-            print "setting up a test failed!", request.node.nodeid
+            print("setting up a test failed!", request.node.nodeid)
             test_info.set_test_info('failed_setup', test_name)
         elif request.node.rep_setup.passed:
             if request.node.rep_call.failed:
                 test_info.set_test_info('failed_execution', test_name)
-                print "executing test failed", request.node.nodeid
+                print("executing test failed", request.node.nodeid)
 
     request.addfinalizer(fin)
     test_info.set_test_info('passed', test_name)

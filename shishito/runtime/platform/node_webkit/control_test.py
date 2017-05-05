@@ -6,7 +6,7 @@
 import os
 import re
 from shishito.runtime.platform.shishito_control_test import ShishitoControlTest
-import pyscreenshot as Screenshotter
+#import pyscreenshot as Screenshotter
 
 
 class ControlTest(ShishitoControlTest):
@@ -14,8 +14,9 @@ class ControlTest(ShishitoControlTest):
 
     def start_browser(self):
         # call browser from proper environment
-        self.driver = self.test_environment.call_browser()
-
+        config_section = self.shishito_support.get_opt('environment_configuration')
+        print("*********** config_section =", config_section)
+        self.driver = self.test_environment.call_browser(config_section)
         return self.driver
 
     def test_init(self):
@@ -25,9 +26,6 @@ class ControlTest(ShishitoControlTest):
         """
         self.driver.implicitly_wait(int(self.shishito_support.get_opt('default_implicit_wait')))
 
-    def stop_browser(self):
-        # closing browser (node-webkit application) once tests are finished
-        self.driver.quit()
 
     def stop_test(self, test_info):
         """
@@ -48,4 +46,5 @@ class ControlTest(ShishitoControlTest):
                 os.makedirs(screenshot_folder)
 
             file_name = re.sub('[^A-Za-z0-9_. ]+', '', test_info.test_name)
-            Screenshotter.grab_to_file(os.path.join(screenshot_folder, file_name + '.png'))
+            self.driver.save_screenshot(os.path.join(screenshot_folder, file_name + '.png'))
+            #Screenshotter.grab_to_file(os.path.join(screenshot_folder, file_name + '.png'))

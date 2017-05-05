@@ -1,9 +1,13 @@
-import ConfigParser
 import os
 from importlib import import_module
 
 import pytest
 import sys
+if sys.version_info.major > 2:
+    import configparser
+else:
+    import ConfigParser
+    configparser = ConfigParser
 
 
 class ShishitoSupport(object):
@@ -64,14 +68,14 @@ class ShishitoSupport(object):
         configs = []
 
         # load server config variables
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         server_config = os.path.join(config_path, 'server_config.properties')
         config.read(server_config)
         server_config_vars = dict(config.defaults())
         configs.append((server_config_vars, 'server config'))
 
         # load local config variables
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         local_config = os.path.join(config_path, 'local_config.properties')
         config.read(local_config)
         local_config_vars = dict(config.defaults())
@@ -131,7 +135,7 @@ class ShishitoSupport(object):
         :raises ValueError: if config path does not exist
         """
 
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config_path = os.path.join(self.project_root, 'config', self.test_platform, self.test_environment + '.properties')
 
         if not os.path.exists(config_path):

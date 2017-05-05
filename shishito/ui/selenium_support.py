@@ -40,7 +40,7 @@ class SeleniumTest(object):
     def save_file_from_url(self, file_path, url):
         """ Saves file from url """
         if os.path.isfile(file_path):
-            print 'File %s already exists.' % file_path
+            print('File %s already exists.' % file_path)
             return
 
         response = requests.get(url, stream=True)
@@ -280,3 +280,51 @@ class SeleniumTest(object):
         windows = self.driver.window_handles
         self.driver.close()
         self.driver.switch_to_window(windows[0])
+
+
+class ClickDelay:
+    """
+        Class to be used as a decorator that would add sleep after click() calls
+        see click_delay() function for details
+    """
+    def __init__(self, obj):
+        self.obj = obj
+
+    def click_delay(self, delay = 2):
+        self.obj.click()
+        time.sleep(delay)
+    
+    def __getattr__(self, name):
+        if (name == 'click'):
+            return self.click_delay
+        return getattr(self.obj, name)
+    
+
+def click_delay(function):
+    """
+        Function to be used as a decorator that would add sleep after click() calls.
+        Usage scenario:
+            this function will decorate a PageDefiniton property/method that returns a webpage Element object.
+            The Element object is encapsulated by ClickDelay class (see above) which redefines click() method by adding sleep() to it.
+            e.g:
+                class LoginPage:
+
+                    @property
+                    @click_delay
+                    def submit_button(self):
+                        return self.driver.find_element_by_css_selector('form button')
+
+                class TestLogin:
+                    def test_login_err(self):
+                        loginPage.submit_button.click()     # -- will click and sleep(2)
+    """
+    name = function.__name__
+    def wrapper(*args, **kwargs):
+        obj = function(*args, **kwargs)
+        if (obj == None):
+            raise Exception("Error: " + name + "() returned None")
+        return ClickDelay(obj)
+    return wrapper
+ 
+ 
+

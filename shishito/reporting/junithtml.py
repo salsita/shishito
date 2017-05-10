@@ -74,7 +74,7 @@ class LogHTML(object):
         log.append(html.img(src='screenshots/' + name + '.png'))
 
     def append_link_to_debug_event(self, name, log):
-        name = re.sub('[^A-Za-z0-9_. ]+', '', name)
+        name = re.sub('[^A-Za-z0-9_.]+', '_', name)
         if not os.path.exists(self.debug_event_path):
             os.makedirs(self.debug_event_path)
         source = os.path.join(self.project_root, 'debug_events', name + '.json')

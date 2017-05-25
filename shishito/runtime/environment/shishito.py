@@ -4,6 +4,7 @@ import re
 import configparser
 import base64
 from selenium import webdriver
+import json
 
 OPTIONS = 'OPTIONS'
 ARGUMENTS = 'ARGUMENTS'
@@ -51,6 +52,25 @@ class ShishitoEnvironment(object):
         arguments = [i for i in re.split('\s+', arguments_string) if i != '']
         return arguments
 
+    def get_experimental_arguments(self, config_section):
+        """
+        return array of browser command line arguments from config_section
+            [Chrome]
+            experimental_arguments=--mobileEmulation--{"deviceName": "Apple iPhone 6"}
+            ...
+        :param config_section: name of config section in web/*.properties (e.g. Chrome)
+        :return: array
+        """
+
+        if config_section is None:
+            return []
+
+        try:
+            arguments_string = self.shishito_support.get_opt(config_section, 'experimental_arguments')
+        except configparser.NoOptionError:
+            return []
+        arguments = arguments_string.split('--')
+        return arguments[1:]
 
     def get_browser_extensions(self, config_section):
         """
@@ -135,6 +155,16 @@ class ShishitoEnvironment(object):
                     extension_base64 = base64.b64encode(ext_file.read()).decode('UTF-8')
                 browser_capabilities[options_kw][exts_kw].append(extension_base64)
 
+    def add_experimental_option(self, browser_capabilities, config_section):
+        browser_name = self.shishito_support.get_opt(config_section, 'browser').lower()
+        arguments = self.get_experimental_arguments(config_section)
+        if arguments and browser_name == 'chrome':
+            chrome_options = webdriver.ChromeOptions()
+            if('mobileEmulation' in arguments):
+                index = arguments.index('mobileEmulation')
+                chrome_options.add_experimental_option(arguments[index], json.loads(arguments[index+1]))
+            return browser_capabilities.update(chrome_options.to_capabilities())
+        return browser_capabilities
 
     def call_browser(self, config_section):
         """ Start webdriver for given config section."""
@@ -159,15 +189,25 @@ class ShishitoEnvironment(object):
              }
         """
         get_opt = self.shishito_support.get_opt
-        capabilities = {
-            'browserName': get_opt(config_section, 'browser').lower(),
-            'version': get_opt(config_section, 'browser_version'),
-            'resolution': get_opt(config_section, 'resolution'),
-            'javascriptEnabled': True,
-            'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'true',
-        }
+        test_platform = self.shishito_support.test_platform
+        if(test_platform == 'web'):
+            capabilities = {
+                'browserName': get_opt(config_section, 'browser').lower(),
+                'version': get_opt(config_section, 'browser_version'),
+                'resolution': get_opt(config_section, 'resolution'),
+                'javascriptEnabled': True,
+                'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'true',
+            }
+        if(test_platform == 'mobile'):
+            capabilities = {
+                'browserName': get_opt(config_section, 'browser').lower(),
+                'javascriptEnabled': True,
+                'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'true',
+            }
+
         self.add_cmdline_arguments_to_browser(capabilities, config_section)
         self.add_extensions_to_browser(capabilities, config_section)
+        self.add_experimental_option(capabilities, config_section)
         return capabilities
 
 

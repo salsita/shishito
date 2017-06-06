@@ -95,6 +95,12 @@ class ShishitoRunner(object):
         # executor_class = getattr(import_module(platform_path), 'ControlExecution')
         executor = executor_class(self.shishito_support, self.test_timestamp)
 
+        # count tests
+        collected_tests = executor.collect_tests()
+
+        # Report test count
+        print("Discovered tests: ", len(collected_tests))
+
         # run test
         #executor.run_tests()
         exit_code = executor.run_tests()

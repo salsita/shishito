@@ -45,6 +45,7 @@ class ShishitoControlTest(object):
         """ Webdriver termination function. """
 
         self.driver.quit()
+        del self.driver
 
     def stop_test(self, test_info, debug_events=None):
         """ To be executed after every test-case (test function). If test failed, function saves

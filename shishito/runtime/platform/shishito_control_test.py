@@ -72,7 +72,7 @@ class ShishitoControlTest(object):
                     os.makedirs(debugevent_folder)
 
                 with open(os.path.join(debugevent_folder, file_name + '.json'), 'w') as logfile:
-                        json.dump(debug_events, logfile)
+                        json.dump(debug_events, logfile, indent=4)
 
     def test_init(self, url):
         """ Executed only once after browser starts.

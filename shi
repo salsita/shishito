@@ -4,6 +4,12 @@
 # - find root dir (with config/) or install project template
 # - source shi.source if it exists
 # - run tests
+
+# this bash file is for Windows only!
+# for Windows only: copy chromedriver.exe (gecko) into shishito directory
+# for Windows only: create .bashrc containing next two lines
+# export PATH=$PATH:/c/Users/<Username>/PycharmProjects/shishito
+# alias python='winpty python.exe'
 set -e
 
 	# find project root dir, print it or ''
@@ -25,8 +31,8 @@ export VIRTUAL_ENV="$SCRIPT_DIR/venv"
 
 	# create venv if needed
 if ! [ -d "$VIRTUAL_ENV" ]; then
-	python3 -m venv "$VIRTUAL_ENV"
-	"$VIRTUAL_ENV/bin/pip" install -r "$SCRIPT_DIR/requirements.txt"
+	python -m venv "$VIRTUAL_ENV"
+	"$VIRTUAL_ENV/Scripts/pip" install -r "$SCRIPT_DIR/requirements.txt"
 fi
 
 
@@ -51,10 +57,10 @@ if [ -f "$root_dir/shi.source" ]; then
 fi
 
 	# run shishito pytest
-export PATH="$VIRTUAL_ENV/bin:$PATH"
+export PATH="$VIRTUAL_ENV/Scripts:$PATH"
 export PYTHONPATH="$SCRIPT_DIR"
 
-"$VIRTUAL_ENV/bin/python3" -c "from shishito.shishito_runner import ShishitoRunner
+"$VIRTUAL_ENV/Scripts/python" -c "from shishito.shishito_runner import ShishitoRunner
 ShishitoRunner('$(pwd -P)').run_tests()" "$@"
 
 	# check results

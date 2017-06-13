@@ -4,6 +4,7 @@
 """
 
 import argparse
+import os
 import sys
 import time
 
@@ -20,7 +21,7 @@ class ShishitoRunner(object):
 
     def __init__(self, project_root):
         # set project root
-        self.project_root = project_root
+        self.project_root = os.path.abspath(project_root.replace('/c',''))
 
         # test timestamp - for storing results
         self.test_timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")

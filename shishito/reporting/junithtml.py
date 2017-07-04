@@ -2,6 +2,7 @@
 author: Irina Gvozdeva
 Based on initial code from Ross Lawley and mozilla selenium report generating.
 """
+import glob
 
 import pkg_resources
 import os
@@ -63,16 +64,33 @@ class LogHTML(object):
             content = sec.get("Captured std%s setup" % name)
             if content:
                 output = output + content
+            content = sec.get("Captured std%s call" % name)
+            if content:
+                output = output + content
         return output
 
     def append_screenshot(self, name, log):
         name = re.sub('[^A-Za-z0-9_.]+', '_', name)
-        if not os.path.exists(self.screenshot_path):
-            os.makedirs(self.screenshot_path)
-        source = os.path.join(self.project_root, 'screenshots', name + '.png')
-        self.used_screens.append(source)
-        log.append(html.h3('Screenshot'))
-        log.append(html.img(src='screenshots/' + name + '.png'))
+        log.append(html.h3('Screenshots'))
+
+        # Following works only for manually captured images.
+        # One will be captured automatically *AFTER* this method finishes, so we have to predict
+        related_images = glob.glob(os.path.join(self.project_root, 'screenshots', name + '_*.png'))
+
+        existing_images_count = len(related_images)
+
+        # There will be always this image (captured by the ShishitoControlTest.stop_test() method
+        automatically_captured = os.path.join(self.project_root, 'screenshots', '{}_{}.png'.format(name, existing_images_count + 1))
+        related_images.append(automatically_captured)
+
+        for image_path in related_images:
+            self.used_screens.append(image_path)
+            # use relative path in img src
+            source = image_path.replace(self.project_root,'.')
+            log.append(source)
+            log.append(html.br())
+            log.append(html.img(src=source))
+            log.append(html.br())
 
     def append_link_to_debug_event(self, name, log):
         name = re.sub('[^A-Za-z0-9_.]+', '_', name)
@@ -84,6 +102,9 @@ class LogHTML(object):
         log.append(html.a(name + '.json', href='debug_events/' + name + '.json'))
 
     def process_screenshot_files(self):
+        if not os.path.exists(self.screenshot_path):
+            os.makedirs(self.screenshot_path)
+
         for screen in self.used_screens:
             if os.path.exists(screen):
                 shutil.copy(screen, self.screenshot_path)
@@ -209,7 +230,16 @@ class LogHTML(object):
             if hasattr(report, 'wasxfail'):
                 log.append(html.h3('Expected failure'))
                 xfail_p = html.p(class_='xfail')
-                xfail_p.append("Reason: {}".format(report.wasxfail))
+                xfail_reason = report.wasxfail
+                xfail_p.append("Reason: ")
+
+                # Does xfail reason contain e.g. link to JIRA?
+                urls = self._find_urls(xfail_reason)
+                if len(urls) > 0:
+                    xfail_p.append(html.a(xfail_reason, href=urls[0], target='_blank'))
+                else:
+                    xfail_p.append(xfail_reason)
+
                 log.append(xfail_p)
 
             log.append(html.h3('Stacktrace'))
@@ -238,10 +268,16 @@ class LogHTML(object):
         else:
             log.append('Test OK I guess')
 
-        additional_html.append(log)
 
         output = self._write_captured_output(report)
-        additional_html.append(output)
+
+        log.append(html.h3('Captured output'))
+        stacktrace_p = html.p(class_='stacktrace')
+        stacktrace_p.append(output)
+        log.append(stacktrace_p)
+
+        additional_html.append(log)
+
 
         info = output.split(" ")
         links_html = []
@@ -259,3 +295,9 @@ class LogHTML(object):
                                           html.td(links_html, class_='col-links'),
                                           html.td(additional_html, class_='debug')],
                                       class_=result.lower() + ' results-table-row'))
+
+    def _find_urls(self, text):
+        return re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
+
+
+

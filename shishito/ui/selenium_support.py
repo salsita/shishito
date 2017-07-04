@@ -8,6 +8,7 @@ Helper functions that abstract often basic webdriver operations into more usable
 
 import time
 import os
+import glob
 
 import requests
 from selenium.webdriver.support.ui import Select
@@ -37,7 +38,10 @@ class SeleniumTest(object):
         screenshot_folder = os.path.join(project_root, 'screenshots')
         if not os.path.exists(screenshot_folder):
             os.makedirs(screenshot_folder)
-        self.driver.save_screenshot(os.path.join(screenshot_folder, name + '.png'))
+
+        existing_images = glob.glob(os.path.join(screenshot_folder, name + '_*.png'))
+        actual_pic_nr = len(existing_images) + 1
+        self.driver.save_screenshot(os.path.join(screenshot_folder, '{}_{}.png'.format(name, actual_pic_nr)))
 
     def save_file_from_url(self, file_path, url):
         """ Saves file from url """

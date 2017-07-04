@@ -171,6 +171,9 @@ def test_status(request):
             if request.node.rep_call.failed:
                 test_info.set_test_info('failed_execution', test_name)
                 print("executing test failed", request.node.nodeid)
+            elif "xfail" in request.node.keywords:
+                test_info.set_test_info('expected_fail', test_name)
+                print("executing test failed as eXpected", request.node.nodeid)
 
     request.addfinalizer(fin)
     test_info.set_test_info('passed', test_name)

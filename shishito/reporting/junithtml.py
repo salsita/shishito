@@ -102,14 +102,10 @@ class LogHTML(object):
         log.append(html.a(name + '.json', href='debug_events/' + name + '.json'))
 
     def process_screenshot_files(self):
-        if not os.path.exists(self.screenshot_path):
-            os.makedirs(self.screenshot_path)
-
-        for screen in self.used_screens:
-            if os.path.exists(screen):
-                shutil.copy(screen, self.screenshot_path)
+        ''' Move ALL screenshots to results folder'''
         screenshot_folder = os.path.join(self.project_root, 'screenshots')
         if os.path.exists(screenshot_folder):
+            shutil.copytree(screenshot_folder, self.screenshot_path)
             shutil.rmtree(screenshot_folder)
 
     def process_debug_event_files(self):

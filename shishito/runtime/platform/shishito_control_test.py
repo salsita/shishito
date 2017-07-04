@@ -3,6 +3,7 @@ import os
 import re
 
 from shishito.runtime.shishito_support import ShishitoSupport
+from shishito.ui.selenium_support import SeleniumTest
 
 
 class ShishitoControlTest(object):
@@ -57,12 +58,9 @@ class ShishitoControlTest(object):
             # save screenshot in case test fails
             file_name = re.sub('[^A-Za-z0-9_.]+', '_', test_info.test_name)
 
-            screenshot_folder = os.path.join(self.shishito_support.project_root, 'screenshots')
+            ts = SeleniumTest(self.driver)
+            ts.save_screenshot(file_name)
 
-            if not os.path.exists(screenshot_folder):
-                os.makedirs(screenshot_folder)
-
-            self.driver.save_screenshot(os.path.join(screenshot_folder, file_name + '.png'))
 
             #Save debug info to file
             if debug_events is not None:

@@ -30,8 +30,10 @@ class SeleniumTest(object):
         self.default_implicit_wait = int(self.shishito_support.get_opt('default_implicit_wait'))
         self.timeout = int(self.shishito_support.get_opt('timeout'))
 
-    def save_screenshot(self, name, project_root):
+    def save_screenshot(self, name, project_root=None):
         """ Saves application screenshot """
+        if not project_root:
+            project_root = self.shishito_support.project_root
         screenshot_folder = os.path.join(project_root, 'screenshots')
         if not os.path.exists(screenshot_folder):
             os.makedirs(screenshot_folder)

@@ -127,6 +127,8 @@ class ShishitoExecution(object):
 
         # verbose diffs
         pytest_arguments.extend(['-vv'])
-        pytest_arguments.extend(['-s'])
+
+        # Uncomment following to enable stdout and stderr (otherwise it is added to the final report)
+        # pytest_arguments.extend(['-s'])
 
         return pytest.main(pytest_arguments)

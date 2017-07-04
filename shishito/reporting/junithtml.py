@@ -255,8 +255,6 @@ class LogHTML(object):
 
             log.append(stacktrace_p)
 
-            if not os.path.exists(self.screenshot_path):
-                os.makedirs(self.screenshot_path)
             self.append_screenshot(testmethod, log)
 
             self.append_link_to_debug_event(testmethod, log)

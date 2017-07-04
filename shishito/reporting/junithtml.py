@@ -71,6 +71,7 @@ class LogHTML(object):
             os.makedirs(self.screenshot_path)
         source = os.path.join(self.project_root, 'screenshots', name + '.png')
         self.used_screens.append(source)
+        log.append(html.h3('Screenshot'))
         log.append(html.img(src='screenshots/' + name + '.png'))
 
     def append_link_to_debug_event(self, name, log):
@@ -201,30 +202,47 @@ class LogHTML(object):
 
         additional_html = []
 
-        if not 'Passed' in result:
-            if report.longrepr:
-                log = html.div(class_='log')
-                for line in str(report.longrepr).splitlines():
-                    separator = line.startswith('_ ' * 10)
-                    if separator:
-                        log.append(line[:80])
+
+        log = html.div(class_='log')
+
+        if report.longrepr:
+            if hasattr(report, 'wasxfail'):
+                log.append(html.h3('Expected failure'))
+                xfail_p = html.p(class_='xfail')
+                xfail_p.append("Reason: {}".format(report.wasxfail))
+                log.append(xfail_p)
+
+            log.append(html.h3('Stacktrace'))
+            stacktrace_p = html.p(class_='stacktrace')
+            for line in str(report.longrepr).splitlines():
+                separator = line.startswith('_ ' * 10)
+                if separator:
+                    stacktrace_p.append(line[:80])
+                else:
+                    exception = line.startswith("E   ")
+                    if exception:
+                        stacktrace_p.append(html.span(raw(cgi.escape(line)),
+                                             class_='error'))
                     else:
-                        exception = line.startswith("E   ")
-                        if exception:
-                            log.append(html.span(raw(cgi.escape(line)),
-                                                 class_='error'))
-                        else:
-                            log.append(raw(cgi.escape(line)))
-                    log.append(html.br())
+                        stacktrace_p.append(raw(cgi.escape(line)))
+                stacktrace_p.append(html.br())
 
-                if not os.path.exists(self.screenshot_path):
-                    os.makedirs(self.screenshot_path)
-                self.append_screenshot(testmethod, log)
+            log.append(stacktrace_p)
 
-                self.append_link_to_debug_event(testmethod, log)
+            if not os.path.exists(self.screenshot_path):
+                os.makedirs(self.screenshot_path)
+            self.append_screenshot(testmethod, log)
 
-                additional_html.append(log)
+            self.append_link_to_debug_event(testmethod, log)
+
+        else:
+            log.append('Test OK I guess')
+
+        additional_html.append(log)
+
         output = self._write_captured_output(report)
+        additional_html.append(output)
+
         info = output.split(" ")
         links_html = []
         for i in range(0, len(info)):

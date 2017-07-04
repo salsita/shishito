@@ -7,7 +7,7 @@ $(document).ready(function() {
 	hide_all_errors();
 
 	$('.sortable').click(toggle_sort_states);
-    $('.failed.results-table-row, .error.results-table-row').click(function() {
+    $('.results-table-row').click(function() {
         $(this).next('tr.debug').toggle('fast');
         $(this).children('.col-result').children('.hide_error').toggle();
         $(this).children('.col-result').children('.show_error').toggle();

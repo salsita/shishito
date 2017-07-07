@@ -158,7 +158,7 @@ class LogHTML(object):
     def pytest_terminal_summary(self, terminalreporter):
         terminalreporter.write_sep("-", "generated html file: %s" % (self.logfile))
 
-    def pytest_sessionfinish(self, session, exitstatus, __multicall__):
+    def pytest_sessionfinish(self, session, exitstatus):
         self._make_report_dir()
         logfile = py.std.codecs.open(self.logfile, 'w', encoding='utf-8')
 

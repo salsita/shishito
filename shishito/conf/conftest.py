@@ -147,10 +147,11 @@ def pytest_collection_finish(session):
         test_names[name] = module
 
 
-@pytest.mark.tryfirst
-def pytest_runtest_makereport(item, call, __multicall__):
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
     # execute all other hooks to obtain the report object
-    rep = __multicall__.execute()
+    outcome = yield
+    rep = outcome.get_result()
     # set an report attribute for each phase of a call, which can
     # be "setup", "call", "teardown"
     setattr(item, "rep_" + rep.when, rep)

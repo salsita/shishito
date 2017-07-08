@@ -21,15 +21,17 @@ from py.xml import raw
 def mangle_testnames(names):
     names = [x.replace(".py", "") for x in names if x != '()']
     names[0] = names[0].replace("/", '.')
-    #print("names %s" %names)
     return names
+
+
+def find_urls(text):
+    return re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
 
 
 class LogHTML(object):
     def __init__(self, logfile, prefix):
         logfile = os.path.expanduser(os.path.expandvars(logfile))
         self.logfile = os.path.normpath(os.path.abspath(logfile))
-        # TODO will not work if shishito runner is not used
         self.project_root = os.getcwd()
         self.screenshot_path = os.path.join(os.path.dirname(self.logfile), 'screenshots')
         self.debug_event_path = os.path.join(os.path.dirname(self.logfile), 'debug_events')
@@ -58,6 +60,7 @@ class LogHTML(object):
         return logfile_dirname
 
     def _write_captured_output(self, report):
+        # TODO: add support for all call types (setup, call, teardown)
         sec = dict(report.sections)
         output = ""
         for name in ('out', 'err'):
@@ -68,38 +71,6 @@ class LogHTML(object):
             if content:
                 output = output + content
         return output
-
-    def append_screenshot(self, name, log):
-        name = re.sub('[^A-Za-z0-9_.]+', '_', name)
-        log.append(html.h3('Screenshots'))
-
-        # Following works only for manually captured images.
-        # One will be captured automatically *AFTER* this method finishes, so we have to predict
-        related_images = glob.glob(os.path.join(self.project_root, 'screenshots', name + '_*.png'))
-
-        existing_images_count = len(related_images)
-
-        # There will be always this image (captured by the ShishitoControlTest.stop_test() method
-        automatically_captured = os.path.join(self.project_root, 'screenshots', '{}_{}.png'.format(name, existing_images_count + 1))
-        related_images.append(automatically_captured)
-
-        for image_path in related_images:
-            self.used_screens.append(image_path)
-            # use relative path in img src
-            source = image_path.replace(self.project_root,'.')
-            log.append(source)
-            log.append(html.br())
-            log.append(html.img(src=source))
-            log.append(html.br())
-
-    def append_link_to_debug_event(self, name, log):
-        name = re.sub('[^A-Za-z0-9_.]+', '_', name)
-        if not os.path.exists(self.debug_event_path):
-            os.makedirs(self.debug_event_path)
-        source = os.path.join(self.project_root, 'debug_events', name + '.json')
-        self.used_debug_events.append(source)
-        log.append(html.h3('DebugEvent log'))
-        log.append(html.a(name + '.json', href='debug_events/' + name + '.json'))
 
     def process_screenshot_files(self):
         ''' Move ALL screenshots to results folder'''
@@ -188,19 +159,19 @@ class LogHTML(object):
                     html.span('%i failed' % self.failed, class_='failed clickable'), ', ',
                     html.span('%i errors' % self.errors, class_='error clickable'), '.',
                     html.br(), ),
-                          html.span('Hide all errors', class_='clickable hide_all_errors'), ', ',
-                          html.span('Show all errors', class_='clickable show_all_errors'),
-                         ], id='summary-wrapper'),
+                    html.span('Hide all errors', class_='clickable hide_all_errors'), ', ',
+                    html.span('Show all errors', class_='clickable show_all_errors'),
+                ], id='summary-wrapper'),
                 html.div(id='summary-space'),
                 html.table([
-                               html.thead(html.tr([
-                                   html.th('Result', class_='sortable', col='result'),
-                                   html.th('Class', class_='sortable', col='class'),
-                                   html.th('Name', class_='sortable', col='name'),
-                                   html.th('Duration', class_='sortable numeric', col='duration'),
-                                   #html.th('Output')]), id='results-table-head'),
-                                   html.th('Links to BrowserStack')]), id='results-table-head'),
-                               html.tbody(*self.test_logs, id='results-table-body')], id='results-table')))
+                    html.thead(html.tr([
+                        html.th('Result', class_='sortable', col='result'),
+                        html.th('Class', class_='sortable', col='class'),
+                        html.th('Name', class_='sortable', col='name'),
+                        html.th('Duration', class_='sortable numeric', col='duration'),
+                        # html.th('Output')]), id='results-table-head'),
+                        html.th('Links to BrowserStack')]), id='results-table-head'),
+                    html.tbody(*self.test_logs, id='results-table-body')], id='results-table')))
         logfile.write(
             '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">' + doc.unicode(
                 indent=2))
@@ -215,64 +186,42 @@ class LogHTML(object):
             testclass.insert(0, self.prefix)
         testclass = ".".join(testclass)
         testmethod = names[-1]
-        time = getattr(report, 'duration', 0.0)
+
+        duration = getattr(report, 'duration', 0.0)
 
         additional_html = []
-
 
         log = html.div(class_='log')
 
         if report.longrepr:
             if hasattr(report, 'wasxfail'):
-                log.append(html.h3('Expected failure'))
-                xfail_p = html.p(class_='xfail')
-                xfail_reason = report.wasxfail
-                xfail_p.append("Reason: ")
+                self._append_xpath_section(log, report)
 
-                # Does xfail reason contain e.g. link to JIRA?
-                urls = self._find_urls(xfail_reason)
-                if len(urls) > 0:
-                    xfail_p.append(html.a(xfail_reason, href=urls[0], target='_blank'))
-                else:
-                    xfail_p.append(xfail_reason)
+            self._append_stacktrace_section(log, report)
 
-                log.append(xfail_p)
+            self._append_screenshot(testmethod, log)
 
-            log.append(html.h3('Stacktrace'))
-            stacktrace_p = html.p(class_='stacktrace')
-            for line in str(report.longrepr).splitlines():
-                separator = line.startswith('_ ' * 10)
-                if separator:
-                    stacktrace_p.append(line[:80])
-                else:
-                    exception = line.startswith("E   ")
-                    if exception:
-                        stacktrace_p.append(html.span(raw(cgi.escape(line)),
-                                             class_='error'))
-                    else:
-                        stacktrace_p.append(raw(cgi.escape(line)))
-                stacktrace_p.append(html.br())
-
-            log.append(stacktrace_p)
-
-            self.append_screenshot(testmethod, log)
-
-            self.append_link_to_debug_event(testmethod, log)
+            self._append_link_to_debug_event(testmethod, log)
 
         else:
-            log.append('Test OK I guess')
+            log.append('Your tests are passing, but you are still curious. I like it :)')
 
-
-        output = self._write_captured_output(report)
-
-        log.append(html.h3('Captured output'))
-        stacktrace_p = html.p(class_='stacktrace')
-        stacktrace_p.append(output)
-        log.append(stacktrace_p)
+        output = self._append_captured_output(log, report)
 
         additional_html.append(log)
 
+        links_html = self._append_browserstack_log(output)
 
+        self.test_logs.append(html.tr([
+            html.td(result, class_='col-result'),
+            html.td(testclass, class_='col-class'),
+            html.td(testmethod, class_='col-name'),
+            html.td(round(duration), class_='col-duration'),
+            html.td(links_html, class_='col-links'),
+            html.td(additional_html, class_='debug')],
+            class_=result.lower() + ' results-table-row'))
+
+    def _append_browserstack_log(self, output):
         info = output.split(" ")
         links_html = []
         for i in range(0, len(info)):
@@ -280,18 +229,77 @@ class LogHTML(object):
             if match_obj:
                 links_html.append(html.a("link", href=match_obj.group(1), target='_blank'))
                 links_html.append(' ')
+        return links_html
 
-        self.test_logs.append(html.tr([
-                                          html.td(result, class_='col-result'),
-                                          html.td(testclass, class_='col-class'),
-                                          html.td(testmethod, class_='col-name'),
-                                          html.td(round(time), class_='col-duration'),
-                                          html.td(links_html, class_='col-links'),
-                                          html.td(additional_html, class_='debug')],
-                                      class_=result.lower() + ' results-table-row'))
+    def _append_captured_output(self, log, report):
+        output = self._write_captured_output(report)
+        log.append(html.h3('Captured output'))
+        stacktrace_p = html.p(class_='stacktrace')
+        stacktrace_p.append(output)
+        log.append(stacktrace_p)
+        return output
 
-    def _find_urls(self, text):
-        return re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
+    @staticmethod
+    def _append_stacktrace_section(log, report):
+        log.append(html.h3('Stacktrace'))
+        stacktrace_p = html.p(class_='stacktrace')
+        for line in str(report.longrepr).splitlines():
+            separator = line.startswith('_ ' * 10)
+            if separator:
+                stacktrace_p.append(line[:80])
+            else:
+                exception = line.startswith("E   ")
+                if exception:
+                    stacktrace_p.append(html.span(raw(cgi.escape(line)),
+                                                  class_='error'))
+                else:
+                    stacktrace_p.append(raw(cgi.escape(line)))
+            stacktrace_p.append(html.br())
+        log.append(stacktrace_p)
 
+    @staticmethod
+    def _append_xpath_section(log, report):
+        log.append(html.h3('Expected failure'))
+        xfail_p = html.p(class_='xfail')
+        xfail_reason = report.wasxfail
+        xfail_p.append("Reason: ")
+        # Does xfail reason contain e.g. link to JIRA?
+        urls = find_urls(xfail_reason)
+        if len(urls) > 0:
+            xfail_p.append(html.a(xfail_reason, href=urls[0], target='_blank'))
+        else:
+            xfail_p.append(xfail_reason)
+        log.append(xfail_p)
 
+    def _append_screenshot(self, name, log):
+        name = re.sub('[^A-Za-z0-9_.]+', '_', name)
+        log.append(html.h3('Screenshots'))
 
+        # Following works only for manually captured images.
+        # One will be captured automatically *AFTER* this method finishes, so we have to predict
+        related_images = glob.glob(os.path.join(self.project_root, 'screenshots', name + '_*.png'))
+
+        existing_images_count = len(related_images)
+
+        # There will be always this image (captured by the ShishitoControlTest.stop_test() method
+        automatically_captured = os.path.join(self.project_root, 'screenshots',
+                                              '{}_{}.png'.format(name, existing_images_count + 1))
+        related_images.append(automatically_captured)
+
+        for image_path in related_images:
+            self.used_screens.append(image_path)
+            # use relative path in img src
+            source = image_path.replace(self.project_root, '.')
+            log.append(source)
+            log.append(html.br())
+            log.append(html.img(src=source))
+            log.append(html.br())
+
+    def _append_link_to_debug_event(self, name, log):
+        name = re.sub('[^A-Za-z0-9_.]+', '_', name)
+        if not os.path.exists(self.debug_event_path):
+            os.makedirs(self.debug_event_path)
+        source = os.path.join(self.project_root, 'debug_events', name + '.json')
+        self.used_debug_events.append(source)
+        log.append(html.h3('DebugEvent log'))
+        log.append(html.a(name + '.json', href='debug_events/' + name + '.json'))

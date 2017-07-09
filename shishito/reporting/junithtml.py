@@ -193,18 +193,21 @@ class LogHTML(object):
 
         log = html.div(class_='log')
 
-        if report.longrepr:
+        if report.passed:
+            log.append('Your tests are passing, but you are still curious. I like it :)')
+
+        else:
+
             if hasattr(report, 'wasxfail'):
                 self._append_xpath_section(log, report)
 
-            self._append_stacktrace_section(log, report)
+            if not report.skipped:
 
-            self._append_screenshot(testmethod, log)
+                self._append_stacktrace_section(log, report)
 
-            self._append_link_to_debug_event(testmethod, log)
+                self._append_screenshot(testmethod, log)
 
-        else:
-            log.append('Your tests are passing, but you are still curious. I like it :)')
+                self._append_link_to_debug_event(testmethod, log)
 
         output = self._append_captured_output(log, report)
 

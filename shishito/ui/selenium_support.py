@@ -5,7 +5,7 @@
 @summary: Common selenium webdriver related functions.
 Helper functions that abstract often basic webdriver operations into more usable functional blocks.
 """
-
+import inspect
 import time
 import os
 import glob
@@ -31,8 +31,11 @@ class SeleniumTest(object):
         self.default_implicit_wait = int(self.shishito_support.get_opt('default_implicit_wait'))
         self.timeout = int(self.shishito_support.get_opt('timeout'))
 
-    def save_screenshot(self, name, project_root=None):
+    def save_screenshot(self, name=None, project_root=None):
         """ Saves application screenshot """
+        if not name:
+            # Use the name of caller function
+            name = inspect.stack()[1][3]
         if not project_root:
             project_root = self.shishito_support.project_root
         screenshot_folder = os.path.join(project_root, 'screenshots')

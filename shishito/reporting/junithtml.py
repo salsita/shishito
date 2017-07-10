@@ -13,15 +13,13 @@ import shutil
 import re
 
 import py
+from _pytest.runner import TestReport
 
 from py.xml import html
 from py.xml import raw
 
 
-def mangle_testnames(names):
-    names = [x.replace(".py", "") for x in names if x != '()']
-    names[0] = names[0].replace("/", '.')
-    return names
+
 
 
 def find_urls(text):
@@ -38,6 +36,8 @@ class LogHTML(object):
         self.used_screens = []
         self.used_debug_events = []
         self.prefix = prefix
+        self.current_test_info = dict.fromkeys(['package', 'class', 'name'])
+        self.current_test_reports = dict.fromkeys(['setup', 'call', 'teardown'])
         self.tests = []
         self.passed = self.skipped = 0
         self.failed = self.errors = 0
@@ -59,17 +59,22 @@ class LogHTML(object):
                 os.path.abspath(os.path.join(logfile_dirname, file)))
         return logfile_dirname
 
+    def process_testnames_from_report(self, test_node_path):
+        names = [x.replace(".py", "") for x in test_node_path.split("::") if x != '()']
+        self.current_test_info['package'] = names[0].replace("/", '.')
+        self.current_test_info['class'] = names[1]
+        self.current_test_info['name'] = names[2]
+        return names
+
     def _write_captured_output(self, report):
         # TODO: add support for all call types (setup, call, teardown)
         sec = dict(report.sections)
         output = ""
-        for name in ('out', 'err'):
-            content = sec.get("Captured std%s setup" % name)
-            if content:
-                output = output + content
-            content = sec.get("Captured std%s call" % name)
-            if content:
-                output = output + content
+        for type in ('out', 'err'):
+            for section in ('setup', 'call', 'teardown'):
+                content = sec.get("Captured std{} {}".format(type, section))
+                if content:
+                    output += content
         return output
 
     def process_screenshot_files(self):
@@ -112,16 +117,34 @@ class LogHTML(object):
             self.skipped += 1
 
     def pytest_runtest_logreport(self, report):
-        if report.passed:
-            if report.when == 'call':
-                self.append_pass(report)
-        elif report.failed:
-            if report.when != "call":
-                self.append_error(report)
-            else:
-                self.append_failure(report)
-        elif report.skipped:
-            self.append_skipped(report)
+        self.process_testnames_from_report(report.nodeid)
+
+        # Save the reports for all three test phases
+        self.current_test_reports[report.when] = report  # type: TestReport
+
+        if report.when == 'teardown': #finish processing the test
+            setup_report = self.current_test_reports['setup']  # type: TestReport
+            call_report = self.current_test_reports['call']  # type: TestReport
+            teardown_report = self.current_test_reports['teardown']  # type: TestReport
+
+            if setup_report.failed or teardown_report.failed:
+                self.append_error(setup_report)
+
+            elif setup_report.skipped:
+                self.append_skipped(setup_report)
+
+            elif call_report.skipped:
+                self.append_skipped(call_report)
+
+            elif call_report.passed:
+                self.append_pass(call_report)
+
+            elif call_report.failed:
+                self.append_failure(call_report)
+
+
+            # cleanup the reports for current test (set values to None)
+            self.current_test_reports = dict.fromkeys(self.current_test_reports)
 
     def pytest_sessionstart(self):
         self.suite_start_time = time.time()
@@ -180,12 +203,8 @@ class LogHTML(object):
         self.process_debug_event_files()
 
     def _appendrow(self, result, report):
-        names = mangle_testnames(report.nodeid.split("::"))
-        testclass = (names[:-1])
-        if self.prefix:
-            testclass.insert(0, self.prefix)
-        testclass = ".".join(testclass)
-        testmethod = names[-1]
+        testclass = self.prefix + " " + self.current_test_info['package'] + self.current_test_info['class']
+        testmethod = self.current_test_info['name']
 
         duration = getattr(report, 'duration', 0.0)
 
@@ -205,9 +224,9 @@ class LogHTML(object):
 
                 self._append_stacktrace_section(log, report)
 
-                self._append_screenshot(testmethod, log)
-
                 self._append_link_to_debug_event(testmethod, log)
+
+        self._append_screenshot(testmethod, log)
 
         output = self._append_captured_output(log, report)
 
@@ -235,7 +254,8 @@ class LogHTML(object):
         return links_html
 
     def _append_captured_output(self, log, report):
-        output = self._write_captured_output(report)
+        # Use the output section from the "teardown" report - as it has all the previous sections (setup, call) as well
+        output = self._write_captured_output(self.current_test_reports['teardown'])
         log.append(html.h3('Captured output'))
         stacktrace_p = html.p(class_='stacktrace')
         stacktrace_p.append(output)
@@ -279,15 +299,7 @@ class LogHTML(object):
         log.append(html.h3('Screenshots'))
 
         # Following works only for manually captured images.
-        # One will be captured automatically *AFTER* this method finishes, so we have to predict
         related_images = glob.glob(os.path.join(self.project_root, 'screenshots', name + '_*.png'))
-
-        existing_images_count = len(related_images)
-
-        # There will be always this image (captured by the ShishitoControlTest.stop_test() method
-        automatically_captured = os.path.join(self.project_root, 'screenshots',
-                                              '{}_{}.png'.format(name, existing_images_count + 1))
-        related_images.append(automatically_captured)
 
         for image_path in related_images:
             self.used_screens.append(image_path)

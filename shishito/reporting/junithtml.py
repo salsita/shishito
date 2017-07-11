@@ -67,7 +67,6 @@ class LogHTML(object):
         return names
 
     def _write_captured_output(self, report):
-        # TODO: add support for all call types (setup, call, teardown)
         sec = dict(report.sections)
         output = ""
         for type in ('out', 'err'):
@@ -78,13 +77,20 @@ class LogHTML(object):
         return output
 
     def process_screenshot_files(self):
-        ''' Move ALL screenshots to results folder'''
+        if not os.path.exists(self.screenshot_path):
+            os.makedirs(self.screenshot_path)
+
+        for screenshot in self.used_screens:
+            if os.path.exists(screenshot):
+                shutil.copy(screenshot, self.screenshot_path)
         screenshot_folder = os.path.join(self.project_root, 'screenshots')
         if os.path.exists(screenshot_folder):
-            shutil.copytree(screenshot_folder, self.screenshot_path)
             shutil.rmtree(screenshot_folder)
 
     def process_debug_event_files(self):
+        if not os.path.exists(self.debug_event_path):
+            os.makedirs(self.debug_event_path)
+
         for event in self.used_debug_events:
             if os.path.exists(event):
                 shutil.copy(event, self.debug_event_path)
@@ -296,10 +302,12 @@ class LogHTML(object):
 
     def _append_screenshot(self, name, log):
         name = re.sub('[^A-Za-z0-9_.]+', '_', name)
+        browser_name = self.prefix.split(",")[0].replace('[', '').lower()
+
         log.append(html.h3('Screenshots'))
 
         # Following works only for manually captured images.
-        related_images = glob.glob(os.path.join(self.project_root, 'screenshots', name + '_*.png'))
+        related_images = glob.glob(os.path.join(self.project_root, 'screenshots', browser_name + '_' + name + '_*.png'))
 
         for image_path in related_images:
             self.used_screens.append(image_path)
@@ -312,8 +320,8 @@ class LogHTML(object):
 
     def _append_link_to_debug_event(self, name, log):
         name = re.sub('[^A-Za-z0-9_.]+', '_', name)
-        if not os.path.exists(self.debug_event_path):
-            os.makedirs(self.debug_event_path)
+        browser_name = self.prefix.split(",")[0].replace('[', '').lower()
+
         source = os.path.join(self.project_root, 'debug_events', name + '.json')
         self.used_debug_events.append(source)
         log.append(html.h3('DebugEvent log'))

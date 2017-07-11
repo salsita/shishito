@@ -56,7 +56,9 @@ class ShishitoControlTest(object):
 
         if test_info.test_status not in ('passed', None):
             # save screenshot in case test fails
-            file_name = re.sub('[^A-Za-z0-9_.]+', '_', test_info.test_name)
+            test_name = re.sub('[^A-Za-z0-9_.]+', '_', test_info.test_name)
+            browser_name = self.driver.name
+            file_name = browser_name + '_' + test_name
 
             ts = SeleniumTest(self.driver)
             ts.save_screenshot(file_name)

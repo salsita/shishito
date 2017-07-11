@@ -34,8 +34,8 @@ class SeleniumTest(object):
     def save_screenshot(self, name=None, project_root=None):
         """ Saves application screenshot """
         if not name:
-            # Use the name of caller function
-            name = inspect.stack()[1][3]
+            # Use the name of browser and caller function (e.g. 'chrome_test_google_search'
+            name = self.driver.name + "_" + inspect.stack()[1][3]
         if not project_root:
             project_root = self.shishito_support.project_root
         screenshot_folder = os.path.join(project_root, 'screenshots')

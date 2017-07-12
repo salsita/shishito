@@ -33,6 +33,7 @@ class LogHTML(object):
         self.project_root = os.getcwd()
         self.screenshot_path = os.path.join(os.path.dirname(self.logfile), 'screenshots')
         self.debug_event_path = os.path.join(os.path.dirname(self.logfile), 'debug_events')
+        self.performance_path = os.path.join(os.path.dirname(self.logfile), 'performance_logs')
         self.used_screens = []
         self.used_debug_events = []
         self.prefix = prefix
@@ -97,6 +98,20 @@ class LogHTML(object):
         debug_event_folder = os.path.join(self.project_root, 'debug_events')
         if os.path.exists(debug_event_folder):
             shutil.rmtree(debug_event_folder)
+
+    def process_performance_files(self):
+        # TODO: The file processing code smells, need to refactor it to be more DRY :)
+        if not os.path.exists(self.performance_path):
+            os.makedirs(self.performance_path)
+
+        performance_tmp_folder = os.path.join(self.project_root, 'performance_logs')
+        perf_log_files = glob.glob(os.path.join(performance_tmp_folder, '*.log'))
+
+        for perf_log_file in perf_log_files:
+            shutil.copy(perf_log_file, self.performance_path)
+
+        if os.path.exists(performance_tmp_folder):
+            shutil.rmtree(performance_tmp_folder)
 
     def append_pass(self, report):
         self.passed += 1
@@ -207,6 +222,7 @@ class LogHTML(object):
         logfile.close()
         self.process_screenshot_files()
         self.process_debug_event_files()
+        self.process_performance_files()
 
     def _appendrow(self, result, report):
         testclass = self.prefix + " " + self.current_test_info['package'] + self.current_test_info['class']

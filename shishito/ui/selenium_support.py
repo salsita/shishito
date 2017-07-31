@@ -5,9 +5,10 @@
 @summary: Common selenium webdriver related functions.
 Helper functions that abstract often basic webdriver operations into more usable functional blocks.
 """
-
+import inspect
 import time
 import os
+import glob
 
 import requests
 from selenium.webdriver.support.ui import Select
@@ -30,12 +31,20 @@ class SeleniumTest(object):
         self.default_implicit_wait = int(self.shishito_support.get_opt('default_implicit_wait'))
         self.timeout = int(self.shishito_support.get_opt('timeout'))
 
-    def save_screenshot(self, name, project_root):
+    def save_screenshot(self, name=None, project_root=None):
         """ Saves application screenshot """
+        if not name:
+            # Use the name of browser and caller function (e.g. 'chrome_test_google_search'
+            name = self.driver.name + "_" + inspect.stack()[1][3]
+        if not project_root:
+            project_root = self.shishito_support.project_root
         screenshot_folder = os.path.join(project_root, 'screenshots')
         if not os.path.exists(screenshot_folder):
             os.makedirs(screenshot_folder)
-        self.driver.save_screenshot(os.path.join(screenshot_folder, name + '.png'))
+
+        existing_images = glob.glob(os.path.join(screenshot_folder, name + '_*.png'))
+        actual_pic_nr = len(existing_images) + 1
+        self.driver.save_screenshot(os.path.join(screenshot_folder, '{}_{}.png'.format(name, actual_pic_nr)))
 
     def save_file_from_url(self, file_path, url):
         """ Saves file from url """

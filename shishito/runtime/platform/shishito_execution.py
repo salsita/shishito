@@ -7,6 +7,15 @@ import os
 import sys
 import pytest
 
+class CollectionPlugin:
+    # collect test data from pytest
+
+    def __init__(self):
+        self.collected = []
+
+    def pytest_collection_modifyitems(self, items):
+        for item in items:
+            self.collected.append((item.cls, item.name))
 
 class ShishitoExecution(object):
     """ Base class for platform ControlExecution objects. """
@@ -42,6 +51,23 @@ class ShishitoExecution(object):
             test_status = self.trigger_pytest(config_section)
 
         return test_status
+
+    def collect_tests(self):
+        # collect tests discoverable by pytest
+
+        test_directory = self.shishito_support.get_opt('test_directory')
+
+        collect_plugin = CollectionPlugin()
+
+        pytest_arguments = [
+            os.path.join(self.shishito_support.project_root, test_directory),
+        ]
+
+        pytest_arguments.extend(['--collect-only'])
+        pytest_arguments.extend(['-p', 'no:terminal'])
+        pytest.main(pytest_arguments, plugins=[collect_plugin])
+
+        return collect_plugin.collected
 
     def trigger_pytest(self, config_section):
         """ Run PyTest runner on specific browser/device configuration. Function creates arguments for pytest.
@@ -99,9 +125,10 @@ class ShishitoExecution(object):
         if test_stringexpr:
             pytest_arguments.extend(['-k', test_stringexpr])
 
-
-        # verbose diffs   
+        # verbose diffs
         pytest_arguments.extend(['-vv'])
-        pytest_arguments.extend(['-s'])
+
+        # Uncomment following to enable stdout and stderr (otherwise it is added to the final report)
+        # pytest_arguments.extend(['-s'])
 
         return pytest.main(pytest_arguments)

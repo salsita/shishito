@@ -2,6 +2,7 @@
 author: Irina Gvozdeva
 Based on initial code from Ross Lawley and mozilla selenium report generating.
 """
+import glob
 
 import pkg_resources
 import os
@@ -12,29 +13,32 @@ import shutil
 import re
 
 import py
+from _pytest.runner import TestReport
 
 from py.xml import html
 from py.xml import raw
 
 
-def mangle_testnames(names):
-    names = [x.replace(".py", "") for x in names if x != '()']
-    names[0] = names[0].replace("/", '.')
-    #print("names %s" %names)
-    return names
+
+
+
+def find_urls(text):
+    return re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
 
 
 class LogHTML(object):
     def __init__(self, logfile, prefix):
         logfile = os.path.expanduser(os.path.expandvars(logfile))
         self.logfile = os.path.normpath(os.path.abspath(logfile))
-        # TODO will not work if shishito runner is not used
         self.project_root = os.getcwd()
         self.screenshot_path = os.path.join(os.path.dirname(self.logfile), 'screenshots')
         self.debug_event_path = os.path.join(os.path.dirname(self.logfile), 'debug_events')
+        self.performance_path = os.path.join(os.path.dirname(self.logfile), 'performance_logs')
         self.used_screens = []
         self.used_debug_events = []
         self.prefix = prefix
+        self.current_test_info = dict.fromkeys(['package', 'class', 'name'])
+        self.current_test_reports = dict.fromkeys(['setup', 'call', 'teardown'])
         self.tests = []
         self.passed = self.skipped = 0
         self.failed = self.errors = 0
@@ -56,47 +60,58 @@ class LogHTML(object):
                 os.path.abspath(os.path.join(logfile_dirname, file)))
         return logfile_dirname
 
+    def process_testnames_from_report(self, test_node_path):
+        names = [x.replace(".py", "") for x in test_node_path.split("::") if x != '()']
+        self.current_test_info['package'] = names[0].replace("/", '.')
+        self.current_test_info['class'] = names[1]
+        self.current_test_info['name'] = names[2]
+        return names
+
     def _write_captured_output(self, report):
         sec = dict(report.sections)
         output = ""
-        for name in ('out', 'err'):
-            content = sec.get("Captured std%s setup" % name)
-            if content:
-                output = output + content
+        for type in ('out', 'err'):
+            for section in ('setup', 'call', 'teardown'):
+                content = sec.get("Captured std{} {}".format(type, section))
+                if content:
+                    output += content
         return output
 
-    def append_screenshot(self, name, log):
-        name = re.sub('[^A-Za-z0-9_. ]+', '', name)
+    def process_screenshot_files(self):
         if not os.path.exists(self.screenshot_path):
             os.makedirs(self.screenshot_path)
-        source = os.path.join(self.project_root, 'screenshots', name + '.png')
-        self.used_screens.append(source)
-        log.append(html.img(src='screenshots/' + name + '.png'))
 
-    def append_link_to_debug_event(self, name, log):
-        name = re.sub('[^A-Za-z0-9_. ]+', '', name)
-        if not os.path.exists(self.debug_event_path):
-            os.makedirs(self.debug_event_path)
-        source = os.path.join(self.project_root, 'debug_events', name + '.json')
-        self.used_debug_events.append(source)
-        log.append(html.h3('DebugEvent log'))
-        log.append(html.a(name + '.json', href='debug_events/' + name + '.json'))
-
-    def process_screenshot_files(self):
-        for screen in self.used_screens:
-            if os.path.exists(screen):
-                shutil.copy(screen, self.screenshot_path)
+        for screenshot in self.used_screens:
+            if os.path.exists(screenshot):
+                shutil.copy(screenshot, self.screenshot_path)
         screenshot_folder = os.path.join(self.project_root, 'screenshots')
         if os.path.exists(screenshot_folder):
             shutil.rmtree(screenshot_folder)
 
     def process_debug_event_files(self):
+        if not os.path.exists(self.debug_event_path):
+            os.makedirs(self.debug_event_path)
+
         for event in self.used_debug_events:
             if os.path.exists(event):
                 shutil.copy(event, self.debug_event_path)
         debug_event_folder = os.path.join(self.project_root, 'debug_events')
         if os.path.exists(debug_event_folder):
             shutil.rmtree(debug_event_folder)
+
+    def process_performance_files(self):
+        # TODO: The file processing code smells, need to refactor it to be more DRY :)
+        if not os.path.exists(self.performance_path):
+            os.makedirs(self.performance_path)
+
+        performance_tmp_folder = os.path.join(self.project_root, 'performance_logs')
+        perf_log_files = glob.glob(os.path.join(performance_tmp_folder, '*.log'))
+
+        for perf_log_file in perf_log_files:
+            shutil.copy(perf_log_file, self.performance_path)
+
+        if os.path.exists(performance_tmp_folder):
+            shutil.rmtree(performance_tmp_folder)
 
     def append_pass(self, report):
         self.passed += 1
@@ -123,16 +138,34 @@ class LogHTML(object):
             self.skipped += 1
 
     def pytest_runtest_logreport(self, report):
-        if report.passed:
-            if report.when == 'call':
-                self.append_pass(report)
-        elif report.failed:
-            if report.when != "call":
-                self.append_error(report)
-            else:
-                self.append_failure(report)
-        elif report.skipped:
-            self.append_skipped(report)
+        self.process_testnames_from_report(report.nodeid)
+
+        # Save the reports for all three test phases
+        self.current_test_reports[report.when] = report  # type: TestReport
+
+        if report.when == 'teardown': #finish processing the test
+            setup_report = self.current_test_reports['setup']  # type: TestReport
+            call_report = self.current_test_reports['call']  # type: TestReport
+            teardown_report = self.current_test_reports['teardown']  # type: TestReport
+
+            if setup_report.failed or teardown_report.failed:
+                self.append_error(setup_report)
+
+            elif setup_report.skipped:
+                self.append_skipped(setup_report)
+
+            elif call_report.skipped:
+                self.append_skipped(call_report)
+
+            elif call_report.passed:
+                self.append_pass(call_report)
+
+            elif call_report.failed:
+                self.append_failure(call_report)
+
+
+            # cleanup the reports for current test (set values to None)
+            self.current_test_reports = dict.fromkeys(self.current_test_reports)
 
     def pytest_sessionstart(self):
         self.suite_start_time = time.time()
@@ -140,7 +173,7 @@ class LogHTML(object):
     def pytest_terminal_summary(self, terminalreporter):
         terminalreporter.write_sep("-", "generated html file: %s" % (self.logfile))
 
-    def pytest_sessionfinish(self, session, exitstatus, __multicall__):
+    def pytest_sessionfinish(self, session, exitstatus):
         self._make_report_dir()
         logfile = py.std.codecs.open(self.logfile, 'w', encoding='utf-8')
 
@@ -170,61 +203,69 @@ class LogHTML(object):
                     html.span('%i failed' % self.failed, class_='failed clickable'), ', ',
                     html.span('%i errors' % self.errors, class_='error clickable'), '.',
                     html.br(), ),
-                          html.span('Hide all errors', class_='clickable hide_all_errors'), ', ',
-                          html.span('Show all errors', class_='clickable show_all_errors'),
-                         ], id='summary-wrapper'),
+                    html.span('Hide all errors', class_='clickable hide_all_errors'), ', ',
+                    html.span('Show all errors', class_='clickable show_all_errors'),
+                ], id='summary-wrapper'),
                 html.div(id='summary-space'),
                 html.table([
-                               html.thead(html.tr([
-                                   html.th('Result', class_='sortable', col='result'),
-                                   html.th('Class', class_='sortable', col='class'),
-                                   html.th('Name', class_='sortable', col='name'),
-                                   html.th('Duration', class_='sortable numeric', col='duration'),
-                                   #html.th('Output')]), id='results-table-head'),
-                                   html.th('Links to BrowserStack')]), id='results-table-head'),
-                               html.tbody(*self.test_logs, id='results-table-body')], id='results-table')))
+                    html.thead(html.tr([
+                        html.th('Result', class_='sortable', col='result'),
+                        html.th('Class', class_='sortable', col='class'),
+                        html.th('Name', class_='sortable', col='name'),
+                        html.th('Duration', class_='sortable numeric', col='duration'),
+                        # html.th('Output')]), id='results-table-head'),
+                        html.th('Links to BrowserStack')]), id='results-table-head'),
+                    html.tbody(*self.test_logs, id='results-table-body')], id='results-table')))
         logfile.write(
             '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">' + doc.unicode(
                 indent=2))
         logfile.close()
         self.process_screenshot_files()
         self.process_debug_event_files()
+        self.process_performance_files()
 
     def _appendrow(self, result, report):
-        names = mangle_testnames(report.nodeid.split("::"))
-        testclass = (names[:-1])
-        if self.prefix:
-            testclass.insert(0, self.prefix)
-        testclass = ".".join(testclass)
-        testmethod = names[-1]
-        time = getattr(report, 'duration', 0.0)
+        testclass = self.prefix + " " + self.current_test_info['package'] + self.current_test_info['class']
+        testmethod = self.current_test_info['name']
+
+        duration = getattr(report, 'duration', 0.0)
 
         additional_html = []
 
-        if not 'Passed' in result:
-            if report.longrepr:
-                log = html.div(class_='log')
-                for line in str(report.longrepr).splitlines():
-                    separator = line.startswith('_ ' * 10)
-                    if separator:
-                        log.append(line[:80])
-                    else:
-                        exception = line.startswith("E   ")
-                        if exception:
-                            log.append(html.span(raw(cgi.escape(line)),
-                                                 class_='error'))
-                        else:
-                            log.append(raw(cgi.escape(line)))
-                    log.append(html.br())
+        log = html.div(class_='log')
 
-                if not os.path.exists(self.screenshot_path):
-                    os.makedirs(self.screenshot_path)
-                self.append_screenshot(testmethod, log)
+        if report.passed:
+            log.append('Your tests are passing, but you are still curious. I like it :)')
 
-                self.append_link_to_debug_event(testmethod, log)
+        else:
 
-                additional_html.append(log)
-        output = self._write_captured_output(report)
+            if hasattr(report, 'wasxfail'):
+                self._append_xpath_section(log, report)
+
+            if not report.skipped:
+
+                self._append_stacktrace_section(log, report)
+
+                self._append_link_to_debug_event(testmethod, log)
+
+        self._append_screenshot(testmethod, log)
+
+        output = self._append_captured_output(log, report)
+
+        additional_html.append(log)
+
+        links_html = self._append_browserstack_log(output)
+
+        self.test_logs.append(html.tr([
+            html.td(result, class_='col-result'),
+            html.td(testclass, class_='col-class'),
+            html.td(testmethod, class_='col-name'),
+            html.td(round(duration), class_='col-duration'),
+            html.td(links_html, class_='col-links'),
+            html.td(additional_html, class_='debug')],
+            class_=result.lower() + ' results-table-row'))
+
+    def _append_browserstack_log(self, output):
         info = output.split(" ")
         links_html = []
         for i in range(0, len(info)):
@@ -232,12 +273,72 @@ class LogHTML(object):
             if match_obj:
                 links_html.append(html.a("link", href=match_obj.group(1), target='_blank'))
                 links_html.append(' ')
+        return links_html
 
-        self.test_logs.append(html.tr([
-                                          html.td(result, class_='col-result'),
-                                          html.td(testclass, class_='col-class'),
-                                          html.td(testmethod, class_='col-name'),
-                                          html.td(round(time), class_='col-duration'),
-                                          html.td(links_html, class_='col-links'),
-                                          html.td(additional_html, class_='debug')],
-                                      class_=result.lower() + ' results-table-row'))
+    def _append_captured_output(self, log, report):
+        # Use the output section from the "teardown" report - as it has all the previous sections (setup, call) as well
+        output = self._write_captured_output(self.current_test_reports['teardown'])
+        log.append(html.h3('Captured output'))
+        stacktrace_p = html.p(class_='stacktrace')
+        stacktrace_p.append(output)
+        log.append(stacktrace_p)
+        return output
+
+    @staticmethod
+    def _append_stacktrace_section(log, report):
+        log.append(html.h3('Stacktrace'))
+        stacktrace_p = html.p(class_='stacktrace')
+        for line in str(report.longrepr).splitlines():
+            separator = line.startswith('_ ' * 10)
+            if separator:
+                stacktrace_p.append(line[:80])
+            else:
+                exception = line.startswith("E   ")
+                if exception:
+                    stacktrace_p.append(html.span(raw(cgi.escape(line)),
+                                                  class_='error'))
+                else:
+                    stacktrace_p.append(raw(cgi.escape(line)))
+            stacktrace_p.append(html.br())
+        log.append(stacktrace_p)
+
+    @staticmethod
+    def _append_xpath_section(log, report):
+        log.append(html.h3('Expected failure'))
+        xfail_p = html.p(class_='xfail')
+        xfail_reason = report.wasxfail
+        xfail_p.append("Reason: ")
+        # Does xfail reason contain e.g. link to JIRA?
+        urls = find_urls(xfail_reason)
+        if len(urls) > 0:
+            xfail_p.append(html.a(xfail_reason, href=urls[0], target='_blank'))
+        else:
+            xfail_p.append(xfail_reason)
+        log.append(xfail_p)
+
+    def _append_screenshot(self, name, log):
+        name = re.sub('[^A-Za-z0-9_.]+', '_', name)
+        browser_name = self.prefix.split(",")[0].replace('[', '').lower()
+
+        log.append(html.h3('Screenshots'))
+
+        # Following works only for manually captured images.
+        related_images = glob.glob(os.path.join(self.project_root, 'screenshots', browser_name + '_' + name + '_*.png'))
+
+        for image_path in related_images:
+            self.used_screens.append(image_path)
+            # use relative path in img src
+            source = image_path.replace(self.project_root, '.')
+            log.append(source)
+            log.append(html.br())
+            log.append(html.img(src=source))
+            log.append(html.br())
+
+    def _append_link_to_debug_event(self, name, log):
+        name = re.sub('[^A-Za-z0-9_.]+', '_', name)
+        browser_name = self.prefix.split(",")[0].replace('[', '').lower()
+
+        source = os.path.join(self.project_root, 'debug_events', browser_name + '_' + name + '.json')
+        self.used_debug_events.append(source)
+        log.append(html.h3('DebugEvent log'))
+        log.append(html.a(name + '.json', href='debug_events/' + name + '.json'))

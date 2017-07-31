@@ -82,8 +82,11 @@ span.error, span.failed, span.xpassed, .failed .col-result, .error .col-result, 
     color: red;
 }
 
+.results-table-row:hover {
+    background-color: rgb(240, 240, 240);
+}
+
 .failed.results-table-row {
-    cursor: pointer;
     background-color: rgb(250, 230, 230);
 }
 
@@ -92,7 +95,6 @@ span.error, span.failed, span.xpassed, .failed .col-result, .error .col-result, 
 }
 
 .error.results-table-row {
-    cursor: pointer;
     background-color: rgb(250, 200, 200);
 }
 
@@ -130,24 +132,26 @@ span.error, span.failed, span.xpassed, .failed .col-result, .error .col-result, 
     font-weight: bold
 }
 
+.results-table-row {
+    cursor: pointer;
+}
 /*------------------
  * 2. Debug
  *------------------*/
 
-.log:only-child {
+.stacktrace:only-child {
     height: inherit
 }
 
-.log {
+.stacktrace {
     background-color: #e6e6e6;
     border: 1px solid #e6e6e6;
     color: black;
     display: block;
     font-family: "Courier New", Courier, monospace;
-    height: 230px;
     overflow-y: scroll;
     padding: 5px;
-    white-space: pre-wrap
+    white-space: pre-wrap;
 }
 
 .screenshot, .video {

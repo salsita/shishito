@@ -147,10 +147,11 @@ def pytest_collection_finish(session):
         test_names[name] = module
 
 
-@pytest.mark.tryfirst
-def pytest_runtest_makereport(item, call, __multicall__):
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
     # execute all other hooks to obtain the report object
-    rep = __multicall__.execute()
+    outcome = yield
+    rep = outcome.get_result()
     # set an report attribute for each phase of a call, which can
     # be "setup", "call", "teardown"
     setattr(item, "rep_" + rep.when, rep)
@@ -171,6 +172,9 @@ def test_status(request):
             if request.node.rep_call.failed:
                 test_info.set_test_info('failed_execution', test_name)
                 print("executing test failed", request.node.nodeid)
+            elif "xfail" in request.node.keywords:
+                test_info.set_test_info('expected_fail', test_name)
+                print("executing test failed as eXpected", request.node.nodeid)
 
     request.addfinalizer(fin)
     test_info.set_test_info('passed', test_name)

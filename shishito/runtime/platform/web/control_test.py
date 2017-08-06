@@ -18,22 +18,23 @@ class ControlTest(ShishitoControlTest):
 
         :param bool delete_cookies: delete cookies from webdriver
         """
+        for driver in self.drivers:
+            if delete_cookies:
+                driver.delete_all_cookies()
 
-        if delete_cookies:
-            self.driver.delete_all_cookies()
+            driver.quit()
 
-        self.driver.quit()
+        # Cleanup the driver info
+        del self.drivers[:]
 
-    def test_init(self, url):
+    def test_init(self, driver, url):
         """ Executed only once after browser starts.
         Suitable for general pre-test logic that do not need to run before every individual test-case.
         Open given url and wait for given time (setting "default_implicit_wait").
-
-        :param str url: url which should be opened
         """
 
-        self.driver.get(url)
-        self.driver.implicitly_wait(int(self.shishito_support.get_opt('default_implicit_wait')))
+        driver.get(url)
+        driver.implicitly_wait(int(self.shishito_support.get_opt('default_implicit_wait')))
 
     def start_test(self, reload_page=None):
         """ To be executed before every test-case (test function).
@@ -42,6 +43,6 @@ class ControlTest(ShishitoControlTest):
         """
 
         if reload_page:
-            self.driver.get(self.shishito_support.get_opt('base_url'))
-            self.driver.implicitly_wait(self.shishito_support.get_opt('default_implicit_wait'))
+            self.drivers[0].get(self.shishito_support.get_opt('base_url'))
+            self.drivers[0].implicitly_wait(self.shishito_support.get_opt('default_implicit_wait'))
             time.sleep(5)

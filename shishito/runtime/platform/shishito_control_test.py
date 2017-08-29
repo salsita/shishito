@@ -16,25 +16,28 @@ class ShishitoControlTest(object):
         control_env_obj = self.shishito_support.get_module('test_environment')
         self.test_environment = control_env_obj(self.shishito_support)
 
-        self.driver = None
+        self.drivers = []
 
-    def start_browser(self):
+    def start_browser(self, base_url = None):
         """ Webdriver startup function.
 
         :return: initialized webdriver
         """
 
-        base_url = self.shishito_support.get_opt('base_url')
         config_section = self.shishito_support.get_opt('environment_configuration')
 
         # call browser from proper environment
-        self.driver = self.test_environment.call_browser(config_section)
+        driver = self.test_environment.call_browser(config_section)
+        self.drivers.append(driver)
 
         # load init url
-        if base_url:
-            self.test_init(base_url)
+        if not base_url:
+            base_url = self.shishito_support.get_opt('base_url')
 
-        return self.driver
+        if base_url:
+            self.test_init(driver, base_url)
+
+        return driver
 
     def start_test(self, reload_page=None):
         """ To be executed before every test-case (test function).
@@ -45,7 +48,8 @@ class ShishitoControlTest(object):
     def stop_browser(self):
         """ Webdriver termination function. """
 
-        self.driver.quit()
+        for driver in self.drivers:
+            driver.quit()
 
     def stop_test(self, test_info, debug_events=None):
         """ To be executed after every test-case (test function). If test failed, function saves
@@ -57,26 +61,31 @@ class ShishitoControlTest(object):
         if test_info.test_status not in ('passed', None):
             # save screenshot in case test fails
             test_name = re.sub('[^A-Za-z0-9_.]+', '_', test_info.test_name)
-            browser_name = self.driver.name
-            file_name = browser_name + '_' + test_name
 
-            ts = SeleniumTest(self.driver)
-            ts.save_screenshot(file_name)
+            # Capture screenshot and debug info from driver(s)
+            for driver in self.drivers:
+                browser_name = driver.name
+                file_name = browser_name + '_' + test_name
+
+                ts = SeleniumTest(driver)
+                ts.save_screenshot(file_name)
 
 
-            #Save debug info to file
-            if debug_events is not None:
-                debugevent_folder = os.path.join(self.shishito_support.project_root, 'debug_events')
+                #Save debug info to file
+                if debug_events is not None:
+                    debugevent_folder = os.path.join(self.shishito_support.project_root, 'debug_events')
 
-                if not os.path.exists(debugevent_folder):
-                    os.makedirs(debugevent_folder)
+                    if not os.path.exists(debugevent_folder):
+                        os.makedirs(debugevent_folder)
 
-                with open(os.path.join(debugevent_folder, file_name + '.json'), 'w') as logfile:
-                        json.dump(debug_events, logfile, indent=4)
+                    with open(os.path.join(debugevent_folder, file_name + '.json'), 'w') as logfile:
+                            json.dump(debug_events, logfile)
 
-    def test_init(self, url):
+    def test_init(self, driver, url):
         """ Executed only once after browser starts.
          Suitable for general pre-test logic that do not need to run before every individual test-case.
 
-        :param str url:
+        :param WebDriver driver: driver instance to set up
+        :param str url: initial URL
+
         """

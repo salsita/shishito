@@ -38,7 +38,7 @@ class LogHTML(object):
         self.used_debug_events = []
         self.prefix = prefix
         self.current_test_info = dict.fromkeys(['package', 'class', 'name'])
-        self.current_test_reports = dict.fromkeys(['setup', 'call', 'teardown'])
+        self.current_test_reports = {}
         self.tests = []
         self.passed = self.skipped = 0
         self.failed = self.errors = 0
@@ -140,13 +140,20 @@ class LogHTML(object):
     def pytest_runtest_logreport(self, report):
         self.process_testnames_from_report(report.nodeid)
 
+        # It is the first report for that test
+        current_test = self.current_test_info['name']
+        if current_test not in self.current_test_reports:
+            self.current_test_reports[current_test] = dict.fromkeys(['setup', 'call', 'teardown'])
+
+        current_test_reports = self.current_test_reports[current_test]
+
         # Save the reports for all three test phases
-        self.current_test_reports[report.when] = report  # type: TestReport
+        current_test_reports[report.when] = report  # type: TestReport
 
         if report.when == 'teardown': #finish processing the test
-            setup_report = self.current_test_reports['setup']  # type: TestReport
-            call_report = self.current_test_reports['call']  # type: TestReport
-            teardown_report = self.current_test_reports['teardown']  # type: TestReport
+            setup_report = current_test_reports['setup']  # type: TestReport
+            call_report = current_test_reports['call']  # type: TestReport
+            teardown_report = current_test_reports['teardown']  # type: TestReport
 
             if setup_report.failed or teardown_report.failed:
                 self.append_error(setup_report)
@@ -163,9 +170,6 @@ class LogHTML(object):
             elif call_report.failed:
                 self.append_failure(call_report)
 
-
-            # cleanup the reports for current test (set values to None)
-            self.current_test_reports = dict.fromkeys(self.current_test_reports)
 
     def pytest_sessionstart(self):
         self.suite_start_time = time.time()
@@ -277,7 +281,8 @@ class LogHTML(object):
 
     def _append_captured_output(self, log, report):
         # Use the output section from the "teardown" report - as it has all the previous sections (setup, call) as well
-        output = self._write_captured_output(self.current_test_reports['teardown'])
+        test_name = self.current_test_info['name']
+        output = self._write_captured_output(self.current_test_reports[test_name]['teardown'])
         log.append(html.h3('Captured output'))
         stacktrace_p = html.p(class_='stacktrace')
         stacktrace_p.append(output)

@@ -48,7 +48,8 @@ class ShishitoSupport(object):
 
         for path in sys.path:
             config_dir = os.path.join(path, 'config')
-            if os.path.exists(config_dir):
+            tests_dir = os.path.join(path, 'tests')
+            if os.path.exists(config_dir) and os.path.exists(tests_dir):
                 return path
 
         raise ValueError('Can not find config dir on sys.path')

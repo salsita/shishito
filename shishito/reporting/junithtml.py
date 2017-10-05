@@ -346,4 +346,4 @@ class LogHTML(object):
         source = os.path.join(self.project_root, 'debug_events', browser_name + '_' + name + '.json')
         self.used_debug_events.append(source)
         log.append(html.h3('DebugEvent log'))
-        log.append(html.a(name + '.json', href='debug_events/' + name + '.json'))
+        log.append(html.a(name + '.json', href='debug_events/' + browser_name + '_' + name + '.json'))

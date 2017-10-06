@@ -30,7 +30,6 @@ class ControlEnvironment(ShishitoEnvironment):
             capabilities['chromeOptions']['extensions'] = ['...']
             print("Starting remote driver", capabilities)
             capabilities['chromeOptions']['extensions'] = extensions
-
         except:
             print("Starting remote driver", capabilities)
 

@@ -253,8 +253,8 @@ class ShishitoEnvironment(object):
 
         self.add_cmdline_arguments_to_browser(capabilities, config_section)
         self.add_extensions_to_browser(capabilities, config_section)
-        self.add_download_path_to_browser(capabilities, config_section)
         self.add_experimental_option(capabilities, config_section)
+        self.add_download_path_to_browser(capabilities, config_section)
         return capabilities
 
     def start_driver(self, browser_type, capabilities, config_section=None):

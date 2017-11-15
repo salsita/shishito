@@ -13,7 +13,7 @@ generates nice test results output.
 
 setup(
     name='shishito',
-    version='2.0',
+    version='3.0.0',
     url='https://github.com/salsita/shishito',
     description='Python module for selenium webdriver test execution',
     long_description=long_description,
@@ -37,6 +37,7 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.5",
         "Topic :: Software Development :: Testing",
     ],
 )

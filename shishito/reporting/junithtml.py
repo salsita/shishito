@@ -218,7 +218,7 @@ class LogHTML(object):
                         html.th('Name', class_='sortable', col='name'),
                         html.th('Duration', class_='sortable numeric', col='duration'),
                         # html.th('Output')]), id='results-table-head'),
-                        html.th('Links to BrowserStack')]), id='results-table-head'),
+                        html.th('Links')]), id='results-table-head'),
                     html.tbody(*self.test_logs, id='results-table-body')], id='results-table')))
         logfile.write(
             '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">' + doc.unicode(
@@ -235,6 +235,7 @@ class LogHTML(object):
         duration = getattr(report, 'duration', 0.0)
 
         additional_html = []
+        links_html = []
 
         log = html.div(class_='log')
 
@@ -250,7 +251,7 @@ class LogHTML(object):
 
                 self._append_stacktrace_section(log, report)
 
-                self._append_link_to_debug_event(testmethod, log)
+                links_html.append(self._link_to_debug_event(testmethod, log))
 
         self._append_screenshot(testmethod, log)
 
@@ -258,7 +259,7 @@ class LogHTML(object):
 
         additional_html.append(log)
 
-        links_html = self._append_browserstack_log(output)
+        links_html.append(self._link_to_browserstack_log(output))
 
         self.test_logs.append(html.tr([
             html.td(result, class_='col-result'),
@@ -269,15 +270,23 @@ class LogHTML(object):
             html.td(additional_html, class_='debug')],
             class_=result.lower() + ' results-table-row'))
 
-    def _append_browserstack_log(self, output):
+    def _link_to_browserstack_log(self, output):
         info = output.split(" ")
-        links_html = []
+        link_html = []
         for i in range(0, len(info)):
             match_obj = re.search(r'(https?://www.browserstack.com/automate/builds/[\w]*/sessions/[\w]*)/', info[i])
             if match_obj:
-                links_html.append(html.a("link", href=match_obj.group(1), target='_blank'))
-                links_html.append(' ')
-        return links_html
+                link_html.append(html.a("Browserstack", href=match_obj.group(1), target='_blank'))
+                link_html.append(' ')
+        return link_html
+
+    def _link_to_debug_event(self, name, log):
+        name = re.sub('[^A-Za-z0-9_.]+', '_', name)
+        browser_name = self.prefix.split(",")[0].replace('[', '').lower()
+
+        source = os.path.join(self.project_root, 'debug_events', browser_name + '_' + name + '.json')
+        self.used_debug_events.append(source)
+        return [html.a("Console log", href='debug_events/' + browser_name + '_' + name + '.json'), ' ']
 
     def _append_captured_output(self, log, report):
         # Use the output section from the "teardown" report - as it has all the previous sections (setup, call) as well
@@ -339,11 +348,4 @@ class LogHTML(object):
             log.append(html.img(src=source))
             log.append(html.br())
 
-    def _append_link_to_debug_event(self, name, log):
-        name = re.sub('[^A-Za-z0-9_.]+', '_', name)
-        browser_name = self.prefix.split(",")[0].replace('[', '').lower()
 
-        source = os.path.join(self.project_root, 'debug_events', browser_name + '_' + name + '.json')
-        self.used_debug_events.append(source)
-        log.append(html.h3('DebugEvent log'))
-        log.append(html.a(name + '.json', href='debug_events/' + browser_name + '_' + name + '.json'))

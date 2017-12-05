@@ -115,6 +115,12 @@ class ShishitoExecution(object):
         if parallel_tests > 1:
             pytest_arguments.extend(['-n', str(parallel_tests)])
 
+        # set pytest maxfail argument
+        maxfail = self.shishito_support.get_opt('maxfail')
+
+        if maxfail:
+            pytest_arguments.extend(['--maxfail={}'.format(maxfail)])
+
         # set pytest smoke test argument
         smoke = self.shishito_support.get_opt('smoke')
         if smoke:

@@ -73,6 +73,8 @@ class ShishitoRunner(object):
                             help='Run specified test (PyTest string expression)')
         parser.add_argument('--build',
                             help='Specify build number for reporting purposes')
+        parser.add_argument('--maxfail',
+                            help='stop after x failures')
         args = parser.parse_args()
 
         # return args dict --> for use in other classes

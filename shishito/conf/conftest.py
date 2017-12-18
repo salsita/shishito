@@ -101,8 +101,8 @@ def pytest_addoption(parser):
                      help="Appium platform: ios, android")
     parser.addoption('--device', action="store", default=None,
                      help="Device name (simulator or real device)")
-
-
+    parser.addoption('--browserstack.appium_version', action="store", default=None,
+                     help="Appium default version")
 
     # REPORTS
     group = parser.getgroup("terminal reporting")

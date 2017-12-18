@@ -36,7 +36,8 @@ class ShishitoControlTest(object):
 
         if base_url:
             self.test_init(driver, base_url)
-
+        else:
+            self.test_init(driver)
         return driver
 
     def start_test(self, reload_page=None):
@@ -65,6 +66,8 @@ class ShishitoControlTest(object):
             # Capture screenshot and debug info from driver(s)
             for driver in self.drivers:
                 browser_name = driver.name
+                if browser_name == '':
+                    browser_name = 'appium'
                 file_name = browser_name + '_' + test_name
 
                 ts = SeleniumTest(driver)
@@ -81,7 +84,7 @@ class ShishitoControlTest(object):
                     with open(os.path.join(debugevent_folder, file_name + '.json'), 'w') as logfile:
                             json.dump(debug_events, logfile)
 
-    def test_init(self, driver, url):
+    def test_init(self, driver, url=None):
         """ Executed only once after browser starts.
          Suitable for general pre-test logic that do not need to run before every individual test-case.
 

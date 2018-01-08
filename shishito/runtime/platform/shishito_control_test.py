@@ -69,8 +69,7 @@ class ShishitoControlTest(object):
                     browser_name = 'appium'
                 else:
                     browser_name = driver.name
-                if not browser_name :
-                    file_name = browser_name + '_' + test_name
+                file_name = browser_name + '_' + test_name
                 ts = SeleniumTest(driver)
                 ts.save_screenshot(file_name)
 

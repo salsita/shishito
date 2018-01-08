@@ -65,14 +65,14 @@ class ShishitoControlTest(object):
 
             # Capture screenshot and debug info from driver(s)
             for driver in self.drivers:
-                browser_name = driver.name
-                if browser_name == '':
+                if(self.shishito_support.test_platform == 'mobile'):
                     browser_name = 'appium'
-                file_name = browser_name + '_' + test_name
-
+                else:
+                    browser_name = driver.name
+                if not browser_name :
+                    file_name = browser_name + '_' + test_name
                 ts = SeleniumTest(driver)
                 ts.save_screenshot(file_name)
-
 
                 #Save debug info to file
                 if debug_events is not None:

@@ -22,3 +22,9 @@ class ControlExecution(ShishitoExecution):
             platform_version = self.shishito_support.get_opt(config_section, 'platformVersion')
 
             return '[%s, %s, %s]' % (config_section, platform, platform_version)
+
+        if (test_env == 'appium_bs'):
+            os_version = self.shishito_support.get_opt(config_section, 'os_version')
+            device = self.shishito_support.get_opt(config_section, 'device')
+            return '[%s, %s, %s]' % (config_section, os_version, device)
+

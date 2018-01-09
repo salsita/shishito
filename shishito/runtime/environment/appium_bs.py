@@ -20,10 +20,19 @@ class ControlEnvironment(ShishitoEnvironment):
         # get browser capabilities
         capabilities = self.get_capabilities(config_section)
         saucelabs = self.shishito_support.get_opt('saucelabs')
-        if saucelabs:
-            remote_url = 'http://%s@ondemand.saucelabs.com:80/wd/hub' % saucelabs
-        else:
-            remote_url = self.shishito_support.get_opt('appium_url')
+        browserstack = self.shishito_support.get_opt('browserstack')
+
+        if browserstack:
+            try:
+                bs_user, bs_password = self.shishito_support.get_opt('browserstack').split(':', 1)
+            except (AttributeError, ValueError):
+                raise ValueError('Browserstack credentials were not specified! Unable to start browser.')
+
+            if bs_user:
+                #remote_url = 'http://%s@ondemand.saucelabs.com:80/wd/hub' % saucelabs
+                remote_url = 'http://{0}:{1}@hub-cloud.browserstack.com/wd/hub'.format(bs_user, bs_password)
+            else:
+                remote_url = self.shishito_support.get_opt('appium_url')
 
         # get driver
         return self.start_driver(capabilities, remote_url)
@@ -37,13 +46,13 @@ class ControlEnvironment(ShishitoEnvironment):
 
         get_opt = self.shishito_support.get_opt
         return {
-            'platformName': get_opt(config_section, 'platformName'),
-            'platformVersion': get_opt(config_section, 'platformVersion'),
-            'deviceName': get_opt(config_section, 'deviceName'),
+            'os_version': get_opt(config_section, 'os_version'),
+            'device': get_opt(config_section, 'device'),
             'app': get_opt('app') or get_opt(config_section, 'app'),
-            'appiumVersion': get_opt(config_section, 'appiumVersion') or '1.6.5',
             'autoAcceptAlerts': True if get_opt(config_section, 'autoAcceptAlerts').lower() == 'true' else False,
-            'name': self.get_test_name() + time.strftime('_%Y-%m-%d')
+            'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
+            'browserstack.debug': get_opt('browserstack_debug').lower() or False,
+            'browserstack.appium_version':  get_opt(config_section, 'browserstack.appium_version') or '1.7.0'
         }
 
     def get_pytest_arguments(self, config_section):
@@ -54,16 +63,15 @@ class ControlEnvironment(ShishitoEnvironment):
         """
 
         pytest_args = {
-            '--platformName': '--platformName=%s' % self.shishito_support.get_opt(config_section, 'platformName'),
-            '--platformVersion': '--platformVersion=%s' % self.shishito_support.get_opt(config_section, 'platformVersion'),
-            '--deviceName': '--deviceName=%s' % self.shishito_support.get_opt(config_section, 'deviceName'),
+            '--os_version': '--os_version=%s' % self.shishito_support.get_opt(config_section, 'os_version'),
+            '--device': '--device=%s' % self.shishito_support.get_opt(config_section, 'device'),
             '--autoAcceptAlerts': '--autoAcceptAlerts=%s' % self.shishito_support.get_opt(config_section, 'autoAcceptAlerts'),
             '--app': '--app=%s' % (self.shishito_support.get_opt('app') or self.shishito_support.get_opt(config_section, 'app'))
         }
+        browserstack = self.shishito_support.get_opt('browserstack')
+        if browserstack:
+            pytest_args['--browserstack'] = '--browserstack=%s' % browserstack
 
-        saucelabs = self.shishito_support.get_opt('saucelabs')
-        if saucelabs:
-            pytest_args['--saucelabs'] = '--saucelabs=%s' % saucelabs
         return pytest_args
 
     def start_driver(self, capabilities, remote_driver_url):

@@ -71,7 +71,7 @@ class ShishitoControlTest(object):
                     browser_name = driver.name
                 file_name = browser_name + '_' + test_name
                 ts = SeleniumTest(driver)
-                ts.save_screenshot(file_name)
+                ts.save_screenshot(name=file_name)
 
                 #Save debug info to file
                 if debug_events is not None:

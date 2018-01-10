@@ -328,16 +328,18 @@ class LogHTML(object):
         log.append(html.h3('Screenshots'))
 
         # Following works only for manually captured images.
-        related_images = glob.glob(os.path.join(self.project_root, 'screenshots', browser_name + '_' + name + '_*.png'))
-
-        for image_path in related_images:
-            self.used_screens.append(image_path)
-            # use relative path in img src
-            source = image_path.replace(self.project_root, '.')
-            log.append(source)
-            log.append(html.br())
-            log.append(html.img(src=source))
-            log.append(html.br())
+        images_saved = os.path.join(self.project_root, 'screenshots')
+        if os.path.isdir(images_saved):
+            for file in os.listdir(images_saved):
+                image_path = os.path.join(images_saved, file)
+                if name in image_path:
+                    self.used_screens.append(image_path)
+                    # use relative path in img src
+                    source = image_path.replace(self.project_root, '.')
+                    log.append(source)
+                    log.append(html.br())
+                    log.append(html.img(src=source))
+                    log.append(html.br())
 
     def _append_link_to_debug_event(self, name, log):
         name = re.sub('[^A-Za-z0-9_.]+', '_', name)

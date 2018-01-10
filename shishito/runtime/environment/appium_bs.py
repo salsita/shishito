@@ -19,7 +19,6 @@ class ControlEnvironment(ShishitoEnvironment):
 
         # get browser capabilities
         capabilities = self.get_capabilities(config_section)
-        saucelabs = self.shishito_support.get_opt('saucelabs')
         browserstack = self.shishito_support.get_opt('browserstack')
 
         if browserstack:
@@ -45,15 +44,23 @@ class ControlEnvironment(ShishitoEnvironment):
         """
 
         get_opt = self.shishito_support.get_opt
-        return {
+
+        capabilities= {
+            'os': get_opt(config_section, 'os'),
             'os_version': get_opt(config_section, 'os_version'),
             'device': get_opt(config_section, 'device'),
             'app': get_opt('app') or get_opt(config_section, 'app'),
-            'autoAcceptAlerts': True if get_opt(config_section, 'autoAcceptAlerts').lower() == 'true' else False,
             'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
             'browserstack.debug': get_opt('browserstack_debug').lower() or False,
-            'browserstack.appium_version':  get_opt(config_section, 'browserstack.appium_version') or '1.7.0'
+            'browserstack.appium_version':  get_opt(config_section, 'browserstack.appium_version') or '1.7.0',
+            'deviceOrientation': get_opt(config_section, 'deviceOrientation') or 'portrait'
         }
+        if(get_opt(config_section, 'os')=='android'):
+            capabilities['autoGrantPermissions']= get_opt(config_section, 'autoGrantPermissions') or False
+        if(get_opt(config_section, 'os')=='ios'):
+            capabilities['autoAcceptAlerts'] = get_opt(config_section, 'autoAcceptAlerts').lower() or False
+        return capabilities
+
 
     def get_pytest_arguments(self, config_section):
         """ Get environment specific arguments for pytest.
@@ -65,7 +72,6 @@ class ControlEnvironment(ShishitoEnvironment):
         pytest_args = {
             '--os_version': '--os_version=%s' % self.shishito_support.get_opt(config_section, 'os_version'),
             '--device': '--device=%s' % self.shishito_support.get_opt(config_section, 'device'),
-            '--autoAcceptAlerts': '--autoAcceptAlerts=%s' % self.shishito_support.get_opt(config_section, 'autoAcceptAlerts'),
             '--app': '--app=%s' % (self.shishito_support.get_opt('app') or self.shishito_support.get_opt(config_section, 'app'))
         }
         browserstack = self.shishito_support.get_opt('browserstack')

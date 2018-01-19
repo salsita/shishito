@@ -27,13 +27,13 @@ class ControlTest(ShishitoControlTest):
         # Cleanup the driver info
         del self.drivers[:]
 
-    def test_init(self, driver, url):
+    def test_init(self, driver, url=None):
         """ Executed only once after browser starts.
         Suitable for general pre-test logic that do not need to run before every individual test-case.
         Open given url and wait for given time (setting "default_implicit_wait").
         """
-
-        driver.get(url)
+        if url:
+            driver.get(url)
         driver.implicitly_wait(int(self.shishito_support.get_opt('default_implicit_wait')))
 
     def start_test(self, reload_page=None):

@@ -13,7 +13,7 @@ generates nice test results output.
 
 setup(
     name='shishito',
-    version='3.0.0',
+    version='3.0.1',
     url='https://github.com/salsita/shishito',
     description='Python module for selenium webdriver test execution',
     long_description=long_description,

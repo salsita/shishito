@@ -13,19 +13,30 @@ from shishito.runtime.platform.shishito_control_test import ShishitoControlTest
 class ControlTest(ShishitoControlTest):
     """ ControlTest for web platform """
 
-    def stop_browser(self, delete_cookies=True):
+    def stop_browser(self, delete_cookies=True, driver=None):
         """ Webdriver termination function.
 
         :param bool delete_cookies: delete cookies from webdriver
         """
-        for driver in self.drivers:
+        if not driver:
+            # Close all drivers
+            for d in self.drivers:
+                if delete_cookies:
+                    d.delete_all_cookies()
+
+                d.quit()
+
+            # Cleanup the driver info
+            del self.drivers[:]
+
+        else:
+            # Close just the specific driver
             if delete_cookies:
                 driver.delete_all_cookies()
-
             driver.quit()
 
-        # Cleanup the driver info
-        del self.drivers[:]
+            self.drivers.remove(driver)
+
 
     def test_init(self, driver, url=None):
         """ Executed only once after browser starts.

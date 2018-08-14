@@ -1,5 +1,9 @@
 from setuptools import find_packages, setup
+from setuptools.command.install import install
+import os
+import sys
 
+VERSION = '3.0.3'
 
 long_description = """
 shishito
@@ -11,9 +15,23 @@ generates nice test results output.
 """
 
 
+class VerifyVersionCommand(install):
+    """Custom command to verify that the git tag matches our version"""
+    description = 'verify that the git tag matches our version'
+
+    def run(self):
+        tag = os.getenv('CIRCLE_TAG')
+
+        if tag != VERSION:
+            info = "Git tag: {0} does not match the version of this app: {1}".format(
+                tag, VERSION
+            )
+            sys.exit(info)
+
+
 setup(
     name='shishito',
-    version='3.0.2',
+    version=VERSION,
     url='https://github.com/salsita/shishito',
     description='Python module for selenium webdriver test execution',
     long_description=long_description,
@@ -28,8 +46,14 @@ setup(
     },
     install_requires=[
         'selenium', 'pytest-xdist', 'pytest-instafail', 'pytest', 'UnittestZero',
-        'Jinja2', 'requests', 'Appium-Python-Client'
+        'Jinja2', 'requests', 'Appium-Python-Client', 'Click>=6.0'
     ],
+    scripts=['shi'],
+    entry_points={
+        'console_scripts': [
+            'shishito=shishito.cli:main',
+        ],
+    },
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
@@ -40,4 +64,7 @@ setup(
         "Programming Language :: Python :: 3.5",
         "Topic :: Software Development :: Testing",
     ],
+    cmdclass={
+        'verify': VerifyVersionCommand,
+    }
 )

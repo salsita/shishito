@@ -9,3 +9,4 @@ Appium-Python-Client
 pyscreenshot
 flaky
 psycopg2
+Click

@@ -38,7 +38,7 @@ class ControlEnvironment(ShishitoEnvironment):
             firefox_options = Options()
             for arg in self.get_browser_arguments(config_section):
                 firefox_options.add_argument(arg)
-            driver = webdriver.Firefox(browser_profile, capabilities=capabilities, firefox_options=firefox_options)
+            driver = webdriver.Firefox(browser_profile, desired_capabilities=capabilities, firefox_options=firefox_options)
         elif browser_type == "chrome":
             driver = webdriver.Chrome(desired_capabilities=capabilities, chrome_options=browser_profile)
         elif browser_type == "ie":

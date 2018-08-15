@@ -3,7 +3,7 @@ from setuptools.command.install import install
 import os
 import sys
 
-VERSION = '3.0.3'
+VERSION = '3.0.4'
 
 with open('README.md') as readme_file:
     readme = readme_file.read()

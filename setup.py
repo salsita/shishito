@@ -5,15 +5,11 @@ import sys
 
 VERSION = '3.0.3'
 
-long_description = """
-shishito
-========
+with open('README.md') as readme_file:
+    readme = readme_file.read()
 
-Shishito is module for web application and browser extension integration testing
-with Selenium Webdriver & Python. It runs tests using included libraries and
-generates nice test results output.
-"""
-
+with open('HISTORY.md') as history_file:
+    history = history_file.read()
 
 class VerifyVersionCommand(install):
     """Custom command to verify that the git tag matches our version"""
@@ -34,7 +30,7 @@ setup(
     version=VERSION,
     url='https://github.com/salsita/shishito',
     description='Python module for selenium webdriver test execution',
-    long_description=long_description,
+    long_description=readme + '\n\n' + history,
     author='Vojtech Burian',
     author_email='vojtech.burian@gmail.com',
     license='MIT',

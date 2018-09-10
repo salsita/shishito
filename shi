@@ -13,11 +13,14 @@ export VIRTUAL_ENV="$SCRIPT_DIR/venv"
 # create venv if needed
 if ! [ -d "$VIRTUAL_ENV" ]; then
   python3 -m venv "$VIRTUAL_ENV"
+  . "$VIRTUAL_ENV/bin/activate"
   # install shishito into venv
-  "$VIRTUAL_ENV/bin/pip" install shishito
+  which pip3
+  pip3 install --upgrade pip
+  pip3 install shishito
   if [[ -f "$SCRIPT_DIR/requirements.txt" ]] ; then
     echo "Installing requirements from requirements.txt"
-    "$VIRTUAL_ENV/bin/pip" install -r "$SCRIPT_DIR/requirements.txt"
+    pip3 install -r "$SCRIPT_DIR/requirements.txt"
   else
     echo "File requirements.txt not found, not installing requirements"
   fi
@@ -32,7 +35,7 @@ fi
 export PATH="$VIRTUAL_ENV/bin:$PATH"
 export PYTHONPATH="$(pwd -P)"
 
-"$VIRTUAL_ENV/bin/python3" -c "from shishito.shishito_runner import ShishitoRunner
+python3 -c "from shishito.shishito_runner import ShishitoRunner
 ShishitoRunner('$(pwd -P)').run_tests()" "$@"
 
 # check results

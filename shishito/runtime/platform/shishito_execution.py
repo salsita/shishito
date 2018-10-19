@@ -5,7 +5,9 @@
 
 import os
 import sys
+
 import pytest
+
 
 class CollectionPlugin:
     # collect test data from pytest
@@ -135,6 +137,6 @@ class ShishitoExecution(object):
         pytest_arguments.extend(['-vv'])
 
         # Uncomment following to enable stdout and stderr (otherwise it is added to the final report)
-        # pytest_arguments.extend(['-s'])
+        pytest_arguments.extend(['-s'])
 
         return pytest.main(pytest_arguments)

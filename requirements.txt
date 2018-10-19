@@ -1,4 +1,4 @@
-selenium
+selenium==3.8.1
 pytest
 pytest-xdist
 pytest-instafail
@@ -9,3 +9,4 @@ Appium-Python-Client
 pyscreenshot
 flaky
 psycopg2
+shishito

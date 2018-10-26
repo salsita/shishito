@@ -1,5 +1,8 @@
 # History
 
+## 3.0.6 (2018-10-25)
+* Add logging options to webdriver
+
 ## 3.0.5 (2018-09-10)
 * Activate venv in shi executable script
 

@@ -86,7 +86,7 @@ class ShishitoSupport(object):
 
         return configs
 
-    def get_opt(self, *args):
+    def get_opt(self, *args, default=None):
         """ Get value from config variables based on provided key and optionaly section.
 
         If key is given, function searches in pytest.config, command lines arguments, local config (if enabled) and server config.
@@ -94,6 +94,7 @@ class ShishitoSupport(object):
 
 
         :param args: key or config_section, key
+        :param default: default value to return if not found
         :return: value for given key or None
         :raises TypeError: if called with wrong number of arguments
         """
@@ -109,7 +110,10 @@ class ShishitoSupport(object):
 
         if section:
             # use env config
-            return self.env_config.get(section, key)
+            try:
+                return self.env_config.get(section, key)
+            except configparser.NoOptionError:
+                return default
 
         # first try to lookup pytest config
         try:
@@ -128,6 +132,8 @@ class ShishitoSupport(object):
             value = cfg.get(key)
             if value:
                 return value
+            else:
+                return default
 
     def get_environment_config(self):
         """ Load environment specific configuration file according to current test platform and environment

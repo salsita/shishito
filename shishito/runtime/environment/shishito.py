@@ -69,8 +69,12 @@ class ShishitoEnvironment(object):
             arguments_string = self.shishito_support.get_opt(config_section, 'experimental_arguments')
         except configparser.NoOptionError:
             return []
-        arguments = arguments_string.split('--')
-        return arguments[1:]
+
+        if arguments_string:
+            arguments = arguments_string.split('--')
+            return arguments[1:]
+        else:
+            return None
 
     def get_browser_extensions(self, config_section):
         """
@@ -191,12 +195,21 @@ class ShishitoEnvironment(object):
         get_opt = self.shishito_support.get_opt
         test_platform = self.shishito_support.test_platform
         if(test_platform == 'web'):
+
+            # Get logging levels from config
+            logging_driver = get_opt(config_section, 'logging_driver', default='INFO').upper()
+            logging_browser = get_opt(config_section, 'logging_browser', default='DEBUG').upper()
+            logging_performance = get_opt(config_section, 'logging_performance', default='ALL').upper()
+
             capabilities = {
                 'browserName': get_opt(config_section, 'browser').lower(),
                 'version': get_opt(config_section, 'browser_version'),
                 'resolution': get_opt(config_section, 'resolution'),
                 'javascriptEnabled': True,
                 'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'true',
+                'loggingPrefs': {'driver': logging_driver,
+                                 'browser': logging_browser,
+                                 'performance': logging_performance}
             }
         if(test_platform == 'mobile'):
             capabilities = {

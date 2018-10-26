@@ -49,8 +49,12 @@ class ShishitoEnvironment(object):
             arguments_string = self.shishito_support.get_opt(config_section, 'browser_arguments')
         except configparser.NoOptionError:
             return []
-        arguments = [i for i in re.split('\s+', arguments_string) if i != '']
-        return arguments
+
+        if arguments_string:
+            arguments = [i for i in re.split('\s+', arguments_string) if i != '']
+            return arguments
+        else:
+            return []
 
     def get_experimental_arguments(self, config_section):
         """

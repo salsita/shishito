@@ -201,9 +201,9 @@ class ShishitoEnvironment(object):
         if(test_platform == 'web'):
 
             # Get logging levels from config
-            logging_driver = get_opt(config_section, 'logging_driver', default='INFO').upper()
-            logging_browser = get_opt(config_section, 'logging_browser', default='DEBUG').upper()
-            logging_performance = get_opt(config_section, 'logging_performance', default='ALL').upper()
+            logging_driver = get_opt(config_section, 'logging_driver', default='WARNING').upper()
+            logging_browser = get_opt(config_section, 'logging_browser', default='WARNING').upper()
+            logging_performance = get_opt(config_section, 'logging_performance', default='WARNING').upper()
 
             capabilities = {
                 'browserName': get_opt(config_section, 'browser').lower(),

@@ -1,5 +1,11 @@
 # History
 
+## 3.0.8 (2018-10-29)
+* Deprecation warning fix
+
+## 3.0.7 (2018-10-25)
+* Hotfix - wrong config parsing
+
 ## 3.0.6 (2018-10-25)
 * Add logging options to webdriver
 

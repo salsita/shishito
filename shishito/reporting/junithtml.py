@@ -309,10 +309,10 @@ class LogHTML(object):
             else:
                 exception = line.startswith("E   ")
                 if exception:
-                    stacktrace_p.append(html.span(raw(cgi.escape(line)),
+                    stacktrace_p.append(html.span(raw(html.escape(line)),
                                                   class_='error'))
                 else:
-                    stacktrace_p.append(raw(cgi.escape(line)))
+                    stacktrace_p.append(raw(html.escape(line)))
             stacktrace_p.append(html.br())
         log.append(stacktrace_p)
 

@@ -18,6 +18,8 @@ from _pytest.runner import TestReport
 from py.xml import html
 from py.xml import raw
 
+from html import escape
+
 
 
 
@@ -309,10 +311,10 @@ class LogHTML(object):
             else:
                 exception = line.startswith("E   ")
                 if exception:
-                    stacktrace_p.append(html.span(raw(html.escape(line)),
+                    stacktrace_p.append(html.span(raw(escape(line)),
                                                   class_='error'))
                 else:
-                    stacktrace_p.append(raw(html.escape(line)))
+                    stacktrace_p.append(raw(escape(line)))
             stacktrace_p.append(html.br())
         log.append(stacktrace_p)
 

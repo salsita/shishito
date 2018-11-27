@@ -21,9 +21,6 @@ from py.xml import raw
 from html import escape
 
 
-
-
-
 def find_urls(text):
     return re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
 
@@ -152,13 +149,16 @@ class LogHTML(object):
         # Save the reports for all three test phases
         current_test_reports[report.when] = report  # type: TestReport
 
-        if report.when == 'teardown': #finish processing the test
+        if report.when == 'teardown':  # finish processing the test
             setup_report = current_test_reports['setup']  # type: TestReport
             call_report = current_test_reports['call']  # type: TestReport
             teardown_report = current_test_reports['teardown']  # type: TestReport
 
-            if setup_report.failed or teardown_report.failed:
+            if setup_report.failed:
                 self.append_error(setup_report)
+
+            elif teardown_report.failed:
+                self.append_error(teardown_report)
 
             elif setup_report.skipped:
                 self.append_skipped(setup_report)
@@ -171,7 +171,6 @@ class LogHTML(object):
 
             elif call_report.failed:
                 self.append_failure(call_report)
-
 
     def pytest_sessionstart(self):
         self.suite_start_time = time.time()
@@ -247,15 +246,15 @@ class LogHTML(object):
         else:
 
             if hasattr(report, 'wasxfail'):
-                self._append_xpath_section(log, report)
+                self._append_xpass_section(log, report)
 
             if not report.skipped:
+                self._append_crash_message_section(log, report)
+                self._append_screenshot(testmethod, log)
 
                 self._append_stacktrace_section(log, report)
 
                 links_html.append(self._link_to_debug_event(testmethod, log))
-
-        self._append_screenshot(testmethod, log)
 
         output = self._append_captured_output(log, report)
 
@@ -301,6 +300,17 @@ class LogHTML(object):
         return output
 
     @staticmethod
+    def _append_crash_message_section(log, report):
+        try:
+            message = report.longrepr.reprcrash.message
+            log.append(html.h3('Crash Message'))
+            crash_message_p = html.p(class_='crash_message')
+            crash_message_p.append(message)
+            log.append(crash_message_p)
+        except:
+            return
+
+    @staticmethod
     def _append_stacktrace_section(log, report):
         log.append(html.h3('Stacktrace'))
         stacktrace_p = html.p(class_='stacktrace')
@@ -319,7 +329,7 @@ class LogHTML(object):
         log.append(stacktrace_p)
 
     @staticmethod
-    def _append_xpath_section(log, report):
+    def _append_xpass_section(log, report):
         log.append(html.h3('Expected failure'))
         xfail_p = html.p(class_='xfail')
         xfail_reason = report.wasxfail
@@ -334,13 +344,13 @@ class LogHTML(object):
 
     def _append_screenshot(self, name, log):
         name = re.sub('[^A-Za-z0-9_.]+', '_', name)
-        browser_name = self.prefix.split(",")[0].replace('[', '').lower()
 
-        log.append(html.h3('Screenshots'))
-
-        # Following works only for manually captured images.
         images_saved = os.path.join(self.project_root, 'screenshots')
-        if os.path.isdir(images_saved):
+
+        if os.path.isdir(images_saved) and len(os.listdir(images_saved)) > 0:
+
+            log.append(html.h3('Screenshots'))
+
             for file in os.listdir(images_saved):
                 image_path = os.path.join(images_saved, file)
                 if name in image_path:
@@ -351,5 +361,3 @@ class LogHTML(object):
                     log.append(html.br())
                     log.append(html.img(src=source))
                     log.append(html.br())
-
-

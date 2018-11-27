@@ -1,7 +1,7 @@
 # History
 
-## 3.0.9 (2018-10-29)
-* Deprecation warning fix
+## 3.1.0 (2018-11-27)
+* Improve generated report
 
 ## 3.0.7 (2018-10-25)
 * Hotfix - wrong config parsing

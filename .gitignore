@@ -6,3 +6,9 @@
 **/integration_tests/results_archive
 **/integration_tests/extension
 *.pyc
+
+.cache/
+build/
+dist/
+venv/
+*.egg-info

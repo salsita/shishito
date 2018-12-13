@@ -1,5 +1,4 @@
 selenium
-appium
 pytest
 pytest-xdist
 pytest-instafail

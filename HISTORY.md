@@ -1,5 +1,9 @@
 # History
 
+## 3.1.1 (2019-01-09)
+* Fix problem with multiple drivers on Mobile devices
+* Change how test names are obtained for Browserstack
+
 ## 3.1.0 (2018-11-27)
 * Improve generated report
 

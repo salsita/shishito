@@ -80,7 +80,7 @@ class ControlEnvironment(ShishitoEnvironment):
 
         return pytest_args
 
-    def start_driver(self, capabilities, remote_driver_url):
+    def start_driver(self, capabilities, remote_driver_url, **kwargs):
         """ Prepare selenium webdriver.
 
         :param capabilities: capabilities used for webdriver initialization

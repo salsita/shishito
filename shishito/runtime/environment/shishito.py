@@ -24,13 +24,10 @@ BROWSER_KEYWORDS = {  # map lowercase browser name to option keyword understood 
 
 
 class ShishitoEnvironment(object):
-
     """ Base class for test environment. """
-
 
     def __init__(self, shishito_support):
         self.shishito_support = shishito_support
-
 
     def get_browser_arguments(self, config_section):
         """
@@ -49,8 +46,12 @@ class ShishitoEnvironment(object):
             arguments_string = self.shishito_support.get_opt(config_section, 'browser_arguments')
         except configparser.NoOptionError:
             return []
-        arguments = [i for i in re.split('\s+', arguments_string) if i != '']
-        return arguments
+
+        if arguments_string:
+            arguments = [i for i in re.split('\s+', arguments_string) if i != '']
+            return arguments
+        else:
+            return []
 
     def get_experimental_arguments(self, config_section):
         """
@@ -69,8 +70,12 @@ class ShishitoEnvironment(object):
             arguments_string = self.shishito_support.get_opt(config_section, 'experimental_arguments')
         except configparser.NoOptionError:
             return []
-        arguments = arguments_string.split('--')
-        return arguments[1:]
+
+        if arguments_string:
+            arguments = arguments_string.split('--')
+            return arguments[1:]
+        else:
+            return None
 
     def get_browser_extensions(self, config_section):
         """
@@ -94,7 +99,7 @@ class ShishitoEnvironment(object):
 
         if extension_string is None:
             try:
-                extension_string = self.shishito_support.get_opt('browser_extensions')                 # common config
+                extension_string = self.shishito_support.get_opt('browser_extensions')  # common config
             except configparser.NoOptionError:
                 pass
 
@@ -110,10 +115,9 @@ class ShishitoEnvironment(object):
                         raise Exception("Error getting browser_extensions: env variable '" + item + "' not defined")
                     extensions.append(os.environ[var_name])  # take the extension path as configured
                 else:
-                    extensions.append(item)     # take the extension path as configured
+                    extensions.append(item)  # take the extension path as configured
 
         return extensions
-
 
     def add_cmdline_arguments_to_browser(self, browser_capabilities, config_section):
         """
@@ -131,7 +135,6 @@ class ShishitoEnvironment(object):
                 browser_capabilities.setdefault(options_kw, {}).setdefault(args_kw, []).extend(arguments)
             except:
                 pass
-
 
     def add_extensions_to_browser(self, browser_capabilities, config_section):
         """
@@ -160,9 +163,9 @@ class ShishitoEnvironment(object):
         arguments = self.get_experimental_arguments(config_section)
         if arguments and browser_name == 'chrome':
             chrome_options = webdriver.ChromeOptions()
-            if('mobileEmulation' in arguments):
+            if ('mobileEmulation' in arguments):
                 index = arguments.index('mobileEmulation')
-                chrome_options.add_experimental_option(arguments[index], json.loads(arguments[index+1]))
+                chrome_options.add_experimental_option(arguments[index], json.loads(arguments[index + 1]))
             return browser_capabilities.update(chrome_options.to_capabilities())
         return browser_capabilities
 
@@ -190,15 +193,23 @@ class ShishitoEnvironment(object):
         """
         get_opt = self.shishito_support.get_opt
         test_platform = self.shishito_support.test_platform
-        if(test_platform == 'web'):
+        if (test_platform == 'web'):
+            # Get logging levels from config
+            logging_driver = get_opt(config_section, 'logging_driver', default='WARNING').upper()
+            logging_browser = get_opt(config_section, 'logging_browser', default='WARNING').upper()
+            logging_performance = get_opt(config_section, 'logging_performance', default='WARNING').upper()
+
             capabilities = {
                 'browserName': get_opt(config_section, 'browser').lower(),
                 'version': get_opt(config_section, 'browser_version'),
                 'resolution': get_opt(config_section, 'resolution'),
                 'javascriptEnabled': True,
                 'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'true',
+                'loggingPrefs': {'driver': logging_driver,
+                                 'browser': logging_browser,
+                                 'performance': logging_performance}
             }
-        if(test_platform == 'mobile'):
+        if (test_platform == 'mobile'):
             capabilities = {
                 'browserName': get_opt(config_section, 'browser').lower(),
                 'javascriptEnabled': True,
@@ -210,7 +221,6 @@ class ShishitoEnvironment(object):
         self.add_experimental_option(capabilities, config_section)
         return capabilities
 
-
     def start_driver(self, browser_type, capabilities, config_section=None):
         """ Prepare selenium webdriver.
 
@@ -219,7 +229,6 @@ class ShishitoEnvironment(object):
         """
 
         raise NotImplementedError()
-
 
     def get_browser_profile(self, browser_type, capabilities, config_section=None):
         """ Return browser profile ready to be passed to driver.
@@ -240,7 +249,6 @@ class ShishitoEnvironment(object):
 
         return profile
 
-
     def get_pytest_arguments(self, config_section):
         """ Get environment specific arguments for pytest.
 
@@ -250,16 +258,7 @@ class ShishitoEnvironment(object):
         pass
 
     def get_test_name(self):
-        """ Return test name from the call stack, assuming there can be only
-        one "test\_" file in the stack. If there are more it means two PyTest
-        tests ran when calling get_test_name, which is invalid use case.
-
-        :return: test name or project_name setting
-        """
-
-        frames = inspect.getouterframes(inspect.currentframe())
-        for frame in frames:
-            if re.match('test_.*', os.path.basename(frame[1])):
-                return os.path.basename(frame[1])[:-3]
-
-        return self.shishito_support.get_opt('project_name')
+        try:
+            return os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
+        except:
+            return self.shishito_support.get_opt('project_name')

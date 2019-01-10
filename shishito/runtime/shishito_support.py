@@ -127,6 +127,8 @@ class ShishitoSupport(object):
         for cfg, cfg_name in self.configs:
             value = cfg.get(key)
             if value:
+                if value[0] == '$':
+                    return os.environ[value[1:]]
                 return value
 
     def get_environment_config(self):

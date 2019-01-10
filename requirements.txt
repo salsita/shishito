@@ -1,4 +1,5 @@
 selenium
+Appium-Python-Client
 pytest
 pytest-xdist
 pytest-instafail
@@ -9,3 +10,4 @@ Appium-Python-Client
 pyscreenshot
 flaky
 psycopg2
+Click

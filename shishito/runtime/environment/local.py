@@ -21,8 +21,7 @@ class ControlEnvironment(ShishitoEnvironment):
         }
         return {**default_capabilities, **capabilities}
 
-
-    def start_driver(self, browser_type, capabilities, config_section):
+    def start_driver(self, browser_type, capabilities, config_section=None):
         """ Prepare selenium webdriver.
 
         :param browser_type: type of browser for which prepare driver
@@ -38,7 +37,8 @@ class ControlEnvironment(ShishitoEnvironment):
             firefox_options = Options()
             for arg in self.get_browser_arguments(config_section):
                 firefox_options.add_argument(arg)
-            driver = webdriver.Firefox(browser_profile, capabilities=capabilities, firefox_options=firefox_options)
+            driver = webdriver.Firefox(browser_profile, desired_capabilities=capabilities,
+                                       firefox_options=firefox_options)
         elif browser_type == "chrome":
             driver = webdriver.Chrome(desired_capabilities=capabilities, chrome_options=browser_profile)
         elif browser_type == "ie":
@@ -54,7 +54,6 @@ class ControlEnvironment(ShishitoEnvironment):
             raise ValueError('Unknown type of browser.')
 
         return driver
-
 
     def call_browser(self, config_section):
         """ Start webdriver for given config section. Prepare capabilities for the browser, set browser resolution.
@@ -80,4 +79,3 @@ class ControlEnvironment(ShishitoEnvironment):
             driver.set_window_size(width, height)
 
         return driver
-

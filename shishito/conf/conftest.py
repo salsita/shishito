@@ -252,4 +252,3 @@ def test_mobile(request):
 @pytest.fixture(scope='class')
 def url(request):
     return request.config.getoption("--url")
-

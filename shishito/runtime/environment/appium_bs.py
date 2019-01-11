@@ -23,6 +23,7 @@ class ControlEnvironment(ShishitoEnvironment):
 
         if browserstack:
             try:
+                print(self.shishito_support.get_opt('browserstack'))
                 bs_user, bs_password = self.shishito_support.get_opt('browserstack').split(':', 1)
             except (AttributeError, ValueError):
                 raise ValueError('Browserstack credentials were not specified! Unable to start browser.')

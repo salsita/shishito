@@ -111,7 +111,10 @@ class ShishitoSupport(object):
         if section:
             # use env config
             try:
-                return self.env_config.get(section, key)
+                value = self.env_config.get(section, key)
+                if value[0] == '$':
+                    return os.environ[value[1:]]
+                return value
             except configparser.NoOptionError:
                 return default
 

@@ -9,7 +9,7 @@ from shishito.reporting.junithtml import LogHTML
 
 # CURRENT TEST INFO OBJECT #
 
-class TestInfo():
+class CurrentTestInfo():
     """ Gathers test execution information about currently running test """
 
     def __init__(self):
@@ -21,7 +21,7 @@ class TestInfo():
         self.test_name = new_name
 
 
-test_info = TestInfo()
+test_info = CurrentTestInfo()
 
 
 def get_test_info():

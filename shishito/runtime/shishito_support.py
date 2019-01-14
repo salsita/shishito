@@ -118,6 +118,16 @@ class ShishitoSupport(object):
             except configparser.NoOptionError:
                 return default
 
+        # first try to lookup pytest config
+        try:
+            value = pytest.config.getoption(key)
+            if value:
+                if value[0] == '$':
+                    return os.environ[value[1:]]
+                return value
+        except (ValueError, AttributeError):
+            pass
+
         # look in cmd args config
         value = self.args_config.get(key)
         if value:

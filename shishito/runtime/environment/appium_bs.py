@@ -53,7 +53,14 @@ class ControlEnvironment(ShishitoEnvironment):
             'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
             'browserstack.debug': get_opt('browserstack_debug').lower() or False,
             'browserstack.appium_version':  get_opt(config_section, 'browserstack.appium_version') or '1.7.0',
-            'deviceOrientation': get_opt(config_section, 'deviceOrientation') or 'portrait'
+            'deviceOrientation': get_opt(config_section, 'deviceOrientation') or 'portrait',
+            'autoGrantPermissions': get_opt(config_section, 'autoGrantPermissions') or True,
+            'automationName': get_opt(config_section, 'automationName') or 'uiautomator2',
+            'autoAcceptAlerts': get_opt(config_section, 'autoAcceptAlerts') or True,
+            'no-reset': get_opt(config_section, 'no-reset') or True,
+            'full-reset': get_opt(config_section, 'full-reset') or False,
+            'autoWebview': get_opt(config_section, 'autoWebview') or False,
+            'browserstack.chrome.driver': get_opt(config_section, 'browserstack.chrome.driver') or '2.46',
         }
         if(get_opt(config_section, 'os')=='android'):
             capabilities['autoGrantPermissions']= get_opt(config_section, 'autoGrantPermissions') or False

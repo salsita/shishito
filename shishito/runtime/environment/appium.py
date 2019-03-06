@@ -43,9 +43,8 @@ class ControlEnvironment(ShishitoEnvironment):
             'deviceName': get_opt(config_section, 'deviceName'),
             'app': get_opt('app') or get_opt(config_section, 'app'),
             'appiumVersion': get_opt(config_section, 'appiumVersion') or '1.6.5',
-            'autoAcceptAlerts': get_opt(config_section, 'autoAcceptAlerts') == 'true' or None,
-            'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
-            'waitForQuiescence': get_opt(config_section, 'waitForQuiescence') == 'true' or None,
+            'autoAcceptAlerts': get_opt(config_section, 'autoAcceptAlerts') == 'true' or None,  # default False
+            'waitForQuiescence': None or get_opt(config_section, 'waitForQuiescence') == 'true',  # default
         }
 
     def get_pytest_arguments(self, config_section):

@@ -43,18 +43,9 @@ class ControlEnvironment(ShishitoEnvironment):
             'deviceName': get_opt(config_section, 'deviceName'),
             'app': get_opt('app') or get_opt(config_section, 'app'),
             'appiumVersion': get_opt(config_section, 'appiumVersion') or '1.6.5',
-            'autoAcceptAlerts': True if get_opt(config_section, 'autoAcceptAlerts').lower() == 'true' else False,
+            'autoAcceptAlerts': get_opt(config_section, 'autoAcceptAlerts') or None,
             'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
-            'os': get_opt(config_section, 'os'),
-            'os_version': get_opt(config_section, 'os_version'),
-            'device': get_opt(config_section, 'device'),
-            'deviceOrientation': get_opt(config_section, 'deviceOrientation') or 'portrait',
-            'autoGrantPermissions': get_opt(config_section, 'autoGrantPermissions') or True,
-            'automationName': get_opt(config_section, 'automationName') or None,
-            'no-reset': get_opt(config_section, 'no-reset') or True,
-            'full-reset': get_opt(config_section, 'full-reset') or False,
-            'autoWebview': get_opt(config_section, 'autoWebview') or False,
-            'waitForQuiescence': get_opt(config_section, 'waitForQuiescence') or False,
+            'waitForQuiescence': get_opt(config_section, 'waitForQuiescence') or None,
         }
 
     def get_pytest_arguments(self, config_section):

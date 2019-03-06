@@ -36,6 +36,7 @@ class ControlEnvironment(ShishitoEnvironment):
         """
 
         get_opt = self.shishito_support.get_opt
+
         return {
             'platformName': get_opt(config_section, 'platformName'),
             'platformVersion': get_opt(config_section, 'platformVersion'),
@@ -47,15 +48,12 @@ class ControlEnvironment(ShishitoEnvironment):
             'os': get_opt(config_section, 'os'),
             'os_version': get_opt(config_section, 'os_version'),
             'device': get_opt(config_section, 'device'),
-            'browserstack.debug': get_opt('browserstack_debug').lower() or False,
-            'browserstack.appium_version': get_opt(config_section, 'browserstack.appium_version') or '1.7.0',
             'deviceOrientation': get_opt(config_section, 'deviceOrientation') or 'portrait',
             'autoGrantPermissions': get_opt(config_section, 'autoGrantPermissions') or True,
-            'automationName': get_opt(config_section, 'automationName') or 'uiautomator2',
+            'automationName': get_opt(config_section, 'automationName') or None,
             'no-reset': get_opt(config_section, 'no-reset') or True,
             'full-reset': get_opt(config_section, 'full-reset') or False,
             'autoWebview': get_opt(config_section, 'autoWebview') or False,
-            'browserstack.chrome.driver': get_opt(config_section, 'browserstack.chrome.driver') or '2.46',
             'waitForQuiescence': get_opt(config_section, 'waitForQuiescence') or False,
         }
 

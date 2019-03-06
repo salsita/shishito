@@ -36,14 +36,15 @@ class ControlEnvironment(ShishitoEnvironment):
         """
 
         get_opt = self.shishito_support.get_opt
+
         return {
             'platformName': get_opt(config_section, 'platformName'),
             'platformVersion': get_opt(config_section, 'platformVersion'),
             'deviceName': get_opt(config_section, 'deviceName'),
             'app': get_opt('app') or get_opt(config_section, 'app'),
             'appiumVersion': get_opt(config_section, 'appiumVersion') or '1.6.5',
-            'autoAcceptAlerts': True if get_opt(config_section, 'autoAcceptAlerts').lower() == 'true' else False,
-            'name': self.get_test_name() + time.strftime('_%Y-%m-%d')
+            'autoAcceptAlerts': get_opt(config_section, 'autoAcceptAlerts') == 'true' or None,  # default False
+            'waitForQuiescence': None or get_opt(config_section, 'waitForQuiescence') == 'true',  # default
         }
 
     def get_pytest_arguments(self, config_section):

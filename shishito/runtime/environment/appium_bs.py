@@ -61,6 +61,7 @@ class ControlEnvironment(ShishitoEnvironment):
             'full-reset': get_opt(config_section, 'full-reset') or False,
             'autoWebview': get_opt(config_section, 'autoWebview') or False,
             'browserstack.chrome.driver': get_opt(config_section, 'browserstack.chrome.driver') or '2.46',
+            'waitForQuiescence': get_opt(config_section, 'waitForQuiescence') or False,
         }
         if(get_opt(config_section, 'os')=='android'):
             capabilities['autoGrantPermissions']= get_opt(config_section, 'autoGrantPermissions') or False

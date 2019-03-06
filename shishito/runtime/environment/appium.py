@@ -43,7 +43,20 @@ class ControlEnvironment(ShishitoEnvironment):
             'app': get_opt('app') or get_opt(config_section, 'app'),
             'appiumVersion': get_opt(config_section, 'appiumVersion') or '1.6.5',
             'autoAcceptAlerts': True if get_opt(config_section, 'autoAcceptAlerts').lower() == 'true' else False,
-            'name': self.get_test_name() + time.strftime('_%Y-%m-%d')
+            'name': self.get_test_name() + time.strftime('_%Y-%m-%d'),
+            'os': get_opt(config_section, 'os'),
+            'os_version': get_opt(config_section, 'os_version'),
+            'device': get_opt(config_section, 'device'),
+            'browserstack.debug': get_opt('browserstack_debug').lower() or False,
+            'browserstack.appium_version': get_opt(config_section, 'browserstack.appium_version') or '1.7.0',
+            'deviceOrientation': get_opt(config_section, 'deviceOrientation') or 'portrait',
+            'autoGrantPermissions': get_opt(config_section, 'autoGrantPermissions') or True,
+            'automationName': get_opt(config_section, 'automationName') or 'uiautomator2',
+            'no-reset': get_opt(config_section, 'no-reset') or True,
+            'full-reset': get_opt(config_section, 'full-reset') or False,
+            'autoWebview': get_opt(config_section, 'autoWebview') or False,
+            'browserstack.chrome.driver': get_opt(config_section, 'browserstack.chrome.driver') or '2.46',
+            'waitForQuiescence': get_opt(config_section, 'waitForQuiescence') or False,
         }
 
     def get_pytest_arguments(self, config_section):

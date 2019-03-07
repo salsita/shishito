@@ -1,5 +1,11 @@
 # History
 
+## 3.1.3 (2019-03-07)
+* extend appium Browserstack capabilities 
+
+## 3.1.2 (2019-01-14)
+* support for environmental variables in config files
+
 ## 3.1.1 (2019-01-09)
 * Fix problem with multiple drivers on Mobile devices
 * Change how test names are obtained for Browserstack

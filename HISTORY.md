@@ -1,5 +1,8 @@
 # History
 
+## 3.1.5 (2019-05-22)
+* Minor fixes
+
 ## 3.1.4 (2019-05-21)
 * Fix Flaky & HTML report issue
 

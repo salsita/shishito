@@ -1,5 +1,8 @@
 # History
 
+## 3.1.4 (2019-05-21)
+* Fix Flaky & HTML report issue
+
 ## 3.1.3 (2019-03-07)
 * extend appium Browserstack capabilities 
 

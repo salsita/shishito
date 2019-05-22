@@ -149,7 +149,7 @@ class LogHTML(object):
         # Save the reports for all three test phases
         current_test_reports[report.when] = report  # type: TestReport
 
-        if report.when == 'teardown':  # finish processing the test
+        if report.when == 'teardown' and current_test_reports['call']:  # finish processing the test and not flaky
             setup_report = current_test_reports['setup']  # type: TestReport
             call_report = current_test_reports['call']  # type: TestReport
             teardown_report = current_test_reports['teardown']  # type: TestReport
@@ -305,7 +305,9 @@ class LogHTML(object):
             message = report.longrepr.reprcrash.message
             log.append(html.h3('Crash Message'))
             crash_message_p = html.p(class_='crash_message')
-            crash_message_p.append(message)
+            for line in message.splitlines():
+                crash_message_p.append(escape(line))
+                crash_message_p.append(html.br())
             log.append(crash_message_p)
         except:
             return

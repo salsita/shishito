@@ -1,4 +1,6 @@
 # History
+## 3.1.6 (2019-06-18)
+* support download_path and browser extension
 
 ## 3.1.5 (2019-05-22)
 * Minor fixes

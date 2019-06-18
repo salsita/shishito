@@ -11,3 +11,4 @@ pyscreenshot
 flaky
 psycopg2
 Click
+elasticsearch

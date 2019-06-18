@@ -9,12 +9,14 @@ import json
 OPTIONS = 'OPTIONS'
 ARGUMENTS = 'ARGUMENTS'
 EXTENSIONS = 'EXTENSIONS'
+PREFS = 'PREFS'
 
 BROWSER_KEYWORDS = {  # map lowercase browser name to option keyword understood by chromedriver/geckodriver...
     'chrome': {
         OPTIONS: 'chromeOptions',
         ARGUMENTS: 'args',
         EXTENSIONS: 'extensions',
+        PREFS: 'prefs',
     },
     'firefox': {
         OPTIONS: 'moz:firefoxOptions',
@@ -136,6 +138,38 @@ class ShishitoEnvironment(object):
             except:
                 pass
 
+    def add_download_path_to_browser(self, browser_capabilities, config_section):
+        """
+        add default path to downloading files from qa-bstack
+        :param browser_capabilities:
+        :param config_section:
+        :return:
+        """
+        try:
+            browser_name = self.shishito_support.get_opt(config_section, 'browser').lower()
+            download_file_path = self.shishito_support.get_opt('download_path')
+            m = re.match('^\$([A-Z][A-Z_]+)$', download_file_path)
+
+            if m is not None:
+                var_name = m.group(1)
+                if var_name not in os.environ:
+                    raise Exception("Error getting path to download file: env variable '" + download_file_path + "' not defined")
+                download_file_path = os.environ[var_name]
+
+            if download_file_path:
+                try:
+                    options_kw = BROWSER_KEYWORDS[browser_name][OPTIONS]
+                    pref_kw = BROWSER_KEYWORDS[browser_name][PREFS]
+                    browser_capabilities[options_kw][pref_kw] = {}
+                    browser_capabilities[options_kw][pref_kw]['download.default_directory'] = download_file_path
+                    browser_capabilities[options_kw][pref_kw]['download.directory_upgrade'] = "true"
+                    browser_capabilities[options_kw][pref_kw]['download.extensions_to_open'] = ""
+                    browser_capabilities[options_kw][pref_kw]['download.prompt_for_download'] = "false"
+                except:
+                    return
+        except:
+            return
+
     def add_extensions_to_browser(self, browser_capabilities, config_section):
         """
         Add base64-encoded extensions to capabilities dict
@@ -145,6 +179,7 @@ class ShishitoEnvironment(object):
 
         browser_name = self.shishito_support.get_opt(config_section, 'browser').lower()
         extensions = self.get_browser_extensions(config_section)
+
         if extensions:
             try:
                 options_kw = BROWSER_KEYWORDS[browser_name][OPTIONS]
@@ -219,6 +254,7 @@ class ShishitoEnvironment(object):
         self.add_cmdline_arguments_to_browser(capabilities, config_section)
         self.add_extensions_to_browser(capabilities, config_section)
         self.add_experimental_option(capabilities, config_section)
+        self.add_download_path_to_browser(capabilities, config_section)
         return capabilities
 
     def start_driver(self, browser_type, capabilities, config_section=None):
@@ -244,6 +280,13 @@ class ShishitoEnvironment(object):
 
         if browser_type == 'firefox':
             profile = webdriver.FirefoxProfile()
+            download_file_path = self.shishito_support.get_opt('download_path')
+            if download_file_path:
+                profile.set_preference("browser.download.folderList", 2)
+                profile.set_preference("browser.download.manager.showWhenStarting", False)
+                profile.set_preference("browser.download.dir", download_file_path)
+                profile.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/x-msdos-program")
+
             for ext in self.get_browser_extensions(config_section):
                 profile.add_extension(ext)
 

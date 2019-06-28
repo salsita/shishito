@@ -277,20 +277,19 @@ class ShishitoEnvironment(object):
             profile = webdriver.FirefoxProfile()
             try:
                 download_file_path = self.shishito_support.get_opt('download_path')
+                if download_file_path:
+                    profile.set_preference("browser.download.folderList", 2)
+                    profile.set_preference("browser.download.manager.showWhenStarting", False)
+                    profile.set_preference("browser.download.dir", download_file_path)
+                    profile.set_preference("browser.helperApps.neverAsk.saveToDisk", content_types)
+                    profile.set_preference("browser.helperApps.alwaysAsk.force", False)
+                    profile.set_preference("browser.download.manager.useWindow", False)
+                    profile.set_preference("browser.download.manager.focusWhenStarting", False)
+                    profile.set_preference("browser.helperApps.neverAsk.openFile", True)
+                    profile.set_preference("browser.download.manager.showAlertOnComplete", False)
+                    profile.set_preference("browser.download.manager.closeWhenDone", True)
             except configparser.NoOptionError:
-                return profile
-            if download_file_path:
-                profile.set_preference("browser.download.folderList", 2)
-                profile.set_preference("browser.download.manager.showWhenStarting", False)
-                profile.set_preference("browser.download.dir", download_file_path)
-                profile.set_preference("browser.helperApps.neverAsk.saveToDisk", content_types)
-                profile.set_preference("browser.helperApps.alwaysAsk.force", False)
-                profile.set_preference("browser.download.manager.useWindow", False)
-                profile.set_preference("browser.download.manager.focusWhenStarting", False)
-                profile.set_preference("browser.helperApps.neverAsk.openFile", True)
-                profile.set_preference("browser.download.manager.showAlertOnComplete", False)
-                profile.set_preference("browser.download.manager.closeWhenDone", True)
-
+                pass
 
             for ext in self.get_browser_extensions(config_section):
                 profile.add_extension(ext)

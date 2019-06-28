@@ -273,7 +273,7 @@ class ShishitoEnvironment(object):
         if browser_type == 'firefox':
             profile = webdriver.FirefoxProfile()
             try:
-                download_file_path = self.shishito_support.get_opt('download_path') or None
+                download_file_path = self.shishito_support.get_opt('download_path')
                 if download_file_path:
                     profile.set_preference("browser.download.folderList", 2)
                     profile.set_preference("browser.download.manager.showWhenStarting", False)

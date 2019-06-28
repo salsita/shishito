@@ -147,23 +147,15 @@ class ShishitoEnvironment(object):
                 return
         except configparser.NoOptionError:
             return
-        m = re.match('^\$([A-Z][A-Z_]+)$', download_directory)
-        if m is not None:
-            var_name = m.group(1)
-            if var_name not in os.environ:
-                raise Exception(
-                    "Error getting path to download file: env variable '" + download_directory + "' not defined")
-                download_directory = os.environ[var_name]
 
-        if download_directory:
-            try:
-                driver.command_executor._commands["send_command"] = (
-                "POST", '/session/$sessionId/chromium/send_command')
-                params = {'cmd': 'Page.setDownloadBehavior',
-                          'params': {'behavior': 'allow', 'downloadPath': download_directory}}
-                driver.execute("send_command", params)
-            except:
-                return
+        try:
+            driver.command_executor._commands["send_command"] = (
+            "POST", '/session/$sessionId/chromium/send_command')
+            params = {'cmd': 'Page.setDownloadBehavior',
+                      'params': {'behavior': 'allow', 'downloadPath': download_directory}}
+            driver.execute("send_command", params)
+        except:
+            return
 
 
     def add_extensions_to_browser(self, browser_capabilities, config_section):

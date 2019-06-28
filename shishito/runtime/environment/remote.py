@@ -39,7 +39,7 @@ class ControlEnvironment(ShishitoEnvironment):
             desired_capabilities=capabilities,
             browser_profile=browser_profile)
 
-        if browser_type == 'chrome':
+        if browser_type.lower() == 'chrome':
             self.set_download_path(driver)
 
         if 'resolution' in capabilities:

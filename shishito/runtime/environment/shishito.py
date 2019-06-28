@@ -143,25 +143,28 @@ class ShishitoEnvironment(object):
         """set download path for Chrome. Variable in config file download_path can be either string or env var."""
         try:
             download_directory = self.shishito_support.get_opt('download_path')
-            m = re.match('^\$([A-Z][A-Z_]+)$', download_directory)
-            if m is not None:
-                var_name = m.group(1)
-                if var_name not in os.environ:
-                    raise Exception(
-                        "Error getting path to download file: env variable '" + download_directory + "' not defined")
-                    download_directory = os.environ[var_name]
-
-            if download_directory:
-                try:
-                    driver.command_executor._commands["send_command"] = (
-                    "POST", '/session/$sessionId/chromium/send_command')
-                    params = {'cmd': 'Page.setDownloadBehavior',
-                              'params': {'behavior': 'allow', 'downloadPath': download_directory}}
-                    driver.execute("send_command", params)
-                except:
-                    return
+            if download_directory is None:
+                return
         except configparser.NoOptionError:
             return
+        m = re.match('^\$([A-Z][A-Z_]+)$', download_directory)
+        if m is not None:
+            var_name = m.group(1)
+            if var_name not in os.environ:
+                raise Exception(
+                    "Error getting path to download file: env variable '" + download_directory + "' not defined")
+                download_directory = os.environ[var_name]
+
+        if download_directory:
+            try:
+                driver.command_executor._commands["send_command"] = (
+                "POST", '/session/$sessionId/chromium/send_command')
+                params = {'cmd': 'Page.setDownloadBehavior',
+                          'params': {'behavior': 'allow', 'downloadPath': download_directory}}
+                driver.execute("send_command", params)
+            except:
+                return
+
 
     def add_extensions_to_browser(self, browser_capabilities, config_section):
         """
@@ -273,20 +276,21 @@ class ShishitoEnvironment(object):
         if browser_type == 'firefox':
             profile = webdriver.FirefoxProfile()
             try:
-                download_file_path = self.shishito_support.get_opt('download_path') or None
-                if download_file_path:
-                    profile.set_preference("browser.download.folderList", 2)
-                    profile.set_preference("browser.download.manager.showWhenStarting", False)
-                    profile.set_preference("browser.download.dir", download_file_path)
-                    profile.set_preference("browser.helperApps.neverAsk.saveToDisk", content_types)
-                    profile.set_preference("browser.helperApps.alwaysAsk.force", False)
-                    profile.set_preference("browser.download.manager.useWindow", False)
-                    profile.set_preference("browser.download.manager.focusWhenStarting", False)
-                    profile.set_preference("browser.helperApps.neverAsk.openFile", True)
-                    profile.set_preference("browser.download.manager.showAlertOnComplete", False)
-                    profile.set_preference("browser.download.manager.closeWhenDone", True)
+                download_file_path = self.shishito_support.get_opt('download_path')
             except configparser.NoOptionError:
                 return profile
+            if download_file_path:
+                profile.set_preference("browser.download.folderList", 2)
+                profile.set_preference("browser.download.manager.showWhenStarting", False)
+                profile.set_preference("browser.download.dir", download_file_path)
+                profile.set_preference("browser.helperApps.neverAsk.saveToDisk", content_types)
+                profile.set_preference("browser.helperApps.alwaysAsk.force", False)
+                profile.set_preference("browser.download.manager.useWindow", False)
+                profile.set_preference("browser.download.manager.focusWhenStarting", False)
+                profile.set_preference("browser.helperApps.neverAsk.openFile", True)
+                profile.set_preference("browser.download.manager.showAlertOnComplete", False)
+                profile.set_preference("browser.download.manager.closeWhenDone", True)
+
 
             for ext in self.get_browser_extensions(config_section):
                 profile.add_extension(ext)

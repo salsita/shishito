@@ -1,4 +1,8 @@
 # History
+## 3.1.7 (2019-07-01)
+* support download_path for chromedriver 75+
+* let download_path to be optional
+
 ## 3.1.6 (2019-06-18)
 * support download_path and browser extension
 

@@ -39,6 +39,9 @@ class ControlEnvironment(ShishitoEnvironment):
             desired_capabilities=capabilities,
             browser_profile=browser_profile)
 
+        if browser_type.lower() == 'chrome':
+            self.set_download_path(driver)
+
         if 'resolution' in capabilities:
             (width, height) = capabilities['resolution'].split('x')
             driver.set_window_size(width, height)

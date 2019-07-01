@@ -267,6 +267,20 @@ class SeleniumTest(object):
         self.driver.find_element(*input_field_locator).send_keys(file_path)
         time.sleep(delay)
 
+    def download_path(self):
+        """:return value of variable download_path"""
+        return self.shishito_support.get_opt('download_path')
+
+    def wait_for_file_to_be_downloaded(self, file_path: str, timeout: int = None):
+        timeout = timeout or self.timeout
+
+        while not os.path.exists(file_path):
+            if timeout < 0:
+                raise FileNotFoundError(f'file not found in {timeout} seconds, make sure you specified download_path')
+
+            time.sleep(0.5)
+            timeout -= 0.5
+
     def execute_js_script(self, script, arguments=None):
         """execute any js command with arguments or without it"""
         script_value = self.driver.execute_script(script, arguments)

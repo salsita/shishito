@@ -70,6 +70,8 @@ class ControlEnvironment(ShishitoEnvironment):
 
         # get driver
         driver = self.start_driver(browser_type, capabilities, config_section=config_section)
+        if browser_type.lower() == 'chrome':
+            self.set_download_path(driver)
 
         # set browser size is defined
         browser_size = self.shishito_support.get_opt(config_section, 'resolution')

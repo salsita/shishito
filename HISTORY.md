@@ -1,4 +1,8 @@
 # History
+## 3.1.8 (2019-07-03)
+* Fix of HTML Test Report not showing errors in the setup phase
+* Disable escaping of special characters error message in Test Report
+
 ## 3.1.7 (2019-07-01)
 * support download_path for chromedriver 75+
 * let download_path to be optional

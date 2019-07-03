@@ -149,7 +149,7 @@ class LogHTML(object):
         # Save the reports for all three test phases
         current_test_reports[report.when] = report  # type: TestReport
 
-        if report.when == 'teardown' and current_test_reports['call']:  # finish processing the test and not flaky
+        if report.when == 'teardown':  # finish processing the test and not flaky
             setup_report = current_test_reports['setup']  # type: TestReport
             call_report = current_test_reports['call']  # type: TestReport
             teardown_report = current_test_reports['teardown']  # type: TestReport
@@ -163,14 +163,15 @@ class LogHTML(object):
             elif setup_report.skipped:
                 self.append_skipped(setup_report)
 
-            elif call_report.skipped:
-                self.append_skipped(call_report)
+            if call_report:     # Fix of problems with Flaky Report not having the "call" state
+                if call_report.skipped:
+                    self.append_skipped(call_report)
 
-            elif call_report.passed:
-                self.append_pass(call_report)
+                if call_report.passed:
+                    self.append_pass(call_report)
 
-            elif call_report.failed:
-                self.append_failure(call_report)
+                if call_report.failed:
+                    self.append_failure(call_report)
 
     def pytest_sessionstart(self):
         self.suite_start_time = time.time()
@@ -306,7 +307,7 @@ class LogHTML(object):
             log.append(html.h3('Crash Message'))
             crash_message_p = html.p(class_='crash_message')
             for line in message.splitlines():
-                crash_message_p.append(escape(line))
+                crash_message_p.append(line)
                 crash_message_p.append(html.br())
             log.append(crash_message_p)
         except:

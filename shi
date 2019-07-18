@@ -28,7 +28,7 @@ else
   . "$VIRTUAL_ENV/bin/activate"
   if [[ -f "$SCRIPT_DIR/requirements.txt" ]] ; then
     echo "Checking for newly added requirements"
-    pip3 install -r requirements.txt
+    pip3 install -r "$SCRIPT_DIR/requirements.txt"
   fi
 fi
 

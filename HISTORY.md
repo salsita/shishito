@@ -1,4 +1,8 @@
 # History
+
+## 3.1.9 (2019-07-18)
+* Minor fix of `shi` script not updating newly added packages to requirements.txt
+
 ## 3.1.8 (2019-07-03)
 * Fix of HTML Test Report not showing errors in the setup phase
 * Disable escaping of special characters error message in Test Report

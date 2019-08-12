@@ -302,15 +302,16 @@ class LogHTML(object):
     def _append_captured_output(self, log, report) -> str:
         # Use the output section from the "teardown" report - as it has all the previous sections (setup, call) as well
         test_name = self.current_test_info['name']
-        if test_name != "N/A":   # Report was NOT taken during test collection -> no names there
-            output = self._write_captured_output(self.current_test_reports[test_name]['teardown'])
-            log.append(html.h3('Captured output'))
-            stacktrace_p = html.p(class_='stacktrace')
-            stacktrace_p.append(output)
-            log.append(stacktrace_p)
-            return output
-        else:
+
+        if test_name == "N/A":   # Report was taken during test collection -> no names there
             return ''
+
+        output = self._write_captured_output(self.current_test_reports[test_name]['teardown'])
+        log.append(html.h3('Captured output'))
+        stacktrace_p = html.p(class_='stacktrace')
+        stacktrace_p.append(output)
+        log.append(stacktrace_p)
+        return output
 
     @staticmethod
     def _append_crash_message_section(log, report):

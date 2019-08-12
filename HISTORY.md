@@ -1,5 +1,8 @@
 # History
 
+## 3.1.10 (2019-08-12)
+* Update the HTML report to contain even errors collected during PyTest collection phase
+
 ## 3.1.9 (2019-07-18)
 * Minor fix of `shi` script not updating newly added packages to requirements.txt
 

@@ -62,8 +62,8 @@ class LogHTML(object):
     def process_testnames_from_report(self, test_node_path):
         names = [x.replace(".py", "") for x in test_node_path.split("::") if x != '()']
         self.current_test_info['package'] = names[0].replace("/", '.')
-        self.current_test_info['class'] = names[1]
-        self.current_test_info['name'] = names[2]
+        self.current_test_info['class'] = names[1] if 1 < len(names) else "N/A"
+        self.current_test_info['name'] = names[2] if 2 < len(names) else "N/A"
         return names
 
     def _write_captured_output(self, report):
@@ -135,6 +135,15 @@ class LogHTML(object):
         else:
             self._appendrow('Skipped', report)
             self.skipped += 1
+
+    def pytest_collectreport(self, report):
+        """
+        For processing status of pytest test collection so we can report errors from there as well
+        """
+
+        if report.failed:
+            self.process_testnames_from_report(report.nodeid)
+            self.append_error(report)
 
     def pytest_runtest_logreport(self, report):
         self.process_testnames_from_report(report.nodeid)
@@ -231,7 +240,7 @@ class LogHTML(object):
         self.process_performance_files()
 
     def _appendrow(self, result, report):
-        testclass = self.prefix + " " + self.current_test_info['package'] + self.current_test_info['class']
+        testclass = f"{self.prefix}/{self.current_test_info['package']}/{self.current_test_info['class']}"
         testmethod = self.current_test_info['name']
 
         duration = getattr(report, 'duration', 0.0)
@@ -290,9 +299,13 @@ class LogHTML(object):
         self.used_debug_events.append(source)
         return [html.a("Console log", href='debug_events/' + browser_name + '_' + name + '.json'), ' ']
 
-    def _append_captured_output(self, log, report):
+    def _append_captured_output(self, log, report) -> str:
         # Use the output section from the "teardown" report - as it has all the previous sections (setup, call) as well
         test_name = self.current_test_info['name']
+
+        if test_name == "N/A":   # Report was taken during test collection -> no names there
+            return ''
+
         output = self._write_captured_output(self.current_test_reports[test_name]['teardown'])
         log.append(html.h3('Captured output'))
         stacktrace_p = html.p(class_='stacktrace')

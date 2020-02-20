@@ -66,7 +66,7 @@ class Reporter(object):
             case = {'name': os.path.basename(result_file), 'cases': []}
             tree = ET.parse(result_file)
             root = tree.getroot()
-            for child in root:
+            for child in root[0]:
                 if child.tag == 'testcase':
                     entry = {'name': child.get('name')}
                     result = 'success'

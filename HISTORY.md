@@ -1,4 +1,6 @@
 # History
+## 3.1.11 (2020-02-20)
+* Update Test Rail API
 
 ## 3.1.10 (2019-08-12)
 * Update the HTML report to contain even errors collected during PyTest collection phase

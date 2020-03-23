@@ -73,7 +73,7 @@ class Reporter(object):
                     failure_message = ''
                     for subChild in child:
                         if failure_message != '': failure_message += '\n'
-                        failure_message += subChild.text
+                        failure_message += subChild.text or ''
                         if subChild.tag == 'failure' and result == 'success':
                             result = 'failure'
                         elif subChild.tag == 'error' and result == 'success':

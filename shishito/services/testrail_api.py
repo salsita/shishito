@@ -161,11 +161,11 @@ class TestRail(object):
             # Create TestRail entry for every test-case in combination (if missing)
             for xunit_test in result['cases']:
                 tr_test_id = tr_tests.get(xunit_test['name'])
-                result_id = {'success': 1, 'failure': 5}.get(xunit_test['result'])
+                result_id = {'success': 1, 'error': 2, 'failure': 5}.get(xunit_test['result'])
                 if tr_test_id and result_id:
                     # Add result content into the payload list
                     result = {'test_id': tr_test_id, 'status_id': result_id}
-                    if result_id == 5:
+                    if result_id in (2, 5):
                         result['comment'] = xunit_test['failure_message']
                     test_results.append(result)
 

@@ -21,6 +21,7 @@ class TestRail(object):
         self.user = user
         self.password = password
         self.timestamp = timestamp
+        self.build = build
 
         # project specific config
         self.project_id = self.shishito_support.get_opt('test_rail_project_id')
@@ -156,7 +157,7 @@ class TestRail(object):
         runs_created = []
         # Iterate over results for each environment combination
         for result_combination in self.shishito_results:
-            run_name = f'Automated Tests | {result_combination["name"][:-4]} ({self.timestamp})'
+            run_name = f'Automated Tests | {result_combination["name"][:-4]} ({self.build or self.timestamp})'
             test_run = {"case_ids": [case['id'] for case in self.get_all_test_cases()]}
             result = self.tr_post(f'add_run/{self.project_id}',
                                   {"suite_id": self.suite_id, "name": run_name, "runs": [test_run]}).json()

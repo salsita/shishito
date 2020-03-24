@@ -1,6 +1,7 @@
 # History
-## 3.1.12 (2020-03-23)
+## 3.1.13 (2020-03-24)
 * Fix bug in Test Rail API - handling skipped tests
+* Add subsections to Test Rail
 
 ## 3.1.11 (2020-02-20)
 * Update Test Rail API

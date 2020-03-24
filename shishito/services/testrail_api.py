@@ -40,12 +40,7 @@ class TestRail(object):
         """ Create test-cases on TestRail, adds a new test run and update results for the run """
         self.create_missing_test_cases()
 
-        if self.test_plan_name:
-            test_plan_id = self.add_test_plan()
-        else:
-            test_plan_id = self.test_plan_id
-
-        test_run = self.add_test_run(test_plan_id)
+        test_run = self.add_test_run()
         self.add_test_results(test_run)
 
     def tr_get(self, url):
@@ -55,7 +50,6 @@ class TestRail(object):
         :return: response JSON
         """
         response = requests.get(self.uri_base + url, auth=(self.user, self.password), headers=self.default_headers)
-        #print(self.uri_base + url, response, response.text)
         return response.json()
 
     def tr_post(self, url, payload):
@@ -76,21 +70,41 @@ class TestRail(object):
         test_plans_list = self.tr_get('get_plans/{}'.format(self.project_id))
         return [{'name': test_plan['name'], 'id': test_plan['id']} for test_plan in test_plans_list]
 
+    def get_all_subsections(self):
+        """ Gets list of all subsections for used section"""
+        subsection_list = self.tr_get(f'get_sections/{self.project_id}&suite_id={self.suite_id}')
+        return {subsection['name']: subsection['id']
+                for subsection in subsection_list
+                if subsection['parent_id'] == int(self.section_id)}
+
+    def create_subsection(self, name):
+        """ Creates a new subsection of the currently used section
+
+        :param name: Name of the subsection
+        :return: response object
+        """
+        return self.tr_post('add_section/{}'.format(self.project_id),
+                            {"name": name,
+                             "description": "Created automatically",
+                             "suite_id": self.suite_id,
+                             "parent_id": self.section_id})
+
     def get_all_test_cases(self):
         """ Gets list of all test-cases from certain project
 
-        :return: list of test-cases (names = strings)
+        :return: list of t.split('.')[-1]est-cases (names = strings)
         """
-        test_case_list = self.tr_get('get_cases/{}&section_id={}&suite_id={}'.format(self.project_id, self.section_id, self.suite_id))
+        test_case_list = self.tr_get(f'get_cases/{self.project_id}&suite_id={self.suite_id}')
         return [{'title': test_case['title'], 'id': test_case['id']} for test_case in test_case_list]
 
-    def create_test_case(self, title):
+    def create_test_case(self, title, section_id):
         """ Creates a new test case in TestRail
 
         :param title: Title of the test-case
+        :param section_id: ID of the subsection to create the test case in
         :return: response object
         """
-        return self.tr_post('add_case/{}'.format(self.section_id), {"title": title})
+        return self.tr_post('add_case/{}'.format(section_id), {"title": title})
 
     def create_missing_test_cases(self):
         """ Creates new test-cases on TestRail for those in test project (those run by pytest).
@@ -100,12 +114,22 @@ class TestRail(object):
         """
         post_errors = []
         test_case_names = [item['title'] for item in self.get_all_test_cases()]
+        subsections = self.get_all_subsections()
         # Iterate over results for each environment combination
         for result_combination in self.shishito_results:
             # Create TestRail entry for every test-case in combination (if missing)
             for item in result_combination['cases']:
+                # Create subsection from class if needed
+                class_name = item['class']
+                if class_name in subsections.keys():
+                    section_id = subsections[class_name]
+                else:
+                    response = self.create_subsection(class_name)
+                    section_id = response.json().get('id')
+                    subsections[class_name] = section_id
+
                 if item['name'] not in test_case_names:
-                    response = self.create_test_case(item['name'])
+                    response = self.create_test_case(item['name'], section_id)
                     if response.status_code != requests.codes.ok:
                         post_errors.append(item['name'])
                     else:
@@ -124,23 +148,21 @@ class TestRail(object):
 
         return json.loads(result.text)['id']
 
-    def add_test_run(self, test_plan_id = None):
-        """ Adds new test run under certain test plan into TestRail
+    def add_test_run(self):
+        """ Adds new test run into TestRail
 
         :return: dictionary of TestRail run names & IDs
         """
-        test_plan_id = test_plan_id or self.test_plan_id
         runs_created = []
         # Iterate over results for each environment combination
         for result_combination in self.shishito_results:
-            run_name = '{} ({})'.format(result_combination['name'][:-4], self.timestamp)
+            run_name = f'Automated Tests | {result_combination["name"][:-4]} ({self.timestamp})'
             test_run = {"case_ids": [case['id'] for case in self.get_all_test_cases()]}
-            result = self.tr_post('add_plan_entry/{}'.format(test_plan_id),
+            result = self.tr_post(f'add_run/{self.project_id}',
                                   {"suite_id": self.suite_id, "name": run_name, "runs": [test_run]}).json()
             # lookup test run id
-            for run in result['runs']:
-                if run['name'] == run_name:
-                    runs_created.append({'combination': result_combination['name'], 'id': run['id']})
+            if result['name'] == run_name:
+                runs_created.append({'combination': result_combination['name'], 'id': result['id']})
         return runs_created
 
     def add_test_results(self, test_runs):
@@ -172,4 +194,5 @@ class TestRail(object):
             response = self.tr_post('add_results/{}'.format(run_id), {'results': test_results})
             if response.status_code != requests.codes.ok:
                 post_errors.append(run_id)
+
         return post_errors

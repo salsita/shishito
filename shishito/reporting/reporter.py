@@ -68,7 +68,9 @@ class Reporter(object):
             root = tree.getroot()
             for child in root[0]:
                 if child.tag == 'testcase':
-                    entry = {'name': child.get('name')}
+                    # Test case class is converted from 'tests.something.TestMyClass' => 'MyClass'
+                    entry = {'name': child.get('name'),
+                             'class': child.get('classname').split('.')[-1].replace('Test', '', 1)}
                     result = 'success'
                     failure_message = ''
                     for subChild in child:

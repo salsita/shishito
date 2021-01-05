@@ -1,4 +1,7 @@
 # History
+## 3.1.14 (2021-01-05)
+* Hotfix Google Options
+
 ## 3.1.13 (2020-03-24)
 * Fix bug in Test Rail API - handling skipped tests
 * Add subsections to Test Rail

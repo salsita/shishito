@@ -14,7 +14,7 @@ PREFS = 'PREFS'
 
 BROWSER_KEYWORDS = {  # map lowercase browser name to option keyword understood by chromedriver/geckodriver...
     'chrome': {
-        OPTIONS: 'chromeOptions',
+        OPTIONS: 'goog:chromeOptions',
         ARGUMENTS: 'args',
         EXTENSIONS: 'extensions',
         PREFS: 'prefs',

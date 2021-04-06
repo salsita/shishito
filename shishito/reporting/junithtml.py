@@ -49,6 +49,7 @@ class LogHTML(object):
 
     def _make_report_dir(self):
         logfile_dirname = os.path.dirname(self.logfile)
+        print(f'*** Make report dir {logfile_dirname}')
         if logfile_dirname and not os.path.exists(logfile_dirname):
             os.makedirs(logfile_dirname)
         # copy across the static resources
@@ -80,12 +81,15 @@ class LogHTML(object):
         if not os.path.exists(self.screenshot_path):
             os.makedirs(self.screenshot_path)
 
+        print(f'*** process_screenshot_files {self.screenshot_path}')
+
         for screenshot in self.used_screens:
+            print(f'... Attempting to copy screenshot {screenshot}')
             if os.path.exists(screenshot):
                 shutil.copy(screenshot, self.screenshot_path)
-        screenshot_folder = os.path.join(self.project_root, 'screenshots')
-        if os.path.exists(screenshot_folder):
-            shutil.rmtree(screenshot_folder)
+            else:
+                print(f'{screenshot} does not exist')
+
 
     def process_debug_event_files(self):
         if not os.path.exists(self.debug_event_path):
@@ -94,9 +98,6 @@ class LogHTML(object):
         for event in self.used_debug_events:
             if os.path.exists(event):
                 shutil.copy(event, self.debug_event_path)
-        debug_event_folder = os.path.join(self.project_root, 'debug_events')
-        if os.path.exists(debug_event_folder):
-            shutil.rmtree(debug_event_folder)
 
     def process_performance_files(self):
         # TODO: The file processing code smells, need to refactor it to be more DRY :)
@@ -189,6 +190,7 @@ class LogHTML(object):
         terminalreporter.write_sep("-", "generated html file: %s" % (self.logfile))
 
     def pytest_sessionfinish(self, session, exitstatus):
+        print('xxxxxxxx Sessionfinish', os.getenv('PYTEST_XDIST_WORKER', 'nada'))
         self._make_report_dir()
         logfile = py.std.codecs.open(self.logfile, 'w', encoding='utf-8')
 

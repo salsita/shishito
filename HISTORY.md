@@ -1,4 +1,7 @@
 # History
+## 3.1.16 (2021-06-08)
+* Logging options configuration
+
 ## 3.1.14 (2021-01-05)
 * Hotfix Google Options
 

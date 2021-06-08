@@ -228,7 +228,7 @@ class ShishitoEnvironment(object):
                 'resolution': get_opt(config_section, 'resolution'),
                 'javascriptEnabled': True,
                 'acceptSslCerts': get_opt('accept_ssl_cert').lower() == 'true',
-                'loggingPrefs': {'driver': logging_driver,
+                'goog:loggingPrefs': {'driver': logging_driver,
                                  'browser': logging_browser,
                                  'performance': logging_performance}
             }
